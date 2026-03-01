@@ -131,7 +131,7 @@ Liste konkrete Risiken mit Datei und Erklärung.
 
 ## TASK-3-R01 – Review: Polygon-Editor PR (Sprint 3)
 
-**Sprint:** 3 | **Zuständig:** GROK + Claude | **Status:** Offen
+**Sprint:** 3 | **Zuständig:** GROK + Claude | **Status:** Erledigt (intern, 2026-03-01)
 
 ### GROK-Prompt
 ```
@@ -176,7 +176,7 @@ Antworte mit Ja/Nein je Punkt + konkreten Befunden.
 
 ## TASK-3-R02 – Review: CAD/SKP Import-Pipeline PR (Sprint 3.5)
 
-**Sprint:** 3.5 | **Zuständig:** Raptor + Claude | **Status:** Offen
+**Sprint:** 3.5 | **Zuständig:** Raptor + Claude | **Status:** Erledigt (intern, 2026-03-01)
 
 ### Raptor-Prompt
 ```
@@ -219,7 +219,7 @@ Antworte mit konkreten Abweichungen von der Spec.
 
 ## TASK-5-R01 – Review: Öffnungen PR (Sprint 5)
 
-**Sprint:** 5 | **Zuständig:** GROK | **Status:** Offen
+**Sprint:** 5 | **Zuständig:** GROK | **Status:** Erledigt (intern, 2026-03-01)
 
 ### GROK-Prompt
 ```
@@ -244,7 +244,7 @@ Prüfe:
 
 ## TASK-8-R01 – Review: Platzierungsengine PR (Sprint 8)
 
-**Sprint:** 8 | **Zuständig:** GROK + Claude | **Status:** Offen
+**Sprint:** 8 | **Zuständig:** GROK + Claude | **Status:** Erledigt (intern, 2026-03-01)
 
 ### GROK-Prompt
 ```
@@ -283,7 +283,7 @@ Prüfe anhand von Docs/ROOM_MODEL.md:
 
 ## TASK-9-R01 – Review: Kollisionserkennung PR (Sprint 9)
 
-**Sprint:** 9 | **Zuständig:** GROK + Raptor | **Status:** Offen
+**Sprint:** 9 | **Zuständig:** GROK + Raptor | **Status:** Erledigt (intern, 2026-03-01)
 
 ### GROK-Prompt
 ```
@@ -318,7 +318,7 @@ Prüfe:
 
 ## TASK-11-R01 – Review: BOM-Engine PR (Sprint 11)
 
-**Sprint:** 11 | **Zuständig:** Claude + GROK | **Status:** Offen
+**Sprint:** 11 | **Zuständig:** Claude + GROK | **Status:** Erledigt (intern, 2026-03-01)
 
 ### Claude-Prompt
 ```

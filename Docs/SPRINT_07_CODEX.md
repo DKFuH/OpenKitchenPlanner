@@ -2,15 +2,16 @@
 
 ## Umfang
 
-Umsetzung Sprint 7 (Katalog MVP mit kaufmännischen Stammdaten):
+Umsetzung Sprint 7 fuer den Katalog-MVP mit kaufmaennischen Stammdaten:
 
-- Katalog-API für auswählbare Objekte
+- Katalog-API fuer auswaehlbare Objekte
 - Preisbasisfelder aus dem Datenmodell nutzbar machen
-- SKP-Mapping-Endpunkt für Sprint 7.5 vorbereiten
+- SKP-Mapping-Endpunkt fuer Sprint 7.5 vorbereiten
 
 ## Umgesetzte Dateien
 
 - `planner-api/src/routes/catalog.ts`
+- `planner-api/src/routes/catalog.test.ts`
 - `planner-api/src/index.ts`
 
 ## Ergebnis Sprint 7
@@ -19,13 +20,13 @@ Implementiert wurde:
 
 - `GET /api/v1/catalog/items`
   - optionale Filter: `type`, `q`, `limit`, `offset`
-  - liefert die Sprint-7-relevanten Preis-/Stammdatenfelder
+  - liefert die Sprint-7-relevanten Preis- und Stammdatenfelder
 - `GET /api/v1/catalog/items/:id`
-  - Einzelobjekt inkl. Zeitstempel
+  - Einzelobjekt inklusive Zeitstempel
 - `POST /api/v1/catalog/skp-mapping`
-  - bewusst als vorbereiteter Stub (`501`) für Sprint 7.5
+  - bewusst als vorbereiteter Stub (`501`) fuer Sprint 7.5
 
-Bereitgestellte kaufmännische Kernfelder pro Katalogobjekt:
+Bereitgestellte kaufmaennische Kernfelder pro Katalogobjekt:
 
 - `list_price_net`
 - `dealer_price_net`
@@ -35,20 +36,21 @@ Bereitgestellte kaufmännische Kernfelder pro Katalogobjekt:
 
 ## DoD-Status Sprint 7
 
-- Katalogobjekte sind per API auswählbar: **erfüllt**
-- Objekte tragen Preisbasis: **erfüllt**
-- SKP-Mapping-Endpunkt vorbereitet: **erfüllt (Stub für 7.5)**
+- Katalogobjekte sind per API auswaehlbar: erfuellt
+- Objekte tragen Preisbasis: erfuellt
+- SKP-Mapping-Endpunkt vorbereitet: erfuellt als Stub fuer 7.5
 
 ## Verifikation
 
-- Type-/Problemanalyse für geänderte Dateien: ohne Befund
-- Regression (preisnah):
-  - `planner-api/src/services/priceCalculator.test.ts` ✅
-  - `planner-api/src/services/bomCalculator.test.ts` ✅
+- Route-Tests fuer Listen-, Detail- und Stub-Verhalten vorhanden
+- `planner-api/src/routes/catalog.test.ts` gruen
+- preisnahe Regression bleibt gruen:
+  - `planner-api/src/services/priceCalculator.test.ts`
+  - `planner-api/src/services/bomCalculator.test.ts`
 
-## Nächster Sprint
+## Naechster Sprint
 
-Sprint 13:
+Sprint 7.5:
 
-- Angebots-/Quote-Flows End-to-End anbinden
-- API- und UI-Integration auf Basis der Preis- und BOM-Daten
+- SKP-Mapping-Endpunkt konkretisieren
+- Import- und Mapping-Flow zwischen Katalog und SKP-Referenzmodell verdrahten
