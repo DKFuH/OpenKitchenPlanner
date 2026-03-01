@@ -222,31 +222,44 @@ export async function manufacturerRoutes(app: FastifyInstance) {
                 },
             })
 
+            // Ensure a default price list for IDM exists
+            await prisma.priceList.upsert({
+                where: { id: 'IDM_IMPORT' },
+                update: { name: 'IDM Import Catalog' },
+                create: { id: 'IDM_IMPORT', name: 'IDM Import Catalog', valid_from: new Date() }
+            }).catch(() => null)
+
             let created = 0
             for (const article of raw) {
+                const articleData = {
+                    name: article.name,
+                    article_type: (article.articleType as any) || 'base_cabinet',
+                    base_dims_json: {
+                        width_mm: article.widthMm,
+                        height_mm: article.heightMm,
+                        depth_mm: article.depthMm,
+                    } as Prisma.InputJsonValue,
+                    meta_json: (article.meta_json as any) || {}
+                }
+
                 await prisma.catalogArticle.upsert({
                     where: { manufacturer_id_sku: { manufacturer_id: mfr.id, sku: article.sku } },
-                    update: {
-                        name: article.name,
-                        article_type: (article.articleType as any) || 'base_cabinet',
-                        base_dims_json: {
-                            width_mm: article.widthMm,
-                            height_mm: article.heightMm,
-                            depth_mm: article.depthMm,
-                        } as Prisma.InputJsonValue,
-                        meta_json: (article.meta_json as any) || {}
-                    },
+                    update: articleData,
                     create: {
+                        ...articleData,
                         sku: article.sku,
-                        name: article.name,
-                        article_type: (article.articleType as any) || 'base_cabinet',
                         manufacturer_id: mfr.id,
-                        base_dims_json: {
-                            width_mm: article.widthMm,
-                            height_mm: article.heightMm,
-                            depth_mm: article.depthMm,
-                        } as Prisma.InputJsonValue,
-                        meta_json: (article.meta_json as any) || {}
+                        // Add prices if provided
+                        ...(article.listPrice && article.listPrice > 0 ? {
+                            prices: {
+                                create: {
+                                    valid_from: new Date(),
+                                    list_net: article.listPrice,
+                                    dealer_net: article.dealerPrice || 0,
+                                    price_list_id: 'IDM_IMPORT'
+                                }
+                            }
+                        } : {})
                     }
                 })
                 created++
