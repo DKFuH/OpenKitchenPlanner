@@ -59,7 +59,7 @@ Sprint-Planung für MVP (Sprints 0–19) und Phase 2 (Sprints 20–24).
 
 **Ausgangslage (Sprint 19):** MVP vollständig. Polygonräume + Placement + BOM + Preis + Angebote + DXF/SKP + Render-Worker alle produktiv.
 
-**Ziel:** Größte Lücken zu Winner Flex / KPS.MAX schließen ohne Architekturbruch.
+**Ziel:** Fehlende Funktionen gegenüber professionellen Küchenstudio-Systemen schließen, ohne Architekturbruch.
 
 ---
 
@@ -130,7 +130,7 @@ Sprint-Planung für MVP (Sprints 0–19) und Phase 2 (Sprints 20–24).
 
 ## Risiken Phase 2
 
-1. Herstellerkatalogtiefe erreicht nicht Winner/KPS-Niveau ohne langfristige Datenpflege.
+1. Herstellerkatalogtiefe professioneller Systeme ist ohne langfristige Datenpflege nicht erreichbar.
 2. Automatismen müssen deterministisch und testbar sein → sonst zerlegt es Pricing/BOM.
 3. Prüf-Engine braucht klare DoD → sonst Rule-Spaghetti.
 4. Multi-Tenant muss früh mit Migrations-/Index-Disziplin kommen.
