@@ -55,7 +55,7 @@ export async function parseIdmArticles(buffer: Buffer): Promise<RawArticle[]> {
             name,
             manufacturerCode,
             manufacturerName,
-            articleType: String(pos.GRP || pos['@_GRP'] || 'cabinet'),
+            articleType: String(pos.GRP || pos['@_GRP'] || 'base_cabinet'),
             listPrice: 0, // IDM stores prices in .PRE files usually
             widthMm: Number(pos.BRE || pos['@_BRE'] || 0),
             depthMm: Number(pos.TIE || pos['@_TIE'] || 0),

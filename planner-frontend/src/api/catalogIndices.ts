@@ -1,4 +1,5 @@
-import { api } from './client.js'
+import { api, shouldUseDemoFallback } from './client.js'
+import { createCatalogIndex as createDemoCatalogIndex, listCatalogIndices as listDemoCatalogIndices } from './demoBackend.js'
 
 export interface CatalogIndexRecord {
   id: string
@@ -23,12 +24,22 @@ function tenantHeaders(tenantId: string) {
 
 export const catalogIndicesApi = {
   list: (projectId: string, tenantId: string): Promise<CatalogIndexRecord[]> =>
-    api.get<CatalogIndexRecord[]>(`/projects/${projectId}/catalog-indices`, tenantHeaders(tenantId)),
+    api.get<CatalogIndexRecord[]>(`/projects/${projectId}/catalog-indices`, tenantHeaders(tenantId)).catch((error) => {
+      if (shouldUseDemoFallback(error)) {
+        return listDemoCatalogIndices(projectId)
+      }
+      throw error
+    }),
 
   create: (
     projectId: string,
     tenantId: string,
     payload: CreateCatalogIndexPayload,
   ): Promise<CatalogIndexRecord> =>
-    api.post<CatalogIndexRecord>(`/projects/${projectId}/catalog-indices`, payload, tenantHeaders(tenantId)),
+    api.post<CatalogIndexRecord>(`/projects/${projectId}/catalog-indices`, payload, tenantHeaders(tenantId)).catch((error) => {
+      if (shouldUseDemoFallback(error)) {
+        return createDemoCatalogIndex(projectId, payload)
+      }
+      throw error
+    }),
 }

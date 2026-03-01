@@ -1,4 +1,5 @@
-import { api } from './client.js'
+import { api, shouldUseDemoFallback } from './client.js'
+import { getDashboardConfig as getDemoDashboardConfig, getDemoSalesChart, saveDashboardConfig as saveDemoDashboardConfig } from './demoBackend.js'
 
 export type DashboardWidgetId =
   | 'sales_chart'
@@ -56,19 +57,37 @@ function tenantHeaders(tenantId: string) {
 }
 
 export const dashboardsApi = {
-  getDashboard: (userId: string, tenantId: string): Promise<DashboardConfigResponse> =>
-    api.get<DashboardConfigResponse>(`/dashboards/${userId}`, tenantHeaders(tenantId)),
+  getDashboard: async (userId: string, tenantId: string): Promise<DashboardConfigResponse> => {
+    try {
+      return await api.get<DashboardConfigResponse>(`/dashboards/${userId}`, tenantHeaders(tenantId))
+    } catch (error) {
+      if (shouldUseDemoFallback(error)) {
+        return getDemoDashboardConfig(userId, tenantId)
+      }
+      throw error
+    }
+  },
 
   saveDashboard: (
     userId: string,
     tenantId: string,
     payload: { widgets: DashboardWidgetConfig[]; layout: DashboardLayout },
   ): Promise<DashboardConfigResponse> =>
-    api.put<DashboardConfigResponse>(`/dashboards/${userId}`, payload, tenantHeaders(tenantId)),
+    api.put<DashboardConfigResponse>(`/dashboards/${userId}`, payload, tenantHeaders(tenantId)).catch((error) => {
+      if (shouldUseDemoFallback(error)) {
+        return saveDemoDashboardConfig(userId, tenantId, payload)
+      }
+      throw error
+    }),
 
   getSalesChart: (
     tenantId: string,
     period: 'month' | 'last_month' | 'year' = 'month',
   ): Promise<SalesChartResponse> =>
-    api.get<SalesChartResponse>(`/kpis/sales-chart?period=${period}`, tenantHeaders(tenantId)),
+    api.get<SalesChartResponse>(`/kpis/sales-chart?period=${period}`, tenantHeaders(tenantId)).catch((error) => {
+      if (shouldUseDemoFallback(error)) {
+        return getDemoSalesChart(period)
+      }
+      throw error
+    }),
 }

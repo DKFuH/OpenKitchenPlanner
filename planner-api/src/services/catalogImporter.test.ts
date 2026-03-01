@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mapToInternalSchema, parseCatalogFile, validateCatalogSet } from './catalogImporter.js';
 
 describe('catalogImporter', () => {
-  it('parses CSV catalogs into raw articles', () => {
+  it('parses CSV catalogs into raw articles', async () => {
     const csv = Buffer.from(
       [
         'manufacturer,sku,name,list_price,width_mm,depth_mm,color,griff',
@@ -10,7 +10,7 @@ describe('catalogImporter', () => {
       ].join('\n')
     );
 
-    const parsed = parseCatalogFile(csv, 'csv');
+    const parsed = await parseCatalogFile(csv, 'csv');
 
     expect(parsed).toHaveLength(1);
     expect(parsed[0]).toMatchObject({
@@ -25,7 +25,7 @@ describe('catalogImporter', () => {
     });
   });
 
-  it('parses JSON catalogs from articles payloads', () => {
+  it('parses JSON catalogs from articles payloads', async () => {
     const json = Buffer.from(
       JSON.stringify({
         articles: [
@@ -43,13 +43,34 @@ describe('catalogImporter', () => {
       })
     );
 
-    const parsed = parseCatalogFile(json, 'json');
+    const parsed = await parseCatalogFile(json, 'json');
 
     expect(parsed[0]).toMatchObject({
       manufacturerCode: 'pronorm',
       manufacturerName: 'Pronorm',
       sku: 'SKU-2',
       listPrice: 599
+    });
+  });
+
+  it('parses basic IDM XML articles', async () => {
+    const xml = Buffer.from(`
+      <ART>
+        <KAT HES="test-mfr" KATBEZ="Test IDM">
+          <POS IDN="IDM-001" BEZ="IDM Cabinet" BRE="600" TIE="560" HOE="720" GRP="tall_cabinet" />
+        </KAT>
+      </ART>
+    `);
+
+    const parsed = await parseCatalogFile(xml, 'idm');
+
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]).toMatchObject({
+      sku: 'IDM-001',
+      name: 'IDM Cabinet',
+      manufacturerCode: 'test-mfr',
+      widthMm: 600,
+      articleType: 'tall_cabinet'
     });
   });
 
