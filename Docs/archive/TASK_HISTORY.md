@@ -4,6 +4,43 @@ Archivierte Task-Listen für MVP (Phase 1) und Phase 2.
 
 ---
 
+## Recent Deliveries (Phase 3, Stand 2026-03-01)
+
+Kompakter Nachtrag für die zuletzt ausgelieferten Arbeiten, damit Archiv, README, Status und Roadmap synchron bleiben.
+
+### Sprint 26 - Dokumentenmanagement
+
+- `Document`-Schema und Kernrouten (`POST/GET/DELETE /projects/:id/documents`) produktiv integriert.
+- Download-Pfad und automatische Quote-PDF-Ablage (Quote-Export -> Dokument) vorhanden.
+- Tenant-sichere Filterung (`type`, `tag`) und Notification-Hooks für Upload/Delete umgesetzt.
+
+### Sprint 27 - Kontakte / CRM-Light
+
+- Kontakt-API (`GET/POST /contacts`) und Projektverknüpfung (`POST /projects/:id/contacts/:contactId`) integriert.
+- Frontend-Kontaktansicht mit Kennzahlen (Projektanzahl/Umsatz/Conversion) und CSV-Export ergänzt.
+
+### Sprint 28 - Personalisierte Dashboards / KPIs
+
+- `DashboardConfig`-Persistenz (`GET/PUT /dashboards/:userId`) und KPI-Endpunkt (`GET /kpis/sales-chart`) aktiv.
+- Dashboard-UI mit Widget-Auswahl, Layout-Steuerung und Speichern implementiert.
+
+### Sprint 29 - Katalogindexierung & Preisanpassung
+
+- `CatalogIndex`-Endpoints (`POST/GET /projects/:id/catalog-indices`) integriert.
+- Pricing-Integration in `/projects/:projectId/calculate-pricing` inklusive `catalog_indices_applied` umgesetzt.
+- Batch-Indexierungs-UI und Verlauf in der Katalogseite ergänzt.
+
+### Sprint 30 - Cloud/Plattform-Features (laufend)
+
+- Platform-Routen für globale Suche, CSV-Exporte, Notification-Webhooks und Daily-Backups integriert.
+- Frontend-Anbindung für globale Suche und CSV-Export produktiv eingebunden.
+
+### Herstellerimport (Erweiterung)
+
+- IDM/XML-Importpfad erweitert: Parser-Unterstützung inkl. ZIP-Container und PRE-Preiszuordnung.
+
+---
+
 ## Quelle: TASKS_CLAUDE_CODE
 
 # TASKS_CLAUDE_CODE.md
