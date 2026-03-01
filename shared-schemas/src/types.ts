@@ -38,6 +38,7 @@ export interface WallSegment {
   end_vertex_id?: string;
   length_mm: number;
   inner_normal?: Vector2D;
+  thickness_mm?: number;
 }
 
 export interface WallSegment2D {
@@ -55,6 +56,7 @@ export interface Opening {
   width_mm: number;
   height_mm?: number;
   sill_height_mm?: number;
+  recess_mm?: number;
   source?: 'manual' | 'cad_import';
 }
 
