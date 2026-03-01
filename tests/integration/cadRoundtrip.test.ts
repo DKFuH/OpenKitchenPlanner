@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ExportPayload, Point2D } from '@shared/types';
-import { exportToDxf } from '@dxf-export/dxfExporter';
+import { CAD_EXPORT_LAYER_NAMES, exportToDxf } from '@dxf-export/dxfExporter';
 import { parseDxf } from '@dxf-import/dxfParser';
 
 function createPayload(): ExportPayload {
@@ -127,10 +127,9 @@ describe('cad roundtrip', () => {
   it('keeps all expected YAKDS layer names in exported DXF output', () => {
     const dxf = exportToDxf(createPayload());
 
-    expect(dxf).toContain('YAKDS_ROOM');
-    expect(dxf).toContain('YAKDS_WALLS');
-    expect(dxf).toContain('YAKDS_OPENINGS');
-    expect(dxf).toContain('YAKDS_FURNITURE');
+    CAD_EXPORT_LAYER_NAMES.forEach((layerName) => {
+      expect(dxf).toContain(layerName);
+    });
   });
 
   it('returns an empty asset for an empty DXF string', () => {
@@ -188,5 +187,40 @@ describe('cad roundtrip', () => {
 
     expect(asset.entities).toHaveLength(1);
     expect(asset.protocol.some((entry) => entry.status === 'ignored')).toBe(true);
+  });
+
+  it('flags DXF files without explicit units for manual scale review', () => {
+    const dxf = [
+      '0',
+      'SECTION',
+      '2',
+      'ENTITIES',
+      '0',
+      'LINE',
+      '5',
+      'A1',
+      '8',
+      '0',
+      '10',
+      '0',
+      '20',
+      '0',
+      '11',
+      '4000',
+      '21',
+      '0',
+      '0',
+      'ENDSEC',
+      '0',
+      'EOF'
+    ].join('\n');
+
+    const asset = parseDxf(dxf, 'review-units.dxf');
+
+    expect(asset.protocol[0]).toEqual({
+      entity_id: null,
+      status: 'needs_review',
+      reason: 'DXF header did not specify $INSUNITS. Millimeters were assumed.'
+    });
   });
 });

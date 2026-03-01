@@ -4,7 +4,9 @@
 
 Umsetzung der Codex-Aufgabe aus Sprint 11.5:
 
-- TASK-11-C02 - DXF-Schreib-Logik (Export)
+- TASK-11-C02 - DXF-Schreib-Logik
+- API-Anbindung fuer DXF-Export
+- DWG-Export-API als expliziter Staging-/Fallback-Pfad
 
 ## Umgesetzte Dateien
 
@@ -30,10 +32,17 @@ Implementiert wurde:
 
 API-Integration:
 
-- `/api/v1/exports/dxf`
-- `/api/v1/projects/:projectId/export-dxf`
-  - nehmen einen Export-Payload plus optionalen Dateinamen entgegen
-  - liefern den DXF-Inhalt direkt als `application/dxf`-Attachment zurueck
+- produktiv:
+  - `/api/v1/exports/dxf`
+  - `/api/v1/projects/:projectId/export-dxf`
+
+- expliziter DWG-Staging-Pfad:
+  - `/api/v1/exports/dwg`
+  - `/api/v1/projects/:projectId/export-dwg`
+  - liefert standardmaessig `501 DWG_EXPORT_NOT_AVAILABLE`
+  - kann mit `allow_dxf_fallback=true` kontrolliert auf einen DXF-Download zurueckfallen
+
+Damit ist die API-Oberflaeche fuer beide Exportpfade vorhanden, ohne falsche native DWG-Dateien auszugeben.
 
 ## Testabdeckung
 
@@ -41,12 +50,19 @@ API-Integration:
 - DXF-Header enthaelt mm-Einheiten
 - Moebelgeometrie wird optional ausgelassen
 - API-Test fuer erfolgreichen DXF-Export und Validierungsfehler
+- API-Test fuer DWG-Staging-Fehler
+- API-Test fuer kontrollierten DWG->DXF-Fallback
 
 ## DoD-Status Sprint 11.5
 
 - DXF-Export fuer den MVP-Interop-Pfad ist als Modul und API-Route verfuegbar
 - Layer-Konventionen aus `CAD_INTEROP.md` sind umgesetzt
 - Export ist testbar und roundtrip-faehig vorbereitet
+- DWG-API ist vorhanden, aber weiterhin nur als Staging-/Fallback-Pfad
+
+## Hinweise
+
+- Nativer DWG-Schreibpfad ist weiterhin offen. Der aktuelle Endpunkt ist absichtlich ehrlich und faellt nur kontrolliert auf DXF zurueck.
 
 ## Naechster Sprint
 

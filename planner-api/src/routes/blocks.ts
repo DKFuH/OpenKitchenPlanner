@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../db.js'
@@ -104,7 +104,14 @@ async function saveBlockProgram(programId: string | null, payload: z.infer<typeo
           program_id: program.id,
           code: group.code,
           name: group.name,
-          item_selector: (group.item_selector ?? null) as Prisma.InputJsonValue | null,
+          ...(group.item_selector !== undefined
+            ? {
+                item_selector:
+                  group.item_selector === null
+                    ? Prisma.JsonNull
+                    : (group.item_selector as Prisma.InputJsonValue),
+              }
+            : {}),
         },
       })
 

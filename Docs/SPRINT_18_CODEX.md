@@ -36,6 +36,16 @@ Implementierte Endpunkte:
 - `GET /api/v1/imports/:id`
   - liefert den gespeicherten Importjob inklusive `import_asset`, `protocol`, Status und Fehlerzustand
 
+- `GET /api/v1/imports/:id/layers`
+  - liefert die gespeicherten CAD-Layer eines Importjobs als `CadLayer[]`
+  - gibt `409 IMPORT_ASSET_NOT_READY` zurueck, wenn der Job noch kein `import_asset` besitzt
+  - gibt bei SKP- oder layerlosen Assets eine leere Liste zurueck
+
+- `GET /api/v1/imports/:id/mapping-state`
+  - liefert den gespeicherten Mapping-Snapshot eines Importjobs
+  - gibt `409 IMPORT_ASSET_NOT_READY` zurueck, wenn der Job noch kein `import_asset` besitzt
+  - liefert `{}` wenn kein Mapping-Zustand gespeichert wurde
+
 Ergaenzende Details:
 
 - bestehende Preview-Endpunkte fuer DXF und SKP bleiben erhalten
@@ -65,6 +75,8 @@ Frontend-Anschluss (isoliert, ohne tiefe Editor-Eingriffe):
 - `POST /imports/cad` legt reviewbare DWG-Jobs an
 - `POST /imports/skp` verarbeitet SKP-Imports inkl. Komponenten-Mapping
 - `GET /imports/:id` liefert gespeicherte Jobs
+- `GET /imports/:id/layers` liefert gespeicherte Layer bzw. sauberen `409`-Status
+- `GET /imports/:id/mapping-state` liefert gespeicherten Mapping-Zustand bzw. sauberen `409`-Status
 - Validierungsfehler und Not-Found-Faelle sind abgesichert
 - Frontend Build laeuft mit den neuen Import-Dateien gruen
 - Frontend bestehende Tests bleiben gruen

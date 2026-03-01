@@ -1,208 +1,138 @@
 # CAD_INTEROP.md
 
-## CAD-Interoperabilität – DWG/DXF Import und Export
+## CAD-Interoperabilitaet
 
-**Stand:** Sprint 0
+Stand: 2026-03-01
 
----
+## Scope
 
-## Scope (MVP)
-
-| Format | Import | Export | Scope |
+| Format | Import | Export | Status |
 |---|---|---|---|
-| DXF 2D | ✅ | ✅ | Linien, Polylinien, Layer |
-| DWG 2D | ⚠️ Phase 2 | ⚠️ Phase 2 | via ODA/LibreDWG |
-| DWG als Referenz | ✅ (via DXF-Konvertierung) | — | Grundrissbasis |
+| DXF 2D | ja | ja | produktiver MVP-Pfad |
+| DWG 2D | staging/review | nein | Binary-Adapter noch offen |
+| SKP | ja | nein | Referenzmodell-/Komponentenpfad |
 
-**MVP-Strategie:** DWG wird clientseitig oder via Tool in DXF konvertiert, dann importiert.
-Direktes DWG lesen/schreiben ist Phase 2.
+## Interne Formate
 
----
+Zentral ist `ImportAsset` aus `shared-schemas`.
 
-## Neutrales Austauschformat
+Enthaelt:
 
-### `ImportAsset`
+- `layers`
+- `entities`
+- `bounding_box`
+- `units`
+- `protocol`
 
-Das interne Format nach dem Parsen — unabhängig vom Quellformat.
+Alle Geometriedaten werden intern in Millimetern gefuehrt.
 
-```typescript
-interface ImportAsset {
-  id: string;
-  import_job_id: string;
-  source_format: 'dxf' | 'dwg' | 'skp';
-  source_filename: string;
-  layers: CadLayer[];
-  entities: CadEntity[];
-  bounding_box: BoundingBox2D;
-  units: CadUnits;
-  created_at: string;
-}
+## API-Stand
 
-interface CadLayer {
-  id: string;
-  name: string;                    // z.B. "Grundriss", "Möbel", "Bemaßung"
-  color: string | null;
-  visible: boolean;
-  entity_count: number;
-}
+Import:
 
-interface CadEntity {
-  id: string;
-  layer_id: string;
-  type: CadEntityType;
-  geometry: CadGeometry;
-}
+- `POST /api/v1/imports/preview/dxf`
+- `POST /api/v1/imports/preview/skp`
+- `POST /api/v1/imports/cad`
+- `POST /api/v1/imports/skp`
+- `GET /api/v1/imports/:id`
 
-type CadEntityType = 'line' | 'polyline' | 'arc' | 'circle' | 'text' | 'block_ref';
+Export:
 
-type CadGeometry =
-  | { type: 'line'; start: Point2D; end: Point2D }
-  | { type: 'polyline'; points: Point2D[]; closed: boolean }
-  | { type: 'arc'; center: Point2D; radius_mm: number; start_angle: number; end_angle: number }
-  | { type: 'circle'; center: Point2D; radius_mm: number }
-  | { type: 'text'; position: Point2D; content: string; height_mm: number }
-  | { type: 'block_ref'; block_name: string; position: Point2D; rotation_deg: number };
+- `POST /api/v1/exports/dxf`
+- `POST /api/v1/projects/:projectId/export-dxf`
 
-interface BoundingBox2D {
-  min: Point2D;
-  max: Point2D;
-}
+## DXF-Import
 
-type CadUnits = 'mm' | 'cm' | 'm' | 'inch' | 'feet';
-```
+Der DXF-Parser:
 
----
+- liest `LINE`, `LWPOLYLINE`, `POLYLINE`, `ARC`, `CIRCLE`, `TEXT`, `MTEXT`, `INSERT`
+- ignoriert unbekannte Entitaeten mit Protokolleintrag
+- ignoriert Geometrie mit positivem `z`
+- normalisiert bekannte `INSUNITS` nach Millimetern
 
-## Import-Pipeline
+Unit-/Skalierungspruefung:
 
-```
-Datei-Upload (DXF/DWG)
-        │
-        ▼
-POST /imports/cad
-  → ImportJob (status: queued)
-        │
-        ▼
-Parser (Codex-Modul: interop-cad/dxf-import)
-  - Parst DXF-Entities
-  - Normalisiert Einheiten → mm
-  - Erstellt ImportAsset
-        │
-        ▼
-ImportJob (status: done)
-ImportAsset gespeichert (DB + Filesystem)
-        │
-        ▼
-Frontend: Layer-Filter anzeigen
-User wählt relevante Layer aus
-        │
-        ▼
-Extraktion: Polylinien → RoomBoundary-Kandidaten
-             Lücken in Linien → Opening-Kandidaten
-        │
-        ▼
-User bestätigt / korrigiert
-Übernahme in Raum: POST /rooms/:id/adopt-cad-boundary
-```
+- fehlendes `$INSUNITS` fuehrt zu `needs_review`
+- unbekannter `INSUNITS`-Code fuehrt zu `needs_review`
+- bekannte Nicht-mm-Einheiten werden protokolliert und nach mm normalisiert
 
----
+Typische Protokollzustande:
 
-## Import-Job
+- `imported`
+- `ignored`
+- `needs_review`
 
-```typescript
-interface ImportJob {
-  id: string;
-  project_id: string;
-  status: ImportJobStatus;
-  source_format: 'dxf' | 'dwg' | 'skp';
-  source_filename: string;
-  file_size_bytes: number;
-  import_asset_id: string | null;
-  protocol: ImportProtocolEntry[];
-  created_at: string;
-  completed_at: string | null;
-  error_message: string | null;
-}
+## DWG-Strategie
 
-type ImportJobStatus = 'queued' | 'processing' | 'done' | 'failed';
+Direktes DWG-Parsing ist weiterhin nicht verdrahtet.
 
-interface ImportProtocolEntry {
-  entity_id: string | null;
-  status: 'imported' | 'ignored' | 'needs_review';
-  reason: string;
-}
-```
+Aktueller MVP:
 
----
+- `POST /api/v1/imports/cad` mit `source_format=dwg`
+- Datei wird als Importjob gespeichert
+- Job endet mit `done`, aber mit `needs_review`-Protokoll
+- Rohpayload bleibt im gespeicherten `import_asset`
 
-## Export-Pipeline
+Damit ist DWG aktuell ein kontrollierter Staging-/Review-Pfad, kein echter Geometrieparser.
 
-```
-Projekt-Zustand (Raum + Möbel)
-        │
-        ▼
-POST /projects/:id/export-dxf
-        │
-        ▼
-Exporter (Codex-Modul: interop-cad/dxf-export)
-  - Raumkontur → Polylinie (Layer: YAKDS_ROOM)
-  - Wandlinien → Linien (Layer: YAKDS_WALLS)
-  - Öffnungen → Lücken in Wandlinien (Layer: YAKDS_OPENINGS)
-  - Möbelkonturen → Rechtecke (Layer: YAKDS_FURNITURE)
-        │
-        ▼
-DXF-Datei → Download-URL
-```
+## SKP-Import
 
----
+Der SKP-Pfad erzeugt ein Referenzmodell mit Komponentenliste.
 
-## Layer-Konventionen (Export)
+Unterstuetzt:
 
-| Layer-Name | Inhalt | Farbe |
-|---|---|---|
-| `YAKDS_ROOM` | Raumkontur (Polylinie, geschlossen) | Weiß |
-| `YAKDS_WALLS` | Wandmittellinien | Grau |
-| `YAKDS_OPENINGS` | Türen/Fenster (Lücken + Symbole) | Cyan |
-| `YAKDS_FURNITURE` | Möbelkonturen (Draufsicht) | Gelb |
-| `YAKDS_DIMS` | Bemaßungen (optional) | Grün |
-| `YAKDS_REF` | Referenzgeometrie aus Import | Magenta |
+- Komponenten-Mapping auf `cabinet`, `appliance`, `reference_object`, `ignored`
+- Protokolleintraege je Komponente
+- Persistenz des Mapping-Zustands im Job
 
----
+## Export-Layer-Konventionen
+
+Die DXF-Exporter-Layer sind im Code zentralisiert:
+
+- `YAKDS_ROOM`
+- `YAKDS_WALLS`
+- `YAKDS_OPENINGS`
+- `YAKDS_FURNITURE`
+
+Bedeutung:
+
+- `YAKDS_ROOM`: geschlossene Raumkontur
+- `YAKDS_WALLS`: Wandsegmente
+- `YAKDS_OPENINGS`: Oeffnungen an Waenden
+- `YAKDS_FURNITURE`: Moebelkonturen in Draufsicht
 
 ## Einheiten
 
-- **Intern:** immer Millimeter (mm)
-- **Export:** DXF-Einheit = mm (`$INSUNITS = 4`)
-- **Import:** Einheit wird aus DXF-Header gelesen, normalisiert auf mm
+- intern: immer mm
+- DXF-Export: `$INSUNITS = 4`
+- DXF-Import: bekannte DXF-Einheiten werden nach mm umgerechnet
 
----
+Bekannte Zuordnungen:
 
-## Nicht im MVP
+- `1` -> `inch`
+- `2` -> `feet`
+- `4` -> `mm`
+- `5` -> `cm`
+- `6` -> `m`
 
-- Verlustfreier Roundtrip (Import → Bearbeitung → Export → Re-Import identisch)
-- Vollständige Bearbeitung beliebiger DWG-Spezialobjekte (Hatch, XREF, 3D-Körper)
-- DWG direkt lesen/schreiben ohne Konvertierung
+## Roundtrip-Stand
 
----
+Abgesichert ist aktuell:
 
-## API-Contracts
+- DXF Export -> DXF Import fuer Raumkontur
+- Layer-Konventionen im Export
+- Einheitenkonvertierung fuer Inch-DXF
+- Review-Faelle bei fehlenden Units
+- Robustheit bei leeren oder gemischten DXF-Dateien
 
-```
-POST /api/v1/imports/cad
-  Body: multipart/form-data { file: File, project_id: string }
-  → ImportJob
+Nicht abgedeckt als echter Produktionspfad:
 
-GET /api/v1/imports/:id
-  → ImportJob + ImportAsset (wenn done)
+- nativer DWG Roundtrip
+- verlustfreier Roundtrip beliebiger Fremd-DXF-Dateien
+- 3D-CAD-Geometrie
 
-GET /api/v1/imports/:id/layers
-  → CadLayer[]
+## Offene Ausbaustufen
 
-POST /api/v1/projects/:id/export-dxf
-  Body: { include_furniture: boolean, include_dims: boolean }
-  → { download_url: string }
-
-POST /api/v1/rooms/:id/adopt-cad-boundary
-  Body: { import_asset_id: string, layer_id: string, polyline_entity_id: string }
-  → Room (aktualisiert)
-```
+- echter DWG-Binary-Adapter
+- Mapping-Review-UI fuer Layer und SKP-Komponenten
+- staerkere semantische Extraktion fuer Raumkonturen, Oeffnungen und Referenzobjekte

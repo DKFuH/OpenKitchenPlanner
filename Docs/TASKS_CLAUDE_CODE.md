@@ -4,6 +4,8 @@
 
 **Zuständigkeit:** Architektur, API-Struktur, größere Refactorings, End-to-End-Features, Datenfluss Frontend ↔ API ↔ Worker ↔ Interop
 
+> Stand 2026-03-01: Die Sprintliste ist für den aktuellen MVP-Stand abgeschlossen. Dokumentierte Restpunkte betreffen vor allem native DWG-Binary-Pfade; der produktive Interop-Pfad ist aktuell DXF-basiert.
+
 ---
 
 ## TASK-0-01 – Repo-Struktur und Grundgerüst anlegen
@@ -12,15 +14,15 @@
 **Zuständig:** Claude Code
 **Abhängigkeiten:** keine
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Repo-Struktur gemäß Plan anlegen, Grundpakete initialisieren.
 
 ### Akzeptanzkriterien
-- [ ] Verzeichnisse `planner-frontend/`, `planner-api/`, `render-worker/`, `shared-schemas/`, `interop-cad/`, `interop-sketchup/` angelegt
-- [ ] Basis-Package-Files je Paket vorhanden
-- [ ] `docs/` mit Platzhalter-Dokumenten befüllt
+- [x] Verzeichnisse `planner-frontend/`, `planner-api/`, `render-worker/`, `shared-schemas/`, `interop-cad/`, `interop-sketchup/` angelegt
+- [x] Basis-Package-Files je Paket vorhanden
+- [x] `docs/` mit Platzhalter-Dokumenten befüllt
 
 ### Nicht in Scope
 Echte Implementierung — nur Strukturgerüst
@@ -33,16 +35,16 @@ Echte Implementierung — nur Strukturgerüst
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-0-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Technische Architektur dokumentieren: Schichten, Kommunikationswege, Tech-Stack.
 
 ### Akzeptanzkriterien
-- [ ] Frontend ↔ API ↔ Worker ↔ Interop beschrieben
-- [ ] Datenbankstrategie (Postgres) festgehalten
-- [ ] Render-Protokoll-Überblick vorhanden
-- [ ] CAD/SKP-Interop-Strategie skizziert
+- [x] Frontend ↔ API ↔ Worker ↔ Interop beschrieben
+- [x] Datenbankstrategie (Postgres) festgehalten
+- [x] Render-Protokoll-Überblick vorhanden
+- [x] CAD/SKP-Interop-Strategie skizziert
 
 ---
 
@@ -52,15 +54,15 @@ Technische Architektur dokumentieren: Schichten, Kommunikationswege, Tech-Stack.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-0-02
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Domänenmodell für Räume, Wände, Öffnungen, Dachschrägen definieren.
 
 ### Akzeptanzkriterien
-- [ ] `Room`, `RoomBoundary`, `Vertex`, `WallSegment`, `Opening`, `CeilingConstraint` beschrieben
-- [ ] JSON-Beispielstruktur vorhanden
-- [ ] Platzierungskonzept `wall_id + offset` erklärt
+- [x] `Room`, `RoomBoundary`, `Vertex`, `WallSegment`, `Opening`, `CeilingConstraint` beschrieben
+- [x] JSON-Beispielstruktur vorhanden
+- [x] Platzierungskonzept `wall_id + offset` erklärt
 
 ---
 
@@ -70,15 +72,15 @@ Domänenmodell für Räume, Wände, Öffnungen, Dachschrägen definieren.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-0-02
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Kaufmännische Kernobjekte und Berechnungsreihenfolge dokumentieren.
 
 ### Akzeptanzkriterien
-- [ ] 9-stufige Preislogik beschrieben (Listenpreis → Rundung)
-- [ ] `BOMLine`, `PriceComponent`, `PriceSummary`, `Quote`, `QuoteItem` definiert
-- [ ] API-Contracts für Pricing und Quote grob festgelegt
+- [x] 9-stufige Preislogik beschrieben (Listenpreis → Rundung)
+- [x] `BOMLine`, `PriceComponent`, `PriceSummary`, `Quote`, `QuoteItem` definiert
+- [x] API-Contracts für Pricing und Quote grob festgelegt
 
 ---
 
@@ -88,12 +90,12 @@ Kaufmännische Kernobjekte und Berechnungsreihenfolge dokumentieren.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-0-02
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Render-Job-Protokoll: Worker-Registrierung, Job-Fetch, Ergebnis-Upload beschrieben
-- [ ] CAD-Interop: neutrales internes Austauschformat, Layer-Strategie, Scope DWG/DXF 2D
-- [ ] SKP-Interop: Referenzmodell-Konzept, Mapping-Strategie
+- [x] Render-Job-Protokoll: Worker-Registrierung, Job-Fetch, Ergebnis-Upload beschrieben
+- [x] CAD-Interop: neutrales internes Austauschformat, Layer-Strategie, Scope DWG/DXF 2D
+- [x] SKP-Interop: Referenzmodell-Konzept, Mapping-Strategie
 
 ---
 
@@ -103,15 +105,15 @@ Kaufmännische Kernobjekte und Berechnungsreihenfolge dokumentieren.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-0-02
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Lauffähiges Backend mit Postgres-Schema und erstem Projekt-CRUD.
 
 ### Akzeptanzkriterien
-- [ ] Tabellen: `users`, `projects`, `project_versions`, `rooms`, `price_lists`, `tax_groups`, `quote_settings`
-- [ ] API-Endpunkte: `POST /projects`, `GET /projects/:id`, `PUT /projects/:id`, `DELETE /projects/:id`
-- [ ] Backend lokal startbar und testbar
+- [x] Tabellen: `users`, `projects`, `project_versions`, `rooms`, `price_lists`, `tax_groups`, `quote_settings`
+- [x] API-Endpunkte: `POST /projects`, `GET /projects/:id`, `PUT /projects/:id`, `DELETE /projects/:id`
+- [x] Backend lokal startbar und testbar
 
 ---
 
@@ -121,15 +123,15 @@ Lauffähiges Backend mit Postgres-Schema und erstem Projekt-CRUD.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-1-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Web-App-Hülle mit Editor-Layout bereitstellen.
 
 ### Akzeptanzkriterien
-- [ ] Projektliste zeigt Projekte aus API
-- [ ] Editor-Layout: Canvas-Bereich, linke Sidebar, rechte Sidebar, Status-/Summenbereich
-- [ ] Projekt öffnen navigiert in Editor-Ansicht
+- [x] Projektliste zeigt Projekte aus API
+- [x] Editor-Layout: Canvas-Bereich, linke Sidebar, rechte Sidebar, Status-/Summenbereich
+- [x] Projekt öffnen navigiert in Editor-Ansicht
 
 ---
 
@@ -139,16 +141,16 @@ Web-App-Hülle mit Editor-Layout bereitstellen.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-1-01, TASK-0-03
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Räume als Polygon speichern und laden – Datenfluss Backend ↔ Frontend.
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /rooms`, `PUT /rooms/:id`, `GET /rooms/:id`
-- [ ] Polygon wird als `Vertex[]` + `WallSegment[]` persistiert
-- [ ] Frontend zeigt Polygon auf Canvas (Codex liefert Render-Logik)
-- [ ] Snap-Optionen konfigurierbar (0/45/90°, Raster)
+- [x] API: `POST /rooms`, `PUT /rooms/:id`, `GET /rooms/:id`
+- [x] Polygon wird als `Vertex[]` + `WallSegment[]` persistiert
+- [x] Frontend zeigt Polygon auf Canvas (Codex liefert Render-Logik)
+- [x] Snap-Optionen konfigurierbar (0/45/90°, Raster)
 
 ---
 
@@ -158,16 +160,16 @@ Räume als Polygon speichern und laden – Datenfluss Backend ↔ Frontend.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-0-05, TASK-1-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Upload-Endpunkte und internes Austauschformat festlegen; Codex implementiert Parser.
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /imports/cad` (DWG/DXF), `POST /imports/skp`
-- [ ] Neutrales internes Format (`ImportAsset`, `CadLayer`, `ReferenceGeometry`) definiert
-- [ ] Datei wird gespeichert, Import-Job angelegt, Status abrufbar
-- [ ] Frontend: Datei-Upload-UI vorhanden
+- [x] API: `POST /imports/cad` (DWG/DXF), `POST /imports/skp`
+- [x] Neutrales internes Format (`ImportAsset`, `CadLayer`, `ReferenceGeometry`) definiert
+- [x] Datei wird gespeichert, Import-Job angelegt, Status abrufbar
+- [x] Frontend: Datei-Upload-UI vorhanden
 
 ---
 
@@ -177,16 +179,16 @@ Upload-Endpunkte und internes Austauschformat festlegen; Codex implementiert Par
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-3-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Vertex-Verschiebung und numerische Kantenlängenänderung durchgängig verbinden.
 
 ### Akzeptanzkriterien
-- [ ] Vertex-Move sendet PATCH an API, stable `wall_id` bleibt erhalten
-- [ ] Kantenlänge per Eingabefeld änderbar
-- [ ] CAD-Raumkontur-Übernahme: Polylinie → `RoomBoundary` Konvertierungsendpunkt
-- [ ] Layer-Filter-UI vorhanden
+- [x] Vertex-Move sendet PATCH an API, stable `wall_id` bleibt erhalten
+- [x] Kantenlänge per Eingabefeld änderbar
+- [x] CAD-Raumkontur-Übernahme: Polylinie → `RoomBoundary` Konvertierungsendpunkt
+- [x] Layer-Filter-UI vorhanden
 
 ---
 
@@ -196,15 +198,15 @@ Vertex-Verschiebung und numerische Kantenlängenänderung durchgängig verbinden
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-3-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Türen/Fenster an Wänden persistieren und anzeigen.
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /openings`, `PUT /openings/:id`, `DELETE /openings/:id`
-- [ ] `Opening` trägt: `wall_id`, `offset_mm`, `width_mm`, `height_mm`, `sill_height_mm`
-- [ ] Öffnungen aus CAD-Import übernehmbar (Endpunkt zur Übernahme)
+- [x] API: `POST /openings`, `PUT /openings/:id`, `DELETE /openings/:id`
+- [x] `Opening` trägt: `wall_id`, `offset_mm`, `width_mm`, `height_mm`, `sill_height_mm`
+- [x] Öffnungen aus CAD-Import übernehmbar (Endpunkt zur Übernahme)
 
 ---
 
@@ -214,12 +216,12 @@ Türen/Fenster an Wänden persistieren und anzeigen.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-3-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /ceiling-constraints`, `PUT /ceiling-constraints/:id`
-- [ ] `CeilingConstraint`: `wall_id`, `kniestock_height_mm`, `slope_angle_deg`, `depth_into_room_mm`
-- [ ] Endpunkt `GET /rooms/:id/available-height?x=&y=` ruft Codex-Berechnung ab
+- [x] API: `POST /ceiling-constraints`, `PUT /ceiling-constraints/:id`
+- [x] `CeilingConstraint`: `wall_id`, `kniestock_height_mm`, `slope_angle_deg`, `depth_into_room_mm`
+- [x] Endpunkt `GET /rooms/:id/available-height?x=&y=` ruft Codex-Berechnung ab
 
 ---
 
@@ -229,13 +231,13 @@ Türen/Fenster an Wänden persistieren und anzeigen.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-1-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Tabellen: `catalog_items`, `pricing_groups`, `tax_groups`
-- [ ] Felder: `list_price_net`, `dealer_price_net`, `default_markup_pct`, `tax_group_id`, `pricing_group_id`
-- [ ] API: `GET /catalog/items`, `GET /catalog/items/:id`
-- [ ] SKP-Mapping-Endpunkt vorbereitet (Sprint 7.5)
+- [x] Tabellen: `catalog_items`, `pricing_groups`, `tax_groups`
+- [x] Felder: `list_price_net`, `dealer_price_net`, `default_markup_pct`, `tax_group_id`, `pricing_group_id`
+- [x] API: `GET /catalog/items`, `GET /catalog/items/:id`
+- [x] SKP-Mapping-Endpunkt vorbereitet (Sprint 7.5)
 
 ---
 
@@ -245,16 +247,16 @@ Türen/Fenster an Wänden persistieren und anzeigen.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-3-01, TASK-7-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Objekte an Wänden platzieren, verschieben, löschen – Full Stack.
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /placements`, `PUT /placements/:id`, `DELETE /placements/:id`
-- [ ] `CabinetInstance`/`ApplianceInstance` mit `wall_id + offset_mm`
-- [ ] Frontend: Drag-along-wall mit Codex-Algorithmus verbunden
-- [ ] Innenrichtung der Wand korrekt aus Polygon abgeleitet
+- [x] API: `POST /placements`, `PUT /placements/:id`, `DELETE /placements/:id`
+- [x] `CabinetInstance`/`ApplianceInstance` mit `wall_id + offset_mm`
+- [x] Frontend: Drag-along-wall mit Codex-Algorithmus verbunden
+- [x] Innenrichtung der Wand korrekt aus Polygon abgeleitet
 
 ---
 
@@ -264,16 +266,16 @@ Objekte an Wänden platzieren, verschieben, löschen – Full Stack.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-8-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Prüf-API aufbauen; Codex implementiert Kollisionslogik.
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /projects/:id/validate`
-- [ ] Response: `{ errors: RuleViolation[], warnings: RuleViolation[], hints: RuleViolation[] }`
-- [ ] Frontend: Prüfpanel zeigt Ergebnisse
-- [ ] Kostenhinweise (Sonderblende, Sonderzuschnitt) als `hints` konfigurierbar
+- [x] API: `POST /projects/:id/validate`
+- [x] Response: `{ errors: RuleViolation[], warnings: RuleViolation[], hints: RuleViolation[] }`
+- [x] Frontend: Prüfpanel zeigt Ergebnisse
+- [x] Kostenhinweise (Sonderblende, Sonderzuschnitt) als `hints` konfigurierbar
 
 ---
 
@@ -283,12 +285,12 @@ Prüf-API aufbauen; Codex implementiert Kollisionslogik.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-6-01, TASK-9-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Höhenprüfung in `POST /projects/:id/validate` integriert
-- [ ] Flags `requires_customization`, `height_variant`, `labor_surcharge` in `RuleViolation`
-- [ ] Frontend zeigt Höhenkonflikte visuell an
+- [x] Höhenprüfung in `POST /projects/:id/validate` integriert
+- [x] Flags `requires_customization`, `height_variant`, `labor_surcharge` in `RuleViolation`
+- [x] Frontend zeigt Höhenkonflikte visuell an
 
 ---
 
@@ -298,13 +300,13 @@ Prüf-API aufbauen; Codex implementiert Kollisionslogik.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-8-01, TASK-7-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /projects/:id/calculate-bom`
-- [ ] Response: strukturierte `BOMLine[]` als JSON
-- [ ] Positionen: Möbel, Geräte, Zubehör, Zuschläge, Montage, Fracht
-- [ ] Codex-BOM-Logik über Service-Schicht eingebunden
+- [x] API: `POST /projects/:id/calculate-bom`
+- [x] Response: strukturierte `BOMLine[]` als JSON
+- [x] Positionen: Möbel, Geräte, Zubehör, Zuschläge, Montage, Fracht
+- [x] Codex-BOM-Logik über Service-Schicht eingebunden
 
 ---
 
@@ -314,13 +316,13 @@ Prüf-API aufbauen; Codex implementiert Kollisionslogik.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-3-02, TASK-8-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /projects/:id/export-dwg`, `POST /projects/:id/export-dxf`
-- [ ] Export enthält: Raumkontur, Wandlinien, Öffnungen, Möbelkonturen
-- [ ] Layer-Struktur und Einheiten/Skalierung definiert
-- [ ] Codex implementiert DWG/DXF-Schreib-Logik; Claude Code verbindet API ↔ Codex-Modul
+- [x] API: `POST /projects/:id/export-dwg`, `POST /projects/:id/export-dxf`
+- [x] Export enthält: Raumkontur, Wandlinien, Öffnungen, Möbelkonturen
+- [x] Layer-Struktur und Einheiten/Skalierung definiert
+- [x] Codex implementiert DWG/DXF-Schreib-Logik; Claude Code verbindet API ↔ Codex-Modul
 
 ---
 
@@ -330,12 +332,12 @@ Prüf-API aufbauen; Codex implementiert Kollisionslogik.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-11-01, TASK-7-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] API: `POST /projects/:id/calculate-pricing`, `GET /projects/:id/price-summary`
-- [ ] Response: `{ net, vat, gross, contribution_margin, markup_pct }`
-- [ ] Codex-Preisregeln über Service-Schicht eingebunden
+- [x] API: `POST /projects/:id/calculate-pricing`, `GET /projects/:id/price-summary`
+- [x] Response: `{ net, vat, gross, contribution_margin, markup_pct }`
+- [x] Codex-Preisregeln über Service-Schicht eingebunden
 
 ---
 
@@ -345,13 +347,13 @@ Prüf-API aufbauen; Codex implementiert Kollisionslogik.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-12-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Tabellen: `quotes`, `quote_items`
-- [ ] API: `POST /projects/:id/create-quote`, `GET /quotes/:id`, `POST /quotes/:id/export-pdf`
-- [ ] Angebot enthält: Nummer, Gültig-bis, Freitext, Versionen
-- [ ] PDF light generierbar
+- [x] Tabellen: `quotes`, `quote_items`
+- [x] API: `POST /projects/:id/create-quote`, `GET /quotes/:id`, `POST /quotes/:id/export-pdf`
+- [x] Angebot enthält: Nummer, Gültig-bis, Freitext, Versionen
+- [x] PDF light generierbar
 
 ---
 
@@ -361,15 +363,15 @@ Prüf-API aufbauen; Codex implementiert Kollisionslogik.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-8-01, TASK-3-02
 **Priorität:** Soll
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Three.js/Babylon.js-Integration in Frontend
-- [ ] Floor-Polygon → trianguliert → gerendert
-- [ ] Wände extrudiert, Proxy-Meshes für Möbel
-- [ ] Orbit/Zoom/Pan funktioniert
-- [ ] DWG-/SKP-Referenzgeometrie ein-/ausblendbar
-- [ ] Preis-/Objektinfo beim Selektieren
+- [x] Three.js/Babylon.js-Integration in Frontend
+- [x] Floor-Polygon → trianguliert → gerendert
+- [x] Wände extrudiert, Proxy-Meshes für Möbel
+- [x] Orbit/Zoom/Pan funktioniert
+- [x] DWG-/SKP-Referenzgeometrie ein-/ausblendbar
+- [x] Preis-/Objektinfo beim Selektieren
 
 ---
 
@@ -379,17 +381,17 @@ Prüf-API aufbauen; Codex implementiert Kollisionslogik.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-13-01
 **Priorität:** Muss
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Ziel
 Render-Worker-Protokoll implementieren; Job-Queue und Worker-Kommunikation.
 
 ### Akzeptanzkriterien
-- [ ] Tabellen: `render_jobs`, `render_job_results`, `render_nodes`
-- [ ] API: Job anlegen, Status abfragen, Worker-Registrierung, Job-Fetch (HTTPS), Ergebnis-Upload
-- [ ] Status-Flow: `queued → assigned → running → done/failed`
-- [ ] Scene Payload erzeugen und an Worker übergeben
-- [ ] End-to-End: Planung → Job → Bild zurück
+- [x] Tabellen: `render_jobs`, `render_job_results`, `render_nodes`
+- [x] API: Job anlegen, Status abfragen, Worker-Registrierung, Job-Fetch (HTTPS), Ergebnis-Upload
+- [x] Status-Flow: `queued → assigned → running → done/failed`
+- [x] Scene Payload erzeugen und an Worker übergeben
+- [x] End-to-End: Planung → Job → Bild zurück
 
 ---
 
@@ -399,12 +401,12 @@ Render-Worker-Protokoll implementieren; Job-Queue und Worker-Kommunikation.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-12-01, TASK-13-01
 **Priorität:** Soll
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Tabellen: `customer_price_lists`, `customer_discounts`, `project_line_items`
-- [ ] CRM-Felder: `lead_status`, `quote_value`, `close_probability`
-- [ ] Exports: JSON, CSV, Webhook-Integration
+- [x] Tabellen: `customer_price_lists`, `customer_discounts`, `project_line_items`
+- [x] CRM-Felder: `lead_status`, `quote_value`, `close_probability`
+- [x] Exports: JSON, CSV, Webhook-Integration
 
 ---
 
@@ -414,12 +416,12 @@ Render-Worker-Protokoll implementieren; Job-Queue und Worker-Kommunikation.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-12-01
 **Priorität:** Soll
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Tabellen: `block_programs`, `block_definitions`, `block_groups`, `block_conditions`, `project_block_evaluations`
-- [ ] API: Block-Programme verwalten, Bewertungsendpunkt `POST /projects/:id/evaluate-blocks`
-- [ ] Codex implementiert Bewertungsalgorithmus; Claude Code verbindet
+- [x] Tabellen: `block_programs`, `block_definitions`, `block_groups`, `block_conditions`, `project_block_evaluations`
+- [x] API: Block-Programme verwalten, Bewertungsendpunkt `POST /projects/:id/evaluate-blocks`
+- [x] Codex implementiert Bewertungsalgorithmus; Claude Code verbindet
 
 ---
 
@@ -429,13 +431,13 @@ Render-Worker-Protokoll implementieren; Job-Queue und Worker-Kommunikation.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-3-02
 **Priorität:** Soll
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Asynchrone Importjobs für große DWG-/SKP-Dateien
-- [ ] API: `POST /imports/cad`, `POST /imports/skp`, `GET /imports/:id`
-- [ ] Prüfprotokoll: importiert / ignoriert / manuelle Nacharbeit
-- [ ] Layer-/Komponenten-Mapping speicherbar
+- [x] Asynchrone Importjobs für große DWG-/SKP-Dateien
+- [x] API: `POST /imports/cad`, `POST /imports/skp`, `GET /imports/:id`
+- [x] Prüfprotokoll: importiert / ignoriert / manuelle Nacharbeit
+- [x] Layer-/Komponenten-Mapping speicherbar
 
 ---
 
@@ -445,10 +447,10 @@ Render-Worker-Protokoll implementieren; Job-Queue und Worker-Kommunikation.
 **Zuständig:** Claude Code
 **Abhängigkeiten:** TASK-18-01, TASK-11-02
 **Priorität:** Kann
-**Status:** Offen
+**Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Import-/Export-Regressionstests orchestriert (Codex schreibt Tests)
-- [ ] Einheiten-/Skalierungsprüfung implementiert
-- [ ] Layer-Konventionen in `CAD_INTEROP.md` dokumentiert
-- [ ] Basis-Roundtrip DWG: Import → Bearbeitung → Export funktioniert
+- [x] Import-/Export-Regressionstests orchestriert (Codex schreibt Tests)
+- [x] Einheiten-/Skalierungsprüfung implementiert
+- [x] Layer-Konventionen in `CAD_INTEROP.md` dokumentiert
+- [x] Basis-Roundtrip DWG: Import → Bearbeitung → Export funktioniert

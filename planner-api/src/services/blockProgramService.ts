@@ -55,7 +55,18 @@ function toBlockTiers(value: Prisma.JsonValue): BlockTier[] {
     return []
   }
 
-  return value.filter(isBlockTier)
+  const tiers: BlockTier[] = []
+
+  for (const tier of value) {
+    if (isBlockTier(tier)) {
+      tiers.push({
+        min_value: tier.min_value,
+        discount_pct: tier.discount_pct,
+      })
+    }
+  }
+
+  return tiers
 }
 
 function getConditionMetric(

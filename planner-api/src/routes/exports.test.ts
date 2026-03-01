@@ -88,4 +88,46 @@ describe('exportRoutes', () => {
 
     await app.close()
   })
+
+  it('returns a clear staging error for native DWG exports by default', async () => {
+    const app = Fastify()
+    await app.register(exportRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/exports/dwg',
+      payload: createPayload(),
+    })
+
+    expect(response.statusCode).toBe(501)
+    expect(response.json()).toEqual({
+      error: 'DWG_EXPORT_NOT_AVAILABLE',
+      message: 'Native DWG export is not wired yet. Use /exports/dxf or set allow_dxf_fallback=true.',
+    })
+
+    await app.close()
+  })
+
+  it('can fall back from DWG export requests to DXF attachments when allowed', async () => {
+    const app = Fastify()
+    await app.register(exportRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/projects/11111111-1111-1111-1111-111111111111/export-dwg',
+      payload: {
+        ...createPayload(),
+        filename: 'kitchen-plan.dwg',
+        allow_dxf_fallback: true,
+      },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.headers['x-yakds-export-fallback']).toBe('dwg->dxf')
+    expect(response.headers['content-disposition']).toContain('kitchen-plan.dxf')
+    expect(response.headers['content-type']).toContain('application/dxf')
+    expect(response.body).toContain('YAKDS_WALLS')
+
+    await app.close()
+  })
 })

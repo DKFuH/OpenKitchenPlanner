@@ -109,13 +109,20 @@ describe('parseDxf', () => {
     const asset = parseDxf(dxf, 'unsupported.dxf');
 
     expect(asset.entities).toHaveLength(0);
-    expect(asset.protocol).toEqual([
-      {
-        entity_id: 'ELLIPSE-0',
-        status: 'ignored',
-        reason: 'Unsupported entity type ELLIPSE.'
-      }
-    ]);
+    expect(asset.protocol).toEqual(
+      expect.arrayContaining([
+        {
+          entity_id: null,
+          status: 'needs_review',
+          reason: 'DXF header did not specify $INSUNITS. Millimeters were assumed.'
+        },
+        {
+          entity_id: 'ELLIPSE-0',
+          status: 'ignored',
+          reason: 'Unsupported entity type ELLIPSE.'
+        }
+      ])
+    );
   });
 
   it('converts inches to millimeters using INSUNITS', () => {
@@ -158,11 +165,52 @@ describe('parseDxf', () => {
     const line = asset.entities[0];
 
     expect(asset.units).toBe('inch');
+    expect(asset.protocol[0]).toEqual({
+      entity_id: null,
+      status: 'imported',
+      reason: 'DXF units inch were normalized to millimeters.'
+    });
     expect(line).toMatchObject({
       geometry: {
         start: { x_mm: 25.4, y_mm: 0 },
         end: { x_mm: 50.8, y_mm: 0 }
       }
+    });
+  });
+
+  it('marks files without INSUNITS for manual scale review', () => {
+    const dxf = [
+      '0',
+      'SECTION',
+      '2',
+      'ENTITIES',
+      '0',
+      'LINE',
+      '5',
+      'A1',
+      '8',
+      '0',
+      '10',
+      '0',
+      '20',
+      '0',
+      '11',
+      '1000',
+      '21',
+      '0',
+      '0',
+      'ENDSEC',
+      '0',
+      'EOF'
+    ].join('\n');
+
+    const asset = parseDxf(dxf, 'missing-units.dxf');
+
+    expect(asset.units).toBe('mm');
+    expect(asset.protocol[0]).toEqual({
+      entity_id: null,
+      status: 'needs_review',
+      reason: 'DXF header did not specify $INSUNITS. Millimeters were assumed.'
     });
   });
 });

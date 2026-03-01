@@ -4,20 +4,22 @@
 
 **Zuständigkeit:** Polygonalgorithmen, Kollisionserkennung, Validatoren, Preisregeln, BOM-Berechnung, Import-/Export-Mapping, Tests, kleine isolierte Module
 
+> Stand 2026-03-01: Die gelisteten Codex-Tasks sind im aktuellen MVP-Stand umgesetzt. Interop-Restpunkte betreffen weiterhin native DWG-Binary-Pfade außerhalb des DXF-basierten Produktionspfads.
+
 > **Hinweis zu Prompts:** Jeden Prompt als erstes in Codex eingeben. Danach relevante Dateien aus `shared-schemas/src/` und `Docs/ROOM_MODEL.md` als Kontext anhängen.
 
 ---
 
 ## TASK-3-C01 – Polygon-Validierung
 
-**Sprint:** 3 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 3 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Selbstüberschneidungs-Check (Segment-Segment-Intersection)
-- [ ] Mindestkantenlänge prüfen (konfigurierbar, z. B. 100 mm)
-- [ ] Geschlossener Ring validieren (erster = letzter Punkt)
-- [ ] Funktion: `validatePolygon(vertices: Vertex[]): ValidationResult`
-- [ ] Unit-Tests für alle Fehlerfälle
+- [x] Selbstüberschneidungs-Check (Segment-Segment-Intersection)
+- [x] Mindestkantenlänge prüfen (konfigurierbar, z. B. 100 mm)
+- [x] Geschlossener Ring validieren (erster = letzter Punkt)
+- [x] Funktion: `validatePolygon(vertices: Vertex[]): ValidationResult`
+- [x] Unit-Tests für alle Fehlerfälle
 
 ### Codex-Prompt
 ```
@@ -50,13 +52,13 @@ Keine Abhängigkeiten außer Vanilla TypeScript. Keine Klassen, nur pure Funktio
 
 ## TASK-3-C02 – Polygon-Rendering auf Canvas
 
-**Sprint:** 3 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 3 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Polygon aus `Vertex[]` rendern (Konva.js oder reines Canvas)
-- [ ] Snap auf 0°/45°/90° beim Punkte setzen
-- [ ] Raster-Snap (konfigurierbarer Abstand)
-- [ ] Unit-Tests für Snap-Funktionen
+- [x] Polygon aus `Vertex[]` rendern (Konva.js oder reines Canvas)
+- [x] Snap auf 0°/45°/90° beim Punkte setzen
+- [x] Raster-Snap (konfigurierbarer Abstand)
+- [x] Unit-Tests für Snap-Funktionen
 
 ### Codex-Prompt
 ```
@@ -88,13 +90,13 @@ Unit-Tests in snapUtils.test.ts (vitest):
 
 ## TASK-4-C01 – Vertex-Verschiebung und Kantenlängenberechnung
 
-**Sprint:** 4 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 4 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] `moveVertex(polygon, index, newPos): Polygon`
-- [ ] `setEdgeLength(polygon, edgeIndex, lengthMm): Polygon`
-- [ ] `polylineToRoomBoundary(polyline): RoomBoundary`
-- [ ] Unit-Tests
+- [x] `moveVertex(polygon, index, newPos): Polygon`
+- [x] `setEdgeLength(polygon, edgeIndex, lengthMm): Polygon`
+- [x] `polylineToRoomBoundary(polyline): RoomBoundary`
+- [x] Unit-Tests
 
 ### Codex-Prompt
 ```
@@ -127,12 +129,12 @@ Pure Funktionen, kein Framework.
 
 ## TASK-5-C01 – Öffnungs-Validierung
 
-**Sprint:** 5 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 5 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] `validateOpening(wall, opening): ValidationResult`
-- [ ] `detectOpeningsFromCad(cadLayer): OpeningCandidate[]`
-- [ ] Unit-Tests
+- [x] `validateOpening(wall, opening): ValidationResult`
+- [x] `detectOpeningsFromCad(cadLayer): OpeningCandidate[]`
+- [x] Unit-Tests
 
 ### Codex-Prompt
 ```
@@ -164,12 +166,12 @@ Unit-Tests (vitest) für beide Funktionen.
 
 ## TASK-6-C01 – Höhenberechnung (Dachschrägen)
 
-**Sprint:** 6 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 6 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] `getAvailableHeight(constraints, point): number`
-- [ ] Mehrere Constraints → Minimum
-- [ ] Unit-Tests mit verschiedenen Dachgeometrien
+- [x] `getAvailableHeight(constraints, point): number`
+- [x] Mehrere Constraints → Minimum
+- [x] Unit-Tests mit verschiedenen Dachgeometrien
 
 ### Codex-Prompt
 ```
@@ -211,14 +213,14 @@ Unit-Tests (vitest):
 
 ## TASK-8-C01 – Wandbasierte Platzierungsalgorithmen
 
-**Sprint:** 8 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 8 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] `getWallInnerDirection(wall, polygon): Vector2D`
-- [ ] `snapToWall(dragPos, wall): number`
-- [ ] `getPlacementPosition(wall, offsetMm): Point2D`
-- [ ] `canPlaceOnWall(wall, offset, width, existingPlacements): boolean`
-- [ ] Unit-Tests für gerade und schräge Wände
+- [x] `getWallInnerDirection(wall, polygon): Vector2D`
+- [x] `snapToWall(dragPos, wall): number`
+- [x] `getPlacementPosition(wall, offsetMm): Point2D`
+- [x] `canPlaceOnWall(wall, offset, width, existingPlacements): boolean`
+- [x] Unit-Tests für gerade und schräge Wände
 
 ### Codex-Prompt
 ```
@@ -255,13 +257,13 @@ Unit-Tests (vitest) für alle 5 Funktionen.
 
 ## TASK-9-C01 – Kollisionsdetektions-Algorithmen
 
-**Sprint:** 9 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 9 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Object-vs-Object, Object-außerhalb-Raum, Object-vs-Opening
-- [ ] Mindestabstände, ungültiger Wandbereich
-- [ ] Hinweise: Sonderblende, Sonderzuschnitt, Montageaufwand
-- [ ] Unit-Tests für alle Kollisionstypen
+- [x] Object-vs-Object, Object-außerhalb-Raum, Object-vs-Opening
+- [x] Mindestabstände, ungültiger Wandbereich
+- [x] Hinweise: Sonderblende, Sonderzuschnitt, Montageaufwand
+- [x] Unit-Tests für alle Kollisionstypen
 
 ### Codex-Prompt
 ```
@@ -302,12 +304,12 @@ Unit-Tests (vitest) für alle 5 Funktionen inkl. Grenzfälle.
 
 ## TASK-10-C01 – Höhenprüfung gegen Dachschrägen
 
-**Sprint:** 10 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 10 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] `checkHeightVsConstraints(obj, constraints): HeightViolation[]`
-- [ ] Flags: `requires_customization`, `height_variant`, `labor_surcharge`
-- [ ] Unit-Tests
+- [x] `checkHeightVsConstraints(obj, constraints): HeightViolation[]`
+- [x] Flags: `requires_customization`, `height_variant`, `labor_surcharge`
+- [x] Unit-Tests
 
 ### Codex-Prompt
 ```
@@ -344,12 +346,12 @@ Unit-Tests (vitest) mit verschiedenen Szenarien.
 
 ## TASK-11-C01 – BOM-Berechnungslogik
 
-**Sprint:** 11 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 11 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] `calculateBOM(project): BOMLine[]`
-- [ ] Alle Positionstypen: Möbel, Geräte, Zubehör, Zuschläge, Montage, Fracht
-- [ ] Unit-Tests mit Beispielprojekt
+- [x] `calculateBOM(project): BOMLine[]`
+- [x] Alle Positionstypen: Möbel, Geräte, Zubehör, Zuschläge, Montage, Fracht
+- [x] Unit-Tests mit Beispielprojekt
 
 ### Codex-Prompt
 ```
@@ -389,12 +391,12 @@ Unit-Tests (vitest):
 
 ## TASK-11-C02 – DXF-Schreib-Logik (Export)
 
-**Sprint:** 11.5 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 11.5 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] `exportToDxf(project): string`
-- [ ] Layer-Struktur gemäß CAD_INTEROP.md
-- [ ] Integrations-Test mit Referenz-DXF
+- [x] `exportToDxf(project): string`
+- [x] Layer-Struktur gemäß CAD_INTEROP.md
+- [x] Integrations-Test mit Referenz-DXF
 
 ### Codex-Prompt
 ```
@@ -432,12 +434,12 @@ Keine anderen Deps außer dxf-writer.
 
 ## TASK-12-C01 – Preisregel-Berechnungen
 
-**Sprint:** 12 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 12 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] Alle 9 Preisstufen als pure Funktionen
-- [ ] `calculatePriceSummary(bomLines, settings): PriceSummary`
-- [ ] Unit-Tests inkl. Grenzfälle (0-Rabatt, 100%-Rabatt)
+- [x] Alle 9 Preisstufen als pure Funktionen
+- [x] `calculatePriceSummary(bomLines, settings): PriceSummary`
+- [x] Unit-Tests inkl. Grenzfälle (0-Rabatt, 100%-Rabatt)
 
 ### Codex-Prompt
 ```
@@ -477,12 +479,12 @@ Unit-Tests (vitest):
 
 ## TASK-3-C03 – DXF-Import-Parser
 
-**Sprint:** 3.5 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Offen
+**Sprint:** 3.5 | **Zuständig:** Codex | **Priorität:** Muss | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] DXF lesen: Linien, Polylinien, Layer
-- [ ] Output: `ImportAsset`-Format gemäß CAD_INTEROP.md
-- [ ] Unit-Tests mit Beispiel-DXF
+- [x] DXF lesen: Linien, Polylinien, Layer
+- [x] Output: `ImportAsset`-Format gemäß CAD_INTEROP.md
+- [x] Unit-Tests mit Beispiel-DXF
 
 ### Codex-Prompt
 ```
@@ -513,12 +515,12 @@ Unit-Tests (vitest):
 
 ## TASK-7-C01 – SKP-Import-Parser
 
-**Sprint:** 7.5 | **Zuständig:** Codex | **Priorität:** Kann | **Status:** Offen
+**Sprint:** 7.5 | **Zuständig:** Codex | **Priorität:** Kann | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] SKP Komponenten + Metadaten extrahieren
-- [ ] Output: `SkpReferenceModel`
-- [ ] Unit-Tests mit Beispiel-SKP
+- [x] SKP Komponenten + Metadaten extrahieren
+- [x] Output: `SkpReferenceModel`
+- [x] Unit-Tests mit Beispiel-SKP
 
 ### Codex-Prompt
 ```
@@ -549,12 +551,12 @@ Unit-Tests (vitest) mit Mock-Daten (kein echtes SKP nötig für Tests).
 
 ## TASK-17-C01 – Block-Bewertungsalgorithmus
 
-**Sprint:** 17 | **Zuständig:** Codex | **Priorität:** Soll | **Status:** Offen
+**Sprint:** 17 | **Zuständig:** Codex | **Priorität:** Soll | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Akzeptanzkriterien
-- [ ] `evaluateBlock(project, block): BlockEvaluation`
-- [ ] `findBestBlock(project, blocks): BlockEvaluation`
-- [ ] Unit-Tests mit mehreren Blockmodellen
+- [x] `evaluateBlock(project, block): BlockEvaluation`
+- [x] `findBestBlock(project, blocks): BlockEvaluation`
+- [x] Unit-Tests mit mehreren Blockmodellen
 
 ### Codex-Prompt
 ```
@@ -601,7 +603,7 @@ Unit-Tests (vitest):
 
 ## TASK-19-C01 – Import-/Export-Regressionstests
 
-**Sprint:** 19 | **Zuständig:** Codex | **Priorität:** Kann | **Status:** Offen
+**Sprint:** 19 | **Zuständig:** Codex | **Priorität:** Kann | **Status:** Erledigt (MVP, 2026-03-01)
 
 ### Codex-Prompt
 ```

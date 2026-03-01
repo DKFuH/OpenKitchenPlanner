@@ -6,6 +6,8 @@ const { prismaMock } = vi.hoisted(() => ({
     project: { findUnique: vi.fn() },
     quote: { findFirst: vi.fn() },
     projectVersion: { findFirst: vi.fn() },
+    blockProgram: { findUnique: vi.fn() },
+    projectBlockEvaluation: { create: vi.fn() },
   },
 }))
 
@@ -64,9 +66,14 @@ function createPriceSummarySnapshot() {
 describe('pricingRoutes', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    prismaMock.project.findUnique.mockResolvedValue({ id: '11111111-1111-1111-1111-111111111111' })
+    prismaMock.project.findUnique.mockResolvedValue({
+      id: '11111111-1111-1111-1111-111111111111',
+      lead_status: 'quoted',
+    })
     prismaMock.quote.findFirst.mockResolvedValue(null)
     prismaMock.projectVersion.findFirst.mockResolvedValue(null)
+    prismaMock.blockProgram.findUnique.mockResolvedValue(null)
+    prismaMock.projectBlockEvaluation.create.mockResolvedValue({ id: 'eval-1' })
   })
 
   it('returns a pricing summary for preview requests', async () => {
@@ -203,6 +210,88 @@ describe('pricingRoutes', () => {
         price_advantage_net: 70,
         recommended: true,
       },
+    })
+
+    await app.close()
+  })
+
+  it('evaluates and persists a stored block program for a project', async () => {
+    prismaMock.quote.findFirst.mockResolvedValue({
+      price_snapshot: createPriceSummarySnapshot(),
+    })
+    prismaMock.blockProgram.findUnique.mockResolvedValue({
+      id: 'aaaaaaaa-1111-1111-1111-111111111111',
+      name: 'Hersteller Block',
+      groups: [],
+      conditions: [],
+      definitions: [
+        {
+          id: 'block-def-1',
+          name: 'Qualified Block',
+          basis: 'purchase_price',
+          tiers: [{ min_value: 600, discount_pct: 12 }],
+          sort_order: 0,
+          group: null,
+          conditions: [{ id: 'cond-1', block_definition_id: 'block-def-1', field: 'lead_status', operator: 'eq', value: 'quoted' }],
+        },
+        {
+          id: 'block-def-2',
+          name: 'Lost Block',
+          basis: 'purchase_price',
+          tiers: [{ min_value: 600, discount_pct: 20 }],
+          sort_order: 1,
+          group: null,
+          conditions: [{ id: 'cond-2', block_definition_id: 'block-def-2', field: 'lead_status', operator: 'eq', value: 'lost' }],
+        },
+      ],
+    })
+    prismaMock.projectBlockEvaluation.create.mockResolvedValue({
+      id: 'eval-program-1',
+    })
+
+    const app = Fastify()
+    await app.register(pricingRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/projects/11111111-1111-1111-1111-111111111111/evaluate-blocks',
+      payload: {
+        program_id: 'aaaaaaaa-1111-1111-1111-111111111111',
+      },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      evaluation_id: 'eval-program-1',
+      program: {
+        id: 'aaaaaaaa-1111-1111-1111-111111111111',
+        name: 'Hersteller Block',
+      },
+      evaluations: [
+        {
+          block_id: 'block-def-1',
+          block_name: 'Qualified Block',
+          basis_value: 700,
+          applied_discount_pct: 12,
+          price_advantage_net: 84,
+          recommended: false,
+        },
+      ],
+      best_block: {
+        block_id: 'block-def-1',
+        block_name: 'Qualified Block',
+        basis_value: 700,
+        applied_discount_pct: 12,
+        price_advantage_net: 84,
+        recommended: true,
+      },
+    })
+    expect(prismaMock.projectBlockEvaluation.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        project_id: '11111111-1111-1111-1111-111111111111',
+        program_id: 'aaaaaaaa-1111-1111-1111-111111111111',
+        best_block_definition_id: 'block-def-1',
+      }),
     })
 
     await app.close()

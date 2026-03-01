@@ -224,6 +224,36 @@ function buildEmptyImportAsset(sourceFilename: string): ImportAsset {
   };
 }
 
+function createUnitProtocolEntry(document: DxfDocument, units: CadUnits): ImportProtocolEntry | null {
+  const insUnits = document.header?.$INSUNITS;
+
+  if (insUnits === undefined) {
+    return {
+      entity_id: null,
+      status: 'needs_review',
+      reason: 'DXF header did not specify $INSUNITS. Millimeters were assumed.'
+    };
+  }
+
+  if (!(insUnits in DXF_UNIT_FACTORS)) {
+    return {
+      entity_id: null,
+      status: 'needs_review',
+      reason: `DXF uses unsupported INSUNITS code ${insUnits}. Millimeters were assumed.`
+    };
+  }
+
+  if (units !== 'mm') {
+    return {
+      entity_id: null,
+      status: 'imported',
+      reason: `DXF units ${units} were normalized to millimeters.`
+    };
+  }
+
+  return null;
+}
+
 export function parseDxf(dxfString: string, sourceFilename: string): ImportAsset {
   if (dxfString.trim().length === 0) {
     return buildEmptyImportAsset(sourceFilename);
@@ -311,6 +341,11 @@ export function parseDxf(dxfString: string, sourceFilename: string): ImportAsset
       hasBoundingPoints = true;
     });
   });
+
+  const unitProtocolEntry = createUnitProtocolEntry(document, unitConfig.units);
+  if (unitProtocolEntry) {
+    protocol.unshift(unitProtocolEntry);
+  }
 
   return {
     id: randomUUID(),

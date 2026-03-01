@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify'
+import type { Prisma } from '@prisma/client'
 import { z } from 'zod'
 import type { BlockDefinition, BOMLine, GlobalDiscountSettings, PriceSummary } from '@yakds/shared-schemas'
 
@@ -236,9 +237,11 @@ export async function pricingRoutes(app: FastifyInstance) {
           project_id: parsedParams.data.projectId,
           program_id: parsed.data.program_id,
           best_block_definition_id: result.best_block?.block_id ?? null,
-          price_summary: priceSummary as Prisma.InputJsonValue,
+          price_summary: priceSummary as unknown as Prisma.InputJsonValue,
           evaluations: result.evaluations as unknown as Prisma.InputJsonValue,
-          best_block: (result.best_block ?? null) as Prisma.InputJsonValue | null,
+          ...(result.best_block
+            ? { best_block: result.best_block as unknown as Prisma.InputJsonValue }
+            : {}),
         },
       })
 

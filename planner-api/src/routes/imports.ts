@@ -4,6 +4,7 @@ import type { Prisma } from '@prisma/client'
 import { z } from 'zod'
 import { parseDxf } from '@yakds/dxf-import'
 import { parseSkp } from '@yakds/skp-import'
+import type { CadLayer } from '@yakds/shared-schemas'
 import { prisma } from '../db.js'
 import { sendBadRequest, sendNotFound, sendServerError } from '../errors.js'
 
@@ -310,6 +311,41 @@ async function failImportJob(importJobId: string, error: unknown) {
   return message
 }
 
+function getImportAssetLayers(importAsset: unknown): CadLayer[] {
+  if (!importAsset || typeof importAsset !== 'object' || !('layers' in importAsset)) {
+    return []
+  }
+
+  const layers = (importAsset as { layers?: unknown }).layers
+  if (!Array.isArray(layers)) {
+    return []
+  }
+
+  return layers.filter((layer): layer is CadLayer => {
+    return (
+      typeof layer === 'object' &&
+      layer !== null &&
+      'id' in layer &&
+      'name' in layer &&
+      'visible' in layer &&
+      'entity_count' in layer
+    )
+  })
+}
+
+function getImportAssetMappingState(importAsset: unknown): Record<string, unknown> {
+  if (!importAsset || typeof importAsset !== 'object' || !('mapping_state' in importAsset)) {
+    return {}
+  }
+
+  const mappingState = (importAsset as { mapping_state?: unknown }).mapping_state
+  if (!mappingState || typeof mappingState !== 'object' || Array.isArray(mappingState)) {
+    return {}
+  }
+
+  return mappingState as Record<string, unknown>
+}
+
 export async function importRoutes(app: FastifyInstance) {
   app.post('/imports/preview/dxf', async (request, reply) => {
     const parsed = DxfPreviewSchema.safeParse(request.body)
@@ -474,6 +510,52 @@ export async function importRoutes(app: FastifyInstance) {
     }
 
     return reply.send(importJob)
+  })
+
+  app.get('/imports/:id/layers', async (request, reply) => {
+    const parsed = ImportJobParamsSchema.safeParse(request.params)
+    if (!parsed.success) {
+      return sendBadRequest(reply, parsed.error.errors[0].message)
+    }
+
+    const importJob = await prisma.importJob.findUnique({
+      where: { id: parsed.data.id },
+    })
+    if (!importJob) {
+      return sendNotFound(reply, 'Import job not found')
+    }
+
+    if (!importJob.import_asset) {
+      return reply.status(409).send({
+        error: 'IMPORT_ASSET_NOT_READY',
+        message: 'Import asset is not available yet.',
+      })
+    }
+
+    return reply.send(getImportAssetLayers(importJob.import_asset))
+  })
+
+  app.get('/imports/:id/mapping-state', async (request, reply) => {
+    const parsed = ImportJobParamsSchema.safeParse(request.params)
+    if (!parsed.success) {
+      return sendBadRequest(reply, parsed.error.errors[0].message)
+    }
+
+    const importJob = await prisma.importJob.findUnique({
+      where: { id: parsed.data.id },
+    })
+    if (!importJob) {
+      return sendNotFound(reply, 'Import job not found')
+    }
+
+    if (!importJob.import_asset) {
+      return reply.status(409).send({
+        error: 'IMPORT_ASSET_NOT_READY',
+        message: 'Import asset is not available yet.',
+      })
+    }
+
+    return reply.send(getImportAssetMappingState(importJob.import_asset))
   })
 
   app.post('/imports', async (request, reply) => {

@@ -3,10 +3,14 @@ import Drawing from 'dxf-writer';
 import { withoutDuplicateClosure } from '@yakds/shared-schemas';
 import type { ExportPayload, Opening, Point2D, WallSegment2D } from '@yakds/shared-schemas';
 
-const ROOM_LAYER = 'YAKDS_ROOM';
-const WALLS_LAYER = 'YAKDS_WALLS';
-const OPENINGS_LAYER = 'YAKDS_OPENINGS';
-const FURNITURE_LAYER = 'YAKDS_FURNITURE';
+export const CAD_EXPORT_LAYERS = {
+  room: 'YAKDS_ROOM',
+  walls: 'YAKDS_WALLS',
+  openings: 'YAKDS_OPENINGS',
+  furniture: 'YAKDS_FURNITURE'
+} as const;
+
+export const CAD_EXPORT_LAYER_NAMES = Object.values(CAD_EXPORT_LAYERS);
 
 function wallDirection(wall: WallSegment2D): { x: number; y: number } {
   const dx = wall.end.x_mm - wall.start.x_mm;
@@ -42,26 +46,26 @@ export function exportToDxf(payload: ExportPayload): string {
   const drawing = new Drawing();
 
   drawing.setUnits('Millimeters');
-  drawing.addLayer(ROOM_LAYER, Drawing.ACI.WHITE, 'CONTINUOUS');
-  drawing.addLayer(WALLS_LAYER, 8, 'CONTINUOUS');
-  drawing.addLayer(OPENINGS_LAYER, Drawing.ACI.CYAN, 'CONTINUOUS');
-  drawing.addLayer(FURNITURE_LAYER, Drawing.ACI.YELLOW, 'CONTINUOUS');
+  drawing.addLayer(CAD_EXPORT_LAYERS.room, Drawing.ACI.WHITE, 'CONTINUOUS');
+  drawing.addLayer(CAD_EXPORT_LAYERS.walls, 8, 'CONTINUOUS');
+  drawing.addLayer(CAD_EXPORT_LAYERS.openings, Drawing.ACI.CYAN, 'CONTINUOUS');
+  drawing.addLayer(CAD_EXPORT_LAYERS.furniture, Drawing.ACI.YELLOW, 'CONTINUOUS');
 
   const roomBoundary = withoutDuplicateClosure(payload.room.boundary);
   if (roomBoundary.length >= 3) {
-    drawing.setActiveLayer(ROOM_LAYER);
+    drawing.setActiveLayer(CAD_EXPORT_LAYERS.room);
     drawing.drawPolyline(
       roomBoundary.map((vertex) => [vertex.x_mm, vertex.y_mm]),
       true
     );
   }
 
-  drawing.setActiveLayer(WALLS_LAYER);
+  drawing.setActiveLayer(CAD_EXPORT_LAYERS.walls);
   payload.wallSegments.forEach((wall) => {
     drawing.drawLine(wall.start.x_mm, wall.start.y_mm, wall.end.x_mm, wall.end.y_mm);
   });
 
-  drawing.setActiveLayer(OPENINGS_LAYER);
+  drawing.setActiveLayer(CAD_EXPORT_LAYERS.openings);
   const wallsById = new Map(payload.wallSegments.map((wall) => [wall.id, wall]));
   payload.openings.forEach((opening) => {
     const wall = wallsById.get(opening.wall_id);
@@ -71,7 +75,7 @@ export function exportToDxf(payload: ExportPayload): string {
   });
 
   if (payload.includeFurniture) {
-    drawing.setActiveLayer(FURNITURE_LAYER);
+    drawing.setActiveLayer(CAD_EXPORT_LAYERS.furniture);
     payload.furniture.forEach((item) => {
       drawing.drawRect(
         item.footprintRect.min.x_mm,

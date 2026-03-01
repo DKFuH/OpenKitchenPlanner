@@ -321,6 +321,156 @@ describe('importRoutes', () => {
     await app.close()
   })
 
+  it('returns stored CAD layers for an import job', async () => {
+    persistedJob = createImportJob({
+      id: importJobId,
+      status: 'done',
+      source_format: 'dxf',
+      source_filename: 'room.dxf',
+      import_asset: {
+        id: 'asset-2',
+        import_job_id: importJobId,
+        layers: [
+          {
+            id: 'layer-Walls',
+            name: 'Walls',
+            color: '7',
+            visible: true,
+            entity_count: 1,
+          },
+          {
+            id: 'layer-Dims',
+            name: 'Dims',
+            color: '3',
+            visible: false,
+            entity_count: 0,
+          },
+        ],
+      },
+      completed_at: new Date('2026-03-01T10:05:00.000Z'),
+    })
+
+    const app = Fastify()
+    await app.register(importRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/v1/imports/${importJobId}/layers`,
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual([
+      {
+        id: 'layer-Walls',
+        name: 'Walls',
+        color: '7',
+        visible: true,
+        entity_count: 1,
+      },
+      {
+        id: 'layer-Dims',
+        name: 'Dims',
+        color: '3',
+        visible: false,
+        entity_count: 0,
+      },
+    ])
+
+    await app.close()
+  })
+
+  it('returns stored mapping state for an import job', async () => {
+    persistedJob = createImportJob({
+      id: importJobId,
+      status: 'done',
+      source_format: 'skp',
+      source_filename: 'reference.skp',
+      import_asset: {
+        id: 'asset-3',
+        import_job_id: importJobId,
+        mapping_state: {
+          components: {
+            'guid-1': {
+              target_type: 'appliance',
+              catalog_item_id: 'appl-60',
+              label: 'Backofen',
+            },
+          },
+        },
+      },
+      completed_at: new Date('2026-03-01T10:05:00.000Z'),
+    })
+
+    const app = Fastify()
+    await app.register(importRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/v1/imports/${importJobId}/mapping-state`,
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      components: {
+        'guid-1': {
+          target_type: 'appliance',
+          catalog_item_id: 'appl-60',
+          label: 'Backofen',
+        },
+      },
+    })
+
+    await app.close()
+  })
+
+  it('returns 409 when layers are requested before an import asset exists', async () => {
+    persistedJob = createImportJob({
+      id: importJobId,
+      status: 'processing',
+      import_asset: null,
+    })
+
+    const app = Fastify()
+    await app.register(importRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/v1/imports/${importJobId}/layers`,
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({
+      error: 'IMPORT_ASSET_NOT_READY',
+      message: 'Import asset is not available yet.',
+    })
+
+    await app.close()
+  })
+
+  it('returns 409 when mapping state is requested before an import asset exists', async () => {
+    persistedJob = createImportJob({
+      id: importJobId,
+      status: 'processing',
+      import_asset: null,
+    })
+
+    const app = Fastify()
+    await app.register(importRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/v1/imports/${importJobId}/mapping-state`,
+    })
+
+    expect(response.statusCode).toBe(409)
+    expect(response.json()).toEqual({
+      error: 'IMPORT_ASSET_NOT_READY',
+      message: 'Import asset is not available yet.',
+    })
+
+    await app.close()
+  })
+
   it('rejects malformed CAD import payloads', async () => {
     const app = Fastify()
     await app.register(importRoutes, { prefix: '/api/v1' })
@@ -371,6 +521,42 @@ describe('importRoutes', () => {
     const response = await app.inject({
       method: 'GET',
       url: '/api/v1/imports/33333333-3333-3333-3333-333333333333',
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(response.json()).toMatchObject({
+      error: 'NOT_FOUND',
+      message: 'Import job not found',
+    })
+
+    await app.close()
+  })
+
+  it('returns 404 for unknown import job layers', async () => {
+    const app = Fastify()
+    await app.register(importRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/imports/33333333-3333-3333-3333-333333333333/layers',
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(response.json()).toMatchObject({
+      error: 'NOT_FOUND',
+      message: 'Import job not found',
+    })
+
+    await app.close()
+  })
+
+  it('returns 404 for unknown import job mapping state', async () => {
+    const app = Fastify()
+    await app.register(importRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/imports/33333333-3333-3333-3333-333333333333/mapping-state',
     })
 
     expect(response.statusCode).toBe(404)

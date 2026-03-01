@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ExportPayload } from '@shared/types';
-import { exportToDxf } from './dxfExporter';
+import { CAD_EXPORT_LAYER_NAMES, exportToDxf } from './dxfExporter';
 
 function createPayload(includeFurniture = true): ExportPayload {
   return {
@@ -46,10 +46,9 @@ describe('dxfExporter', () => {
   it('exports DXF strings with the required layers', () => {
     const output = exportToDxf(createPayload());
 
-    expect(output).toContain('YAKDS_ROOM');
-    expect(output).toContain('YAKDS_WALLS');
-    expect(output).toContain('YAKDS_OPENINGS');
-    expect(output).toContain('YAKDS_FURNITURE');
+    CAD_EXPORT_LAYER_NAMES.forEach((layerName) => {
+      expect(output).toContain(layerName);
+    });
   });
 
   it('writes millimeter units into the DXF header', () => {
