@@ -38,6 +38,11 @@ model Project {
   name              String
   description       String?
   status            ProjectStatus @default(active)
+  project_status    ProjectWorkflowStatus @default(lead)
+  deadline          DateTime?
+  priority          ProjectPriority @default(medium)
+  assigned_to       String?
+  progress_pct      Int @default(0)
   lead_status       LeadStatus @default(new)
   quote_value       Float?
   close_probability Int?
@@ -54,6 +59,7 @@ model Project {
   quotes            Quote[]
   render_jobs       RenderJob[]
   import_jobs       ImportJob[]
+  documents         Document[]
   customer_price_lists CustomerPriceList[]
   customer_discounts CustomerDiscount[]
   project_line_items ProjectLineItem[]
@@ -65,6 +71,22 @@ model Project {
 enum ProjectStatus {
   active
   archived
+}
+
+enum ProjectWorkflowStatus {
+  lead
+  planning
+  quoted
+  contract
+  production
+  installed
+  archived
+}
+
+enum ProjectPriority {
+  low
+  medium
+  high
 }
 
 enum LeadStatus {
@@ -516,6 +538,39 @@ enum ImportJobStatus {
   processing
   done
   failed
+}
+
+// ─────────────────────────────────────────
+// PHASE 3 – Sprint 26: Dokumentenmanagement
+// ─────────────────────────────────────────
+
+model Document {
+  id          String       @id @default(uuid())
+  project_id  String
+  tenant_id   String
+  filename    String
+  mime_type   String
+  size_bytes  Int
+  uploaded_by String
+  uploaded_at DateTime     @default(now())
+  type        DocumentType
+  tags        String[]     @default([])
+  is_public   Boolean      @default(false)
+
+  project     Project      @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, project_id])
+  @@index([project_id, type])
+  @@map("documents")
+}
+
+enum DocumentType {
+  quote_pdf
+  render_image
+  cad_import
+  email
+  contract
+  other
 }
 
 // ─────────────────────────────────────────
