@@ -121,15 +121,15 @@ Mandantenisolation für Export/Import-Endpunkte durchgängig erzwingen.
 **Zuständig:** Codex
 **Abhängigkeiten:** TASK-20-C01
 **Priorität:** Soll
-**Status:** Offen
+**Status:** Erledigt
 
 ### Ziel
 Automatisch generierte Langteile (`GeneratedItem`) müssen deterministisch neu aufgebaut und korrekt bepreist werden.
 
 ### Akzeptanzkriterien
-- [ ] `GeneratedItem` fließt in `priceCalculator.ts` ein.
-- [ ] Rebuild entfernt nur verwaiste generierte Segmente desselben Projekts.
-- [ ] `is_generated` bleibt über Speichern/Laden stabil.
+- [x] `GeneratedItem` fließt in `priceCalculator.ts` ein.
+- [x] Rebuild entfernt nur verwaiste generierte Segmente desselben Projekts.
+- [x] `is_generated` bleibt über Speichern/Laden stabil.
 
 ### Technische Hinweise
 - End-to-End-Szenario: Schrank verschieben -> Auto-Completion -> BOM ersetzt alte Segmente durch neue, bepreiste Segmente.
@@ -145,15 +145,15 @@ Automatisch generierte Langteile (`GeneratedItem`) müssen deterministisch neu a
 **Zuständig:** Claude Code
 **Abhängigkeiten:** keine
 **Priorität:** Soll
-**Status:** In Arbeit
+**Status:** Erledigt
 
 ### Ziel
 Konfigurator für Herstellerartikel um vollständige Options-/Variantenführung und Preis-Preview ergänzen.
 
 ### Akzeptanzkriterien
-- [ ] `ArticleOption` (`enum`) wird dynamisch auf Dropdowns gemappt.
-- [ ] Auswahl aktualisiert `selectionOptions`/Editor-State deterministisch.
-- [ ] Variantenpreis wird als Live-Preview im Konfigurator angezeigt.
+- [x] `ArticleOption` (`enum`) wird dynamisch auf Dropdowns gemappt.
+- [x] Auswahl aktualisiert `selectionOptions`/Editor-State deterministisch.
+- [x] Variantenpreis wird als Live-Preview im Konfigurator angezeigt.
 
 ### Technische Hinweise
 - Fokus: `LeftSidebar`, `RightSidebar`/`KonfiguratorPanel`, BOM-Payload-Aufbau im Editor.

@@ -1996,8 +1996,8 @@ Die offenen P0/P1-Lücken aus Phase 2 in eine verbindliche, sprintfähige Abarbe
 - [ ] **TASK-23-S01 (P1 Security):** Tenant-Scoping für `exports.ts` und `imports.ts` vollständig erzwingen.
 - [ ] **TASK-22-L01 (P0 Logic):** Kollision über Eck mit World-Polygon + SAT stabil lösen (`COLL-001`).
 - [ ] **TASK-20-C01 (P0 Price):** `CatalogArticle`/`article_variant_id` in BOM + Preisfindung > 0 EUR integrieren.
-- [ ] **TASK-21-A01 (P1 Auto-Completion):** Deterministischer Rebuild + Preisintegration für `GeneratedItem` absichern.
-- [ ] **TASK-20-F01 (P1 Frontend):** Varianten-Selector mit dynamischem Options-Mapping + Preis-Preview finalisieren.
+- [x] **TASK-21-A01 (P1 Auto-Completion):** Deterministischer Rebuild + Preisintegration für `GeneratedItem` absichern.
+- [x] **TASK-20-F01 (P1 Frontend):** Varianten-Selector mit dynamischem Options-Mapping + Preis-Preview finalisieren.
 
 ### Definition of Ready (DoR)
 

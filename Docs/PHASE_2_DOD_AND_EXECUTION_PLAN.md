@@ -111,7 +111,7 @@ Stand: 2026-03-01
 - **Zuständig:** Codex
 - **Abhängigkeiten:** TASK-20-C01
 - **Priorität:** Soll (P1)
-- **Status:** Offen
+- **Status:** Erledigt
 - **Ziel:** Verknüpfung von autogenerierten Langteilen mit Kalkulation stabilisieren.
 
 **Akzeptanzkriterien**
@@ -134,7 +134,7 @@ Stand: 2026-03-01
 - **Zuständig:** Claude Code
 - **Abhängigkeiten:** keine
 - **Priorität:** Soll (P1)
-- **Status:** In Arbeit
+- **Status:** Erledigt
 - **Ziel:** `KonfiguratorPanel` für Fronten- und Griffauswahl vervollständigen.
 
 **Akzeptanzkriterien**
