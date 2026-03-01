@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
-    project: { findUnique: vi.fn() },
+    project: { findUnique: vi.fn(), findFirst: vi.fn() },
     quote: { findFirst: vi.fn() },
     projectVersion: { findFirst: vi.fn() },
     catalogIndex: { findMany: vi.fn() },
@@ -71,6 +71,9 @@ describe('pricingRoutes', () => {
       id: '11111111-1111-1111-1111-111111111111',
       lead_status: 'quoted',
     })
+    prismaMock.project.findFirst.mockResolvedValue({
+      id: '11111111-1111-1111-1111-111111111111',
+    })
     prismaMock.quote.findFirst.mockResolvedValue(null)
     prismaMock.projectVersion.findFirst.mockResolvedValue(null)
     prismaMock.catalogIndex.findMany.mockResolvedValue([])
@@ -97,6 +100,9 @@ describe('pricingRoutes', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/v1/projects/11111111-1111-1111-1111-111111111111/calculate-pricing',
+      headers: {
+        'x-tenant-id': 'tenant-1',
+      },
       payload: {
         bom_lines: [createBomLine()],
         settings: {
@@ -118,6 +124,36 @@ describe('pricingRoutes', () => {
         sales_index: 1.1,
       }),
     ])
+    expect(prismaMock.project.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: '11111111-1111-1111-1111-111111111111',
+        tenant_id: 'tenant-1',
+      },
+      select: { id: true },
+    })
+
+    await app.close()
+  })
+
+  it('rejects /projects/:projectId/calculate-pricing without tenant scope', async () => {
+    const app = Fastify()
+    await app.register(pricingRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/projects/11111111-1111-1111-1111-111111111111/calculate-pricing',
+      payload: {
+        bom_lines: [createBomLine()],
+        settings: {
+          project_id: 'project-12',
+          global_discount_pct: 0,
+          extra_costs: [],
+        },
+      },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(prismaMock.project.findFirst).not.toHaveBeenCalled()
 
     await app.close()
   })

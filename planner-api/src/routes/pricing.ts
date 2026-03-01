@@ -4,10 +4,15 @@ import { z } from 'zod'
 import type { BlockDefinition, BOMLine, GlobalDiscountSettings, PriceSummary } from '@yakds/shared-schemas'
 
 import { prisma } from '../db.js'
-import { sendBadRequest, sendNotFound } from '../errors.js'
+import { sendBadRequest, sendForbidden, sendNotFound } from '../errors.js'
 import { getEligibleProgramBlocks } from '../services/blockProgramService.js'
 import { evaluateBlock, findBestBlock } from '../services/blockEvaluator.js'
 import { calculatePriceSummary } from '../services/priceCalculator.js'
+
+type TenantAwareRequest = {
+  tenantId?: string | null
+  headers?: Record<string, string | string[] | undefined>
+}
 
 type CatalogIndexRecord = {
   id: string
@@ -114,6 +119,19 @@ const EvaluateBlocksRequestSchema = z.object({
 
 function calculatePricingPreview(lines: BOMLine[], settings: GlobalDiscountSettings) {
   return calculatePriceSummary(lines, settings)
+}
+
+function getTenantId(request: TenantAwareRequest): string | null {
+  if (request.tenantId) {
+    return request.tenantId
+  }
+
+  const tenantHeader = request.headers?.['x-tenant-id']
+  if (!tenantHeader) {
+    return null
+  }
+
+  return Array.isArray(tenantHeader) ? (tenantHeader[0] ?? null) : tenantHeader
 }
 
 function roundMoney(value: number): number {
@@ -337,12 +355,29 @@ export async function pricingRoutes(app: FastifyInstance) {
   }
 
   const projectPricingHandler = async (
-    request: { params: unknown; body: unknown },
+    request: { params: unknown; body: unknown; tenantId?: string | null; headers?: Record<string, string | string[] | undefined> },
     reply: { send: (payload: unknown) => unknown },
   ) => {
+    const tenantId = getTenantId(request)
+    if (!tenantId) {
+      return sendForbidden(reply as never, 'Tenant scope is required')
+    }
+
     const parsedParams = ProjectParamsSchema.safeParse(request.params)
     if (!parsedParams.success) {
       return sendBadRequest(reply as never, parsedParams.error.errors[0].message)
+    }
+
+    const project = await prisma.project.findFirst({
+      where: {
+        id: parsedParams.data.projectId,
+        tenant_id: tenantId,
+      },
+      select: { id: true },
+    })
+
+    if (!project) {
+      return sendNotFound(reply as never, 'Project not found in tenant scope')
     }
 
     const parsed = PricingPreviewRequestSchema.safeParse(request.body)
