@@ -1,0 +1,137 @@
+# ROADMAP.md
+
+Sprint-Planung für MVP (Sprints 0–19) und Phase 2 (Sprints 20–24).
+
+---
+
+## MVP – Sprints 0–19
+
+**Zielbild:** Nicht-rechteckige Räume, Dachschrägen, BOM/Preise/Angebote, DXF-Interop, SKP-Referenzimport, externer Render-Worker.
+
+### Sprint-Übersicht
+
+| Sprint | Thema | Deliverables |
+|--------|-------|--------------|
+| 0 | Architektur & Domänenmodell | ARCHITECTURE.md, Kerndokumente, Monorepo-Struktur |
+| 1 | Backend-Grundgerüst | Projekt-CRUD, Postgres-Schema, API-Grundstruktur |
+| 2 | Frontend-Grundgerüst | Projektliste, Editor-Layout, Canvas, Sidebars |
+| 3 | Polygon-Raumeditor v1 | Punkte setzen, Polygon schließen, Validierung |
+| 3.5 | CAD/SKP-Import Grundlagen | Upload-Pipeline, neutrales Austauschformat |
+| 4 | Präzisionsbearbeitung | Vertex-Move, numerische Kantenlänge, stabile Wand-IDs |
+| 5 | Öffnungen | Türen/Fenster an Wänden, Offset, Brüstungshöhe |
+| 6 | Dachschrägen | CeilingConstraints, Höhenberechnung an beliebigem Punkt |
+| 7 | Katalog MVP | Schrank-/Gerätetypen, Preisfelder, Warengruppen |
+| 7.5 | SKP-Komponenten-Mapping | Referenzmodell, Heuristik, Mapping-Persistenz |
+| 8 | Platzierungsengine v1 | wall_id + offset, Innenrichtung, Verschieben |
+| 9 | Geometrieprüfung v1 | Kollisionen, Öffnungsblockierung, Mindestabstände |
+| 10 | Höhenprüfung | Dachschrägen-Regeln, Preiswirkung (flags) |
+| 11 | Stücklisten-Engine v1 | BOM aus Planung, `POST /calculate-bom` |
+| 11.5 | DXF-Export v1 | Raumkontur + Möbel als DXF, Layer-Konventionen |
+| 12 | Preisengine v1 | 9-stufige Kalkulation, netto/MwSt/brutto/DB |
+| 13 | Angebotsmanagement v1 | Angebotsnummer, Versionen, PDF light |
+| 14 | Browser-3D-Preview | Three.js, Extrusion, Proxy-Meshes, Orbit |
+| 15 | Render-Job-System | Queue, Scene Payload, Worker-Protokoll End-to-End |
+| 16 | Business-Sprint | Kundenpreislisten, CRM-Felder light, JSON/CSV-Export |
+| 17 | Blockverrechnung | Blockprogramme, automatische Auswahl des besten Blocks |
+| 18 | Interop-API | Asynchrone Importjobs, Prüfprotokoll, Mapping-Persistenz |
+| 19 | Interop-Härtung | Roundtrip-Tests, Einheitenprüfung, Regressionstests |
+
+### Meilensteine
+
+| Nach Sprint | Ergebnis |
+|-------------|---------|
+| 6 | Echte Polygonräume mit Öffnungen und Dachschrägen |
+| 8 | Erste wandbasierte Küchenplanung |
+| 13 | Internes Angebots-MVP |
+| 15 | Renderworkflow produktiv nutzbar |
+| 19 | Vollständiges MVP: Interop + Business + Planung |
+
+### Nicht im MVP
+
+- Komplexe Eckschrank-Automatik, freie Rundungen
+- Vollständige Dachgeometrie als CAD
+- Echtzeit-Multiuser, vollwertiges ERP
+- Verlustfreier SKP-Roundtrip, nativer DWG-Binary-Parser
+
+---
+
+## Phase 2 – Sprints 20–24
+
+**Ausgangslage (Sprint 19):** MVP vollständig. Polygonräume + Placement + BOM + Preis + Angebote + DXF/SKP + Render-Worker alle produktiv.
+
+**Ziel:** Größte Lücken zu Winner Flex / KPS.MAX schließen ohne Architekturbruch.
+
+---
+
+### Sprint 20 — Herstellerkatalog & Schrankkonfigurator (Light)
+
+**Ziel:** 1 Hersteller-Import End-to-End + konfigurierbarer Schrank mit Artikel/Preis/BOM.
+
+**Neues Datenmodell:**
+- `manufacturer`, `catalog_article`, `article_option`, `article_variant`, `article_price`, `article_rules`
+
+**Deliverables:** Import-Pipeline (CSV/JSON), Konfigurator-UI (Breite/Höhe/Front/Griff), 30 Tests.
+
+**DoD:** 1 Herstellerkatalog importiert, 1 konfigurierbarer Schrank platzierbar, BOM/Pricing aus `catalog_article`.
+
+---
+
+### Sprint 21 — Automatismen (Langteile, Zubehör, Auto-Vervollständigung)
+
+**Ziel:** Automatische BOM-Generierung für Arbeitsplatte, Sockel, Wange, Standardzubehör.
+
+**Scope:**
+- `AutoCompletionService`: Worktop- und Sockel-Segmente entlang Cabinet-Cluster
+- Autogen-Objekte als `generated` markiert, Rebuild bei Änderungen
+- UI: Button „Auto vervollständigen" + Diff-View
+
+**DoD:** Standardzeile erzeugt automatisch Worktop + Sockel in BOM; Änderungen konsistent.
+
+---
+
+### Sprint 22 — Prüf-Engine v2 ("Protect"-Niveau)
+
+**Ziel:** Konfigurierbares Prüfmodul mit Kategorien, Bericht und Finalprüfung.
+
+**Neues Datenmodell:** `rule_definitions`, `rule_runs`, `rule_violations`
+
+**Mindestens 15 Regeln:** Kollision (Tür/Auszug), Abstände, Ergonomie, Vollständigkeit (Arbeitsplatte/Sockel/Blenden), Zubehör.
+
+**DoD:** Konfigurierbarer Prüfbericht mit Filter + Jump-to-Problem + Finalprüfung.
+
+---
+
+### Sprint 23 — Multi-Tenant / BI-Light
+
+**Ziel:** Vom Single-Studio zu Multi-Tenant mit KPI-Endpunkten.
+
+**Scope:**
+- `tenants`, `branches`; `tenant_id` in allen relevanten Tabellen
+- API-Middleware: tenant-scope enforced
+- KPI-Endpunkte: Angebote/Zeitraum, Conversion, Top-Warengruppen
+- Minimal-Dashboard: KPI Cards + Zeitraumfilter
+
+**DoD:** 2 Tenants sauber getrennt, KPI-Endpunkte plausibel, Basis-Dashboard.
+
+---
+
+### Sprint 24 — Online-Webplaner MVP + Handover
+
+**Ziel:** Abgespeckter Endkunden-Webplaner (Lead Gen) mit Übergabe ins Profi-Tool.
+
+**Scope:**
+- Vereinfachter Grundriss (rechteckig + Aussparungen), reduzierter Katalog, guided Wizard
+- `lead_project` → „promoted" zu vollem `project` im Profi-Editor
+- Consent + Retention Policy
+
+**DoD:** Endkunde konfiguriert Küche, Lead geht ans Studio, Studio öffnet Projekt im Profi-Editor.
+
+---
+
+## Risiken Phase 2
+
+1. Herstellerkatalogtiefe erreicht nicht Winner/KPS-Niveau ohne langfristige Datenpflege.
+2. Automatismen müssen deterministisch und testbar sein → sonst zerlegt es Pricing/BOM.
+3. Prüf-Engine braucht klare DoD → sonst Rule-Spaghetti.
+4. Multi-Tenant muss früh mit Migrations-/Index-Disziplin kommen.
+5. Webplaner ist ein anderes Produkt: guided UX, kein Profi-Editor.
