@@ -61,6 +61,7 @@ model Project {
   render_jobs       RenderJob[]
   import_jobs       ImportJob[]
   documents         Document[]
+  catalog_indices   CatalogIndex[]
   project_contacts  ProjectContact[]
   customer_price_lists CustomerPriceList[]
   customer_discounts CustomerDiscount[]
@@ -609,6 +610,26 @@ model DashboardConfig {
   @@unique([user_id])
   @@index([tenant_id, user_id])
   @@map("dashboard_configs")
+}
+
+// ─────────────────────────────────────────
+// PHASE 3 – Sprint 29: Katalogindexierung
+// ─────────────────────────────────────────
+
+model CatalogIndex {
+  id             String   @id @default(uuid())
+  project_id     String
+  catalog_id     String
+  purchase_index Float
+  sales_index    Float
+  applied_at     DateTime @default(now())
+  applied_by     String
+
+  project        Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id, applied_at])
+  @@index([project_id, catalog_id])
+  @@map("catalog_indices")
 }
 
 // ─────────────────────────────────────────
