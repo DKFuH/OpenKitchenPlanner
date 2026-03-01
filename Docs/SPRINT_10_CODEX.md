@@ -31,10 +31,14 @@ Implementierte Funktionen:
 
 API-Integration:
 
-- `/api/v1/validate`
+- `/api/v1/projects/:id/validate`
   - akzeptiert zusaetzlich `ceilingConstraints` und `nominalCeilingMm`
   - kombiniert Sprint-9-Kollisionspruefungen mit Sprint-10-Hoehenpruefung
-  - gibt Hoehenverletzungen inklusive Flags im bestehenden Validierungsformat zurueck
+  - liefert gruppierte `errors`, `warnings` und `hints`
+  - gibt Hoehenverletzungen inklusive Flags im Validierungsformat zurueck
+
+- `/api/v1/validate`
+  - bleibt als Kompatibilitaetsalias fuer bestehende Aufrufer erhalten
 
 ## Testabdeckung
 
@@ -48,6 +52,7 @@ API-Integration:
 
 - Dachschraegen beeinflussen jetzt sowohl die Fachlogik als auch die API-Validierung
 - Folgeflags fuer Anpassung und Zuschlag werden bis in den API-Response durchgereicht
+- projektgebundener Validate-Endpoint fuer den Claude-Vertrag ist vorhanden
 
 ## Naechster Sprint
 

@@ -2,9 +2,14 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import type { BlockDefinition, BOMLine, GlobalDiscountSettings, PriceSummary } from '@yakds/shared-schemas'
 
-import { sendBadRequest } from '../errors.js'
+import { prisma } from '../db.js'
+import { sendBadRequest, sendNotFound } from '../errors.js'
 import { evaluateBlock, findBestBlock } from '../services/blockEvaluator.js'
 import { calculatePriceSummary } from '../services/priceCalculator.js'
+
+const ProjectParamsSchema = z.object({
+  projectId: z.string().uuid(),
+})
 
 const BomLineSchema = z.object({
   id: z.string().min(1),
@@ -69,6 +74,11 @@ const BlockPreviewRequestSchema = z.object({
   blocks: z.array(BlockDefinitionSchema).min(1),
 })
 
+const EvaluateBlocksRequestSchema = z.object({
+  price_summary: BlockPricingSummarySchema.optional(),
+  blocks: z.array(BlockDefinitionSchema).min(1),
+})
+
 function calculatePricingPreview(lines: BOMLine[], settings: GlobalDiscountSettings) {
   return calculatePriceSummary(lines, settings)
 }
@@ -78,6 +88,39 @@ function calculateBlockPreview(priceSummary: PriceSummary, blocks: BlockDefiniti
     evaluations: blocks.map((block) => evaluateBlock(priceSummary, block)),
     best_block: findBestBlock(priceSummary, blocks),
   }
+}
+
+function isPriceSummarySnapshot(value: unknown): value is PriceSummary {
+  return typeof value === 'object' && value !== null && 'subtotal_net' in value && 'total_gross' in value
+}
+
+async function getStoredPriceSummary(projectId: string): Promise<PriceSummary | null> {
+  const latestQuote = await prisma.quote.findFirst({
+    where: { project_id: projectId },
+    orderBy: { version: 'desc' },
+    select: { price_snapshot: true },
+  })
+
+  if (isPriceSummarySnapshot(latestQuote?.price_snapshot)) {
+    return latestQuote.price_snapshot
+  }
+
+  const latestVersion = await prisma.projectVersion.findFirst({
+    where: { project_id: projectId },
+    orderBy: { version: 'desc' },
+    select: { snapshot: true },
+  })
+
+  if (isPriceSummarySnapshot(latestVersion?.snapshot)) {
+    return latestVersion.snapshot
+  }
+
+  const nestedPriceSummary =
+    latestVersion?.snapshot && typeof latestVersion.snapshot === 'object' && latestVersion.snapshot !== null
+      ? (latestVersion.snapshot as { price_summary?: unknown }).price_summary
+      : null
+
+  return isPriceSummarySnapshot(nestedPriceSummary) ? nestedPriceSummary : null
 }
 
 export async function pricingRoutes(app: FastifyInstance) {
@@ -106,7 +149,62 @@ export async function pricingRoutes(app: FastifyInstance) {
     )
   }
 
+  const projectBlockHandler = async (
+    request: { params: unknown; body: unknown },
+    reply: { send: (payload: unknown) => unknown },
+  ) => {
+    const parsedParams = ProjectParamsSchema.safeParse(request.params)
+    if (!parsedParams.success) {
+      return sendBadRequest(reply as never, parsedParams.error.errors[0].message)
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: parsedParams.data.projectId },
+      select: { id: true },
+    })
+    if (!project) {
+      return sendNotFound(reply as never, 'Project not found')
+    }
+
+    const parsed = EvaluateBlocksRequestSchema.safeParse(request.body)
+    if (!parsed.success) {
+      return sendBadRequest(reply as never, parsed.error.errors[0].message)
+    }
+
+    const priceSummary =
+      (parsed.data.price_summary as PriceSummary | undefined) ??
+      (await getStoredPriceSummary(parsedParams.data.projectId))
+    if (!priceSummary) {
+      return sendNotFound(reply as never, 'Price summary snapshot not found')
+    }
+
+    return reply.send(calculateBlockPreview(priceSummary, parsed.data.blocks as BlockDefinition[]))
+  }
+
+  app.get<{ Params: { projectId: string } }>('/projects/:projectId/price-summary', async (request, reply) => {
+    const parsedParams = ProjectParamsSchema.safeParse(request.params)
+    if (!parsedParams.success) {
+      return sendBadRequest(reply, parsedParams.error.errors[0].message)
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: parsedParams.data.projectId },
+      select: { id: true },
+    })
+    if (!project) {
+      return sendNotFound(reply, 'Project not found')
+    }
+
+    const snapshot = await getStoredPriceSummary(parsedParams.data.projectId)
+    if (!snapshot) {
+      return sendNotFound(reply, 'Price summary snapshot not found')
+    }
+
+    return reply.send(snapshot)
+  })
+
   app.post('/pricing/preview', handler)
   app.post('/pricing/block-preview', blockHandler)
   app.post('/projects/:projectId/calculate-pricing', handler)
+  app.post('/projects/:projectId/evaluate-blocks', projectBlockHandler)
 }

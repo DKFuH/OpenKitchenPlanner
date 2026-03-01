@@ -82,6 +82,15 @@ describe('validateRoutes', () => {
     expect(response.statusCode).toBe(200)
     const body = response.json()
     expect(body.valid).toBe(false)
+    expect(body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'HANGING_CABINET_SLOPE_COLLISION',
+        }),
+      ]),
+    )
+    expect(body.warnings).toEqual(expect.any(Array))
+    expect(body.hints).toEqual(expect.any(Array))
     expect(body.violations).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -94,6 +103,32 @@ describe('validateRoutes', () => {
         }),
       ]),
     )
+
+    await app.close()
+  })
+
+  it('supports the project-scoped validate endpoint', async () => {
+    prismaMock.project.findFirst.mockResolvedValue({ id: projectId })
+
+    const app = Fastify()
+    await app.register(validateRoutes, { prefix: '/api/v1' })
+
+    const payload = createPayload()
+    const { project_id: _ignoredProjectId, ...scopedPayload } = payload
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/projects/${projectId}/validate`,
+      payload: scopedPayload,
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toMatchObject({
+      valid: false,
+      errors: expect.any(Array),
+      warnings: expect.any(Array),
+      hints: expect.any(Array),
+    })
 
     await app.close()
   })

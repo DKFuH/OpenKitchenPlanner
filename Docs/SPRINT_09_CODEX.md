@@ -46,6 +46,7 @@ Implementierte Funktionen:
 ## DoD-Status Sprint 9
 
 - Fehler-, Warn- und Hint-Detection in isolierter Validierungslogik vorhanden
+- Backend-Validierungsantwort kann diese Violations in `errors`, `warnings` und `hints` gruppiert ausgeben
 
 ## Nächster Sprint
 

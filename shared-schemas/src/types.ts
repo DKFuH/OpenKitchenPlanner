@@ -93,6 +93,11 @@ export interface PlacedObject {
   flags?: PlacementFlags;
 }
 
+export interface Placement extends PlacedObject {
+  room_id?: string;
+  catalog_item_id: string;
+}
+
 export interface PlacementFlags {
   requires_customization: boolean;
   height_variant: string | null;

@@ -18,6 +18,10 @@ export function CatalogPage() {
         </button>
       </header>
 
+      <p className={styles.description}>
+        Übersicht der verfügbaren Katalogartikel mit Suche, Typ-Filter und Detailansicht.
+      </p>
+
       <CatalogBrowser />
     </div>
   )

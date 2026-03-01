@@ -1,5 +1,17 @@
 import Fastify from 'fastify'
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+const { prismaMock } = vi.hoisted(() => ({
+  prismaMock: {
+    project: { findUnique: vi.fn() },
+    quote: { findFirst: vi.fn() },
+    projectVersion: { findFirst: vi.fn() },
+  },
+}))
+
+vi.mock('../db.js', () => ({
+  prisma: prismaMock,
+}))
 
 import { pricingRoutes } from './pricing.js'
 
@@ -24,7 +36,39 @@ function createBomLine() {
   }
 }
 
+function createPriceSummarySnapshot() {
+  return {
+    project_id: '11111111-1111-1111-1111-111111111111',
+    calculated_at: '2026-03-01T10:00:00.000Z',
+    total_list_price_net: 1000,
+    total_variant_surcharges: 0,
+    total_object_surcharges: 0,
+    total_position_discounts: 0,
+    total_group_discounts: 0,
+    total_global_discount: 0,
+    total_extra_costs: 0,
+    subtotal_net: 1000,
+    vat_amount: 190,
+    total_gross: 1190,
+    dealer_price_net: 700,
+    contribution_margin_net: 300,
+    markup_pct: 42.86,
+    bom_lines: [],
+    components: [],
+    total_purchase_price_net: 700,
+    total_sell_price_net: 1000,
+    total_points: 80,
+  }
+}
+
 describe('pricingRoutes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    prismaMock.project.findUnique.mockResolvedValue({ id: '11111111-1111-1111-1111-111111111111' })
+    prismaMock.quote.findFirst.mockResolvedValue(null)
+    prismaMock.projectVersion.findFirst.mockResolvedValue(null)
+  })
+
   it('returns a pricing summary for preview requests', async () => {
     const app = Fastify()
     await app.register(pricingRoutes, { prefix: '/api/v1' })
@@ -93,6 +137,73 @@ describe('pricingRoutes', () => {
         recommended: true,
       }),
     )
+
+    await app.close()
+  })
+
+  it('returns the latest stored project price summary snapshot', async () => {
+    prismaMock.quote.findFirst.mockResolvedValue({
+      price_snapshot: createPriceSummarySnapshot(),
+    })
+
+    const app = Fastify()
+    await app.register(pricingRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/projects/11111111-1111-1111-1111-111111111111/price-summary',
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual(createPriceSummarySnapshot())
+
+    await app.close()
+  })
+
+  it('evaluates blocks for a project using the stored price snapshot', async () => {
+    prismaMock.quote.findFirst.mockResolvedValue({
+      price_snapshot: createPriceSummarySnapshot(),
+    })
+
+    const app = Fastify()
+    await app.register(pricingRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/projects/11111111-1111-1111-1111-111111111111/evaluate-blocks',
+      payload: {
+        blocks: [
+          {
+            id: 'block-purchase',
+            name: 'EK Block',
+            basis: 'purchase_price',
+            tiers: [{ min_value: 600, discount_pct: 10 }],
+          },
+        ],
+      },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toEqual({
+      evaluations: [
+        {
+          block_id: 'block-purchase',
+          block_name: 'EK Block',
+          basis_value: 700,
+          applied_discount_pct: 10,
+          price_advantage_net: 70,
+          recommended: false,
+        },
+      ],
+      best_block: {
+        block_id: 'block-purchase',
+        block_name: 'EK Block',
+        basis_value: 700,
+        applied_discount_pct: 10,
+        price_advantage_net: 70,
+        recommended: true,
+      },
+    })
 
     await app.close()
   })

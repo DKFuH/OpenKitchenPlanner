@@ -2,9 +2,10 @@
 
 ## Umfang
 
-Umsetzung der Codex-Aufgabe aus Sprint 17:
+Umsetzung der Blockbewertung fuer Sprint 17:
 
 - TASK-17-C01 - Block-Bewertungsalgorithmus
+- TASK-17-01 - projektgebundener Bewertungsendpunkt
 
 ## Umgesetzte Dateien
 
@@ -27,27 +28,31 @@ Implementiert wurde:
 API-Integration:
 
 - `/api/v1/pricing/block-preview`
-  - nimmt eine Preiszusammenfassung plus Blockdefinitionen entgegen
-  - liefert alle Einzelbewertungen und den empfohlenen Block in einem Response
-  - nutzt dieselbe Blocklogik wie die Service-Ebene
+  - nimmt Preiszusammenfassung plus Blockdefinitionen entgegen
+  - liefert Einzelbewertungen und den empfohlenen Block
+
+- `/api/v1/projects/:projectId/evaluate-blocks`
+  - wertet Blockdefinitionen im Projektkontext aus
+  - akzeptiert optional eine direkte `price_summary`
+  - faellt andernfalls auf einen gespeicherten Preis-Snapshot des Projekts zurueck
 
 ## Testabdeckung
 
 - mehrere Blockprogramme mit unterschiedlichen Tiers
 - kein passender Tier fuehrt zu 0 Prozent Rabatt
 - bester Block wird korrekt identifiziert
-- API-Test fuer Block-Preview und Validierungsfehler bei leerer Blockliste
+- API-Test fuer Block-Preview
+- API-Test fuer projektgebundene Block-Evaluation ueber gespeicherten Snapshot
 
 ## DoD-Status Sprint 17
 
-- Blockbewertung ist als Service und als Preview-Endpoint verfuegbar
-- automatische Bestenauswahl funktioniert deterministisch
+- Blockbewertung ist als Service und als API nutzbar
+- projektgebundene Evaluation funktioniert ohne erneute Preisberechnung
 - Kernfaelle sind mit Unit- und Route-Tests abgesichert
 
 ## Naechster Sprint
 
-Sprint 19:
+Offene Claude-Luecken danach:
 
-- Interop-Regressionstests
-- Roundtrip zwischen DXF-Export und DXF-Import
-- Robustheit fuer Einheiten und unbekannte Entities
+- Import-Job-System fuer Sprint 18
+- Ausbau des Blockprogramm-Rahmens ueber reine Evaluation hinaus
