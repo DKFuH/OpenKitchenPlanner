@@ -646,8 +646,89 @@ model Tenant {
   users      User[]
   projects   Project[]
   contacts   Contact[]
+  settings   TenantSetting?
+  backup_snapshots BackupSnapshot[]
+  notification_events NotificationEvent[]
 
   @@map("tenants")
+}
+
+model TenantSetting {
+  id                 String   @id @default(uuid())
+  tenant_id          String   @unique
+  logo_url           String?
+  quote_template     String?
+  currency_code      String   @default("EUR")
+  email_from_name    String?
+  email_from_address String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  tenant             Tenant   @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@map("tenant_settings")
+}
+
+model BackupSnapshot {
+  id               String              @id @default(uuid())
+  tenant_id        String
+  scope            BackupScope         @default(daily_snapshot)
+  status           BackupSnapshotStatus @default(done)
+  storage_provider String              @default("local_fs")
+  storage_bucket   String?
+  storage_key      String
+  entity_count     Int                 @default(0)
+  triggered_by     String
+  created_at       DateTime            @default(now())
+
+  tenant           Tenant              @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, created_at])
+  @@map("backup_snapshots")
+}
+
+enum BackupScope {
+  daily_snapshot
+  manual_snapshot
+}
+
+enum BackupSnapshotStatus {
+  done
+  failed
+}
+
+model NotificationEvent {
+  id               String                    @id @default(uuid())
+  tenant_id        String
+  event_type       NotificationEventType
+  entity_type      String
+  entity_id        String
+  recipient_email  String
+  subject          String
+  message          String
+  delivery_status  NotificationDeliveryStatus @default(queued)
+  metadata_json    Json                      @default("{}")
+  created_at       DateTime                  @default(now())
+
+  tenant           Tenant                    @relation(fields: [tenant_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, created_at])
+  @@index([tenant_id, event_type])
+  @@map("notification_events")
+}
+
+enum NotificationEventType {
+  project_status_changed
+  document_uploaded
+  document_deleted
+  quote_created
+  custom
+}
+
+enum NotificationDeliveryStatus {
+  queued
+  delivered
+  failed
 }
 
 model Branch {

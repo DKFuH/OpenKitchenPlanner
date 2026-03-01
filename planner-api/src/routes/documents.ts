@@ -5,6 +5,7 @@ import { prisma } from '../db.js'
 import { sendBadRequest, sendForbidden, sendNotFound, sendServerError } from '../errors.js'
 import { registerProjectDocument } from '../services/documentRegistry.js'
 import { deleteDocumentBlob, readDocumentBlob } from '../services/documentStorage.js'
+import { queueNotification } from '../services/notificationService.js'
 
 const documentTypeValues = ['quote_pdf', 'render_image', 'cad_import', 'email', 'contract', 'other'] as const
 const documentSourceKindValues = ['manual_upload', 'quote_export', 'render_job', 'import_job'] as const
@@ -189,6 +190,20 @@ export async function documentRoutes(app: FastifyInstance) {
         })
       }
 
+      await queueNotification({
+        tenantId,
+        eventType: 'document_uploaded',
+        entityType: 'document',
+        entityId: document.id,
+        recipientEmail: `alerts+${tenantId}@yakds.local`,
+        subject: `Neues Projektdokument: ${document.filename}`,
+        message: `Im Projekt ${document.project_id} wurde ein Dokument vom Typ ${document.type} hochgeladen.`,
+        metadata: {
+          project_id: document.project_id,
+          document_type: document.type,
+        },
+      })
+
       return reply.status(201).send({
         ...document,
         download_url: getDownloadUrl(document.project_id, document.id),
@@ -318,6 +333,20 @@ export async function documentRoutes(app: FastifyInstance) {
     if (!existing.external_url) {
       await deleteDocumentBlob(existing.storage_key)
     }
+
+    await queueNotification({
+      tenantId,
+      eventType: 'document_deleted',
+      entityType: 'document',
+      entityId: existing.id,
+      recipientEmail: `alerts+${tenantId}@yakds.local`,
+      subject: `Projektdokument gelöscht: ${existing.filename}`,
+      message: `Im Projekt ${existing.project_id} wurde ein Dokument gelöscht.`,
+      metadata: {
+        project_id: existing.project_id,
+        document_type: existing.type,
+      },
+    })
 
     return reply.status(204).send()
   })

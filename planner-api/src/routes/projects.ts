@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../db.js'
 import { sendBadRequest, sendNotFound } from '../errors.js'
+import { queueNotification } from '../services/notificationService.js'
 
 const projectWorkflowStatusValues = [
   'lead',
@@ -262,6 +263,22 @@ export async function projectRoutes(app: FastifyInstance) {
       },
       select: projectBoardSelect(),
     })
+
+    if (project.tenant_id) {
+      await queueNotification({
+        tenantId: project.tenant_id,
+        eventType: 'project_status_changed',
+        entityType: 'project',
+        entityId: project.id,
+        recipientEmail: `alerts+${project.tenant_id}@yakds.local`,
+        subject: `Projektstatus geändert: ${project.name}`,
+        message: `Projekt ${project.name} wurde auf ${project.project_status} gesetzt.`,
+        metadata: {
+          project_status: project.project_status,
+          progress_pct: project.progress_pct,
+        },
+      })
+    }
 
     return reply.send(project)
   })

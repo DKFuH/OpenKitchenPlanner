@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '../db.js'
 import { sendBadRequest, sendNotFound, sendServerError } from '../errors.js'
 import { registerProjectDocument } from '../services/documentRegistry.js'
+import { queueNotification } from '../services/notificationService.js'
 import { buildQuotePdf } from '../services/pdfGenerator.js'
 
 const QuoteParamsSchema = z.object({
@@ -130,6 +131,28 @@ export async function quoteRoutes(app: FastifyInstance) {
         },
       })
     })
+
+    const projectWithTenant = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { id: true, name: true, tenant_id: true },
+    })
+
+    if (projectWithTenant?.tenant_id) {
+      await queueNotification({
+        tenantId: projectWithTenant.tenant_id,
+        eventType: 'quote_created',
+        entityType: 'quote',
+        entityId: quote.id,
+        recipientEmail: `alerts+${projectWithTenant.tenant_id}@yakds.local`,
+        subject: `Neues Angebot: ${quote.quote_number}`,
+        message: `Für Projekt ${projectWithTenant.name} wurde das Angebot ${quote.quote_number} erstellt.`,
+        metadata: {
+          project_id: projectWithTenant.id,
+          quote_number: quote.quote_number,
+          version: quote.version,
+        },
+      })
+    }
 
     return reply.status(201).send(quote)
   })
