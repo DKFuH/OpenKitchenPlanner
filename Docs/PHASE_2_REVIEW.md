@@ -2,6 +2,9 @@
 
 Code-Review Phase 2 (Sprints 20–24) — Stand 2026-03-01
 
+Ergänzende Management-Sicht (DoD, Gap-Matrix, Priorisierung, 14-Tage-Reihenfolgeplan):
+- `Docs/PHASE_2_DOD_AND_EXECUTION_PLAN.md`
+
 ---
 
 ## Status-Übersicht
