@@ -47,9 +47,11 @@
 .btnPrimary,
 .btnSecondary,
 .btnGhost {
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
   font: inherit;
   cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
 .backBtn,
@@ -70,10 +72,17 @@
 }
 
 .btnPrimary {
-  border: none;
   padding: 0.55rem 1rem;
   background: var(--primary-color);
   color: var(--text-inverse);
+}
+
+.backBtn:hover,
+.btnPrimary:hover,
+.btnSecondary:hover,
+.btnGhost:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .indexPanel {
@@ -125,6 +134,17 @@
   background: var(--surface-default);
 }
 
+.field input:focus-visible,
+.field select:focus-visible,
+.backBtn:focus-visible,
+.btnPrimary:focus-visible,
+.btnSecondary:focus-visible,
+.btnGhost:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--primary-color) 70%, var(--border-subtle));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-light) 85%, white);
+}
+
 .batchForm,
 .historyPanel {
   display: grid;
@@ -147,6 +167,12 @@
   background: color-mix(in srgb, var(--surface-default) 96%, white);
 }
 
+.rowMeta {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
 .historyList {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -166,6 +192,13 @@
 .historyCard span {
   color: var(--text-muted);
   font-size: 0.82rem;
+}
+
+.indexHint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  max-width: 30rem;
 }
 
 .empty {
