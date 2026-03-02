@@ -12,6 +12,10 @@ coverage/
 *.skp
 *.dwg
 uploads/
+# GitHub Copilot / Claude Agent temp files
+.agent-sprint-queue/
+.agent-sprint-watch-state.json
+.agent-subagent-request-*.json
 planner-frontend/src/**/*.js
 planner-frontend/src/**/*.js.map
 shared-schemas/src/**/*.js
