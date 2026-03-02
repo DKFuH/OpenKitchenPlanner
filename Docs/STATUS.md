@@ -11,7 +11,7 @@ Projektstatus per 2026-03-02 - MVP, Phase 2, Phase 3 und Phase 4 abgeschlossen. 
 - **Sprints 25-30 (Phase 3): abgeschlossen**
 - **Sprints 31-40 (Phase 4 + Sprints 35-40): abgeschlossen** (PR #8 gemergt 2026-03-02)
 - **Sprints 41-45 (Phase 5 – Profi-Parität): abgeschlossen** (Sprints 41-45 gemergt 2026-03-02)
-- **Sprints 46-50 (Phase 6 – Vernetzte Branchenlösung): geplant** (Sprint 46 teilweise: PurchaseOrder fertig, ProductionOrder ausstehend)
+- **Sprints 46-50 (Phase 6 – Vernetzte Branchenlösung): in_progress** (Sprint 46 vollständig: PurchaseOrder ✅ + ProductionOrder ✅ + Freeze-Guard ✅)
 - **Sprints 51-55 (Phase 7 – Interoperabilität & Dateiformate): geplant**
 - **Sprints 56-60 (Phase 8 – Planerqualität & erweiterte Raumdefinition): geplant**
 
@@ -99,19 +99,21 @@ Alle Reviews (TASK-3-R01 bis TASK-11-R01) intern ausgeführt. Alle Findings umge
 - Sprint 31–34 (Projektliste, Bereiche/Alternativen, Onboarding, Workspace-Layout): PR #8 gemergt 2026-03-02.
 - Sprints 35–40 (Makros, Arbeitsplattenschemas, Annotationen, Raumdekoration, Lichtprofile, Angebotszeilen): backend complete, frontend implemented.
 
-## Phase-6-Vorarbeit (Sprint 46 – teilweise)
+## Phase-6-Fortschritt (Sprint 46 – vollständig)
 
 - `PurchaseOrder` + `PurchaseOrderItem` Prisma-Schema implementiert (PR #10, gemergt 2026-03-02).
+- `ProductionOrder` + `ProductionOrderEvent` Prisma-Schema implementiert (2026-03-02).
 - 6 CRUD-Routen für Bestellwesen + Status-Workflow-Übergänge + Notification-Trigger aktiv.
-- **Aktueller Teststand: 280 Tests grün** (+12 aus PR #10).
-- Ausstehend Sprint 46: `ProductionOrder`, Freeze-Guard, Verknüpfung PO↔PurchaseOrder, Produktionsübersicht-UI.
+- 8 CRUD-Routen für Produktionsaufträge: CRUD, Status-Lifecycle (`draft→confirmed→in_production→ready→delivered→installed`), Freeze-Guard, Audit-Log, PO↔PurchaseOrder-Verknüpfung, Freeze-Status-Endpunkt.
+- Produktionsübersicht-UI unter `/production-orders` implementiert: Projekt-Filter, Status-Filter, Workflow-Bar, Audit-Log, Verknüpfte Bestellungen.
+- **Aktueller Teststand: 297 Tests grün** (+17 aus Sprint 46).
 
 ## Nächste Schritte
 
 - Phase 5 (Sprints 41–45): abgeschlossen ✅
-- Phase 6 (Sprints 46–50): Sprint 46 teilweise (PurchaseOrder ✅, ProductionOrder + Freeze-Guard ausstehend).
+- Phase 6 (Sprints 46–50): Sprint 46 vollständig ✅ (PurchaseOrder + ProductionOrder + Freeze-Guard + Produktionsübersicht-UI). Sprint 47 als nächstes.
 - Phase 7 (Sprints 51–55): geplant – GLTF/GLB-Export, IFC-BIM, DWG/SKP, OFML, Raumakustik.
 - Phase 8 (Sprints 56–60): geplant – Wand-Interaktoren, WallAttachments, Bild-Nachzeichnen, 2D-Bemaßung, Kitchen Assistant.
-- Sprint 46 vervollständigen: `ProductionOrder` + Freeze-Guard + Produktionsübersicht.
+- Sprint 47 starten: Mobile Aufmaß & Baustellenprotokoll.
 - Referenzplanung Phase 6: `Docs/PHASE_6_DOD_AND_EXECUTION_PLAN.md` (noch zu erstellen)
 

@@ -46,6 +46,8 @@ import { userFavoritesRoutes } from './routes/userFavorites.js'
 import { batchPrintRoutes } from './routes/batchPrint.js'
 import { shareLinkRoutes } from './routes/shareLinks.js'
 import { coverPanelRoutes } from './routes/coverPanels.js'
+// Phase 6 Routes
+import { productionOrderRoutes } from './routes/productionOrders.js'
 
 const app = Fastify({ logger: true })
 
@@ -101,6 +103,8 @@ await app.register(userFavoritesRoutes, { prefix: '/api/v1' })
 await app.register(batchPrintRoutes, { prefix: '/api/v1' })
 await app.register(shareLinkRoutes, { prefix: '/api/v1' })
 await app.register(coverPanelRoutes, { prefix: '/api/v1' })
+// Phase 6 Routes
+await app.register(productionOrderRoutes, { prefix: '/api/v1' })
 
 // Health check
 app.get('/health', async () => ({ status: 'ok' }))

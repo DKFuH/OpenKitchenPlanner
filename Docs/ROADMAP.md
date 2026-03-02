@@ -534,11 +534,9 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 46 – Auftragssteuerung & Produktionsübergabe
 
-**Meta:** Status: `in_progress` · Owner: Backend-Lead · ETA: Phase 6 · Abhängigkeiten: S45, S42
+**Meta:** Status: `done` · Owner: Backend-Lead · ETA: Phase 6 · Abhängigkeiten: S45, S42 · **Abgeschlossen: 2026-03-02**
 
 **Ziel:** Bestätigtes Angebot erzeugt zwei verknüpfte Entitäten: interne `ProductionOrder` (Produktionsauftrag im Studio) und externe `PurchaseOrder` (Bestellung an den Küchenhersteller).
-
-> **Stand:** `PurchaseOrder` + `PurchaseOrderItem` + 6 API-Routen bereits implementiert (PR #10, gemergt 2026-03-02, +12 Tests). `ProductionOrder` + Freeze-Guard noch ausstehend.
 
 **Features:**
 
@@ -547,26 +545,24 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
   Status-Lifecycle: `draft → sent → confirmed → partially_delivered → delivered → cancelled`.
   6 CRUD-Endpunkte inkl. Status-Workflow-Übergänge + Notification-Trigger.
 
-- **ProductionOrder (interner Produktionsauftrag):**
+- **ProductionOrder (interner Produktionsauftrag) ✅:**
   Konvertierung des bestätigten Angebots in einen internen Produktionsauftrag; BOM wird eingefroren (Snapshot).
   Status-Lifecycle: `draft → confirmed → in_production → ready → delivered → installed`.
-  Statusübergänge mit Zeitstempel und User-Referenz geloggt.
+  Statusübergänge mit Zeitstempel und User-Referenz geloggt (Audit-Log).
 
-- **Produktionsübersicht:** Listenansicht aller Aufträge mit Filter nach Status, Fälligkeit, Sachbearbeiter; Drill-down auf Positionen.
+- **Produktionsübersicht ✅:** Seite `/production-orders` mit Projekt-Filter, Status-Filter, Workflow-Bar, Audit-Log, Drill-down auf verknüpfte Bestellungen.
 
-- **Freeze-Guard:** Änderungen an Planung/BOM nach Konvertierung blockiert; UI-Hinweis mit Option auf neue Alternative.
+- **Freeze-Guard ✅:** `isProjectFrozen()`-Helper + `GET /projects/:id/freeze-status`-Endpunkt. UI-Hinweis bei eingefrorener Planung.
 
-- **Verknüpfung:** `PurchaseOrder` referenziert `ProductionOrder`; Status-Updates der Herstellerbestellung aktualisieren den Produktionsauftrag.
+- **Verknüpfung ✅:** `PATCH /production-orders/:id/link-purchase-order` verknüpft PurchaseOrder ↔ ProductionOrder.
 
 **Datenmodell:**
-- `purchase_orders` ✅ – (id, status, items[], created_at) – PR #10
-- `purchase_order_items` ✅ – (order_id, position, sku, quantity, unit_price) – PR #10
-- `production_orders` – (quote_id, bom_snapshot JSON, status, created_at) – ausstehend
-- `production_order_events` – Audit-Log (order_id, from_status, to_status, user_id, timestamp) – ausstehend
+- `purchase_orders` ✅ – (id, status, items[], created_at)
+- `purchase_order_items` ✅ – (order_id, position, sku, quantity, unit_price)
+- `production_orders` ✅ – (quote_id, bom_snapshot JSON, status, frozen_at, created_at)
+- `production_order_events` ✅ – Audit-Log (order_id, from_status, to_status, user_id, timestamp)
 
-**Deliverables (ausstehend):** `ProductionOrderService`, Freeze-Guard in API, Produktionsübersicht-UI, Verknüpfung PO↔PurchaseOrder, 15 weitere Tests.
-
-**DoD:** Angebot → Produktionsauftrag konvertiert; BOM-Snapshot unveränderlich; Planungsänderung nach Freeze blockiert; PurchaseOrder mit ProductionOrder verknüpft; Statuswechsel beider Entitäten geloggt.
+**Tests:** 17 neue Unit-Tests grün. Gesamt: 297 Tests.
 
 ---
 

@@ -72,7 +72,8 @@ model Project {
   project_line_items ProjectLineItem[]
   project_block_evaluations ProjectBlockEvaluation[]
   areas             Area[]    // Phase 4 – Sprint 32: Bereiche
-  purchase_orders   PurchaseOrder[]  // Phase 5 – Sprint 35: Bestellverwaltung
+  purchase_orders   PurchaseOrder[]   // Phase 5 – Sprint 35: Bestellverwaltung
+  production_orders ProductionOrder[] // Phase 6 – Sprint 46: Produktionsaufträge
   quote_lines         Json      @default("[]")
   pricing_groups_json Json      @default("[]")
   macros              Json      @default("[]")
@@ -1200,24 +1201,27 @@ model QuotePosition {
 // ─────────────────────────────────────────
 
 model PurchaseOrder {
-  id              String              @id @default(uuid())
-  project_id      String
-  tenant_id       String
-  supplier_name   String
-  supplier_ref    String?
-  status          PurchaseOrderStatus @default(draft)
-  order_date      DateTime?
-  delivery_date   DateTime?
-  notes           String?
-  created_by      String
-  created_at      DateTime            @default(now())
-  updated_at      DateTime            @updatedAt
+  id                  String              @id @default(uuid())
+  project_id          String
+  tenant_id           String
+  supplier_name       String
+  supplier_ref        String?
+  status              PurchaseOrderStatus @default(draft)
+  order_date          DateTime?
+  delivery_date       DateTime?
+  notes               String?
+  created_by          String
+  production_order_id String?             // Phase 6 – Sprint 46: Verknüpfung mit internem Produktionsauftrag
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
 
-  project         Project             @relation(fields: [project_id], references: [id], onDelete: Cascade)
-  items           PurchaseOrderItem[]
+  project             Project             @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  production_order    ProductionOrder?    @relation(fields: [production_order_id], references: [id], onDelete: SetNull)
+  items               PurchaseOrderItem[]
 
   @@index([project_id])
   @@index([tenant_id])
+  @@index([production_order_id])
   @@map("purchase_orders")
 }
 
@@ -1248,6 +1252,57 @@ model PurchaseOrderItem {
 
   @@index([purchase_order_id])
   @@map("purchase_order_items")
+}
+
+// ─────────────────────────────────────────
+// PHASE 6 – Sprint 46: Produktionsaufträge
+// ─────────────────────────────────────────
+
+model ProductionOrder {
+  id            String                @id @default(uuid())
+  project_id    String
+  tenant_id     String
+  quote_id      String?               // Quote die konvertiert wurde
+  bom_snapshot  Json                  @default("{}") // eingefrorener BOM-Snapshot
+  status        ProductionOrderStatus @default(draft)
+  due_date      DateTime?
+  created_by    String
+  notes         String?
+  frozen_at     DateTime?             // Zeitpunkt der Einfrierung (Freeze-Guard)
+  created_at    DateTime              @default(now())
+  updated_at    DateTime              @updatedAt
+
+  project        Project               @relation(fields: [project_id], references: [id], onDelete: Cascade)
+  events         ProductionOrderEvent[]
+  purchase_orders PurchaseOrder[]
+
+  @@index([project_id])
+  @@index([tenant_id])
+  @@map("production_orders")
+}
+
+enum ProductionOrderStatus {
+  draft
+  confirmed
+  in_production
+  ready
+  delivered
+  installed
+}
+
+model ProductionOrderEvent {
+  id                  String        @id @default(uuid())
+  production_order_id String
+  from_status         String?
+  to_status           String
+  user_id             String?
+  note                String?
+  created_at          DateTime      @default(now())
+
+  production_order    ProductionOrder @relation(fields: [production_order_id], references: [id], onDelete: Cascade)
+
+  @@index([production_order_id])
+  @@map("production_order_events")
 }
 
 // ─────────────────────────────────────────
