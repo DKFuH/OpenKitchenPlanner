@@ -109,7 +109,7 @@ Alle Reviews (TASK-3-R01 bis TASK-11-R01) intern ausgeführt. Alle Findings umge
 
 - Phase 5 (Sprints 41–45): abgeschlossen ✅
 - Phase 6 (Sprints 46–50) starten: Auftragssteuerung, Mobile PWA, ERP-Anbindung, Analytics, Compliance.
-- Phase 7 (Sprints 51–53) geplant: GLTF/GLB-Export, IFC-BIM-Integration, DWG/SKP-Vollimplementierung.
+- Phase 7 (Sprints 51–55) geplant: GLTF/GLB-Export, IFC-BIM-Integration, DWG/SKP-Vollimplementierung, OFML-Artikel-Konfiguration, Raumakustik-Plugin.
 - Referenzplanung Phase 5: `Docs/PHASE_5_DOD_AND_EXECUTION_PLAN.md`
 - Sprint 46 vervollständigen: `ProductionOrder` + Freeze-Guard + Produktionsübersicht.
 - Phase 6 (Sprints 46–50) folgt nach Phase 5: Auftragssteuerung, Mobile PWA, ERP-Anbindung, Analytics, Compliance.

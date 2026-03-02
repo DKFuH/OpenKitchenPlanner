@@ -555,11 +555,11 @@ Sprint-Planung für MVP (Sprints 0-19), Phase 2 (Sprints 20-24) und Phase 3 (Spr
 
 ---
 
-## Phase 7 – Sprints 51–53: Interoperabilität & Dateiformate
+## Phase 7 – Sprints 51–55: Interoperabilität, Dateiformate & Raumakustik
 
 **Ausgangslage (nach Sprint 50):** Vollständige Branchenlösung mit ERP-Anbindung, Mobile und Compliance. Interop-Stubs (DXF, DWG, SKP) aus dem MVP sind vorhanden aber nicht vollständig implementiert.
 
-**Ziel:** OKP als offene Plattform mit professionellen Datei-Schnittstellen: 3D-Render-Export (GLTF/GLB), BIM-Integration (IFC), vollständige CAD-Interop (DWG, SKP). Orientierung an pCon.planner Interop-Funktionsumfang.
+**Ziel:** OKP als offene Plattform mit professionellen Datei-Schnittstellen (GLTF, IFC, DWG, SKP), konfigurierbaren Artikeln mit Abhängigkeitslogik (OFML-Parität) und Raumakustik-Visualisierung.
 
 ---
 
@@ -626,6 +626,60 @@ Sprint-Planung für MVP (Sprints 0-19), Phase 2 (Sprints 20-24) und Phase 3 (Spr
 
 ---
 
+### Sprint 54 – Konfigurierbare Artikel & Abhängigkeitslogik (OFML-Parität)
+
+**Ziel:** Katalog-Artikel erhalten eine Abhängigkeitslogik zwischen Eigenschaften – ähnlich dem OFML-Standard (Office Furniture Modelling Language). Variante A → Preis und verfügbare Optionen ändern sich automatisch.
+
+**Hintergrund:** Im professionellen Planungsbereich haben Artikel konfigurierbare Merkmale mit kaufmännischen Abhängigkeiten (z. B. Korpusfarbe → verfügbare Frontfarben; Breite → Preisgruppe). OKP hat bereits ein Katalogsystem und eine Rule Engine – diese Erweiterung fügt den Dependency-Graph zwischen Artikelmerkmalen hinzu.
+
+**Features:**
+- **Merkmals-Abhängigkeitsgraph:** Pro Katalog-Artikel: Merkmale mit Ausprägungen und Abhängigkeitsregeln (wenn Merkmal A = X, dann Merkmal B ∈ {Y, Z}); gespeichert als JSON-Graph in `catalog_articles`
+- **Konfiguratorlogik:** Bei Auswahl einer Ausprägung werden abhängige Merkmale live eingeschränkt/vorbelegt; ungültige Kombinationen werden blockiert
+- **Preisabhängigkeit:** Preis-Lookup per Merkmalskombination (Preistabelle pro Artikel); ersetzt pauschalem Einzelpreis
+- **Profilmanager:** Gespeicherte Merkmalskombinationen (Profile) pro Nutzer/Tenant wiederverwendbar
+- **Merkmalsausprägungen übertragen:** Konfiguration eines Artikels auf gleichartige Artikel übertragen (Batch-Apply)
+
+**Erweitertes Datenmodell:**
+```
+catalog_article_properties  – (article_id, key, label, type, options JSON, depends_on JSON)
+catalog_article_price_table – (article_id, property_combination JSON, price NUMERIC)
+user_profiles               – (user_id, tenant_id, name, article_id, property_values JSON)
+```
+
+**Deliverables:** Abhängigkeitsgraph-Engine, Konfigurator-API, Preistabellen-Lookup, Profilmanager-CRUD, Merkmalsübertragung, 25 Tests.
+
+**DoD:** Abhängige Merkmale schränken korrekt ein; Preis ändert sich bei Variantenwechsel; ungültige Kombination wird blockiert; Profil gespeichert und wiederverwendbar; Merkmale auf mehrere Artikel übertragen.
+
+---
+
+### Sprint 55 – Raumakustik-Plugin (Voxel-Grid Import & Visualisierung)
+
+**Ziel:** Akustische Planung durch Import externer Akustikberechnungen (CNIVG-Format) und Visualisierung als Voxel-Grid in der 2D/3D-Ansicht.
+
+**Hintergrund:** Akustische Berechnungen (Schalldruckpegel, Nachhallzeit T20, STI – Sprachverständlichkeitsindex) werden extern berechnet und als Datei zurückgeliefert. OKP importiert die Ergebnisdatei und stellt sie als überlagerte Falschfarbenkarte dar. Schallquellen (ACOUSTICS_SOURCE) und Schallsenken (ACOUSTICS_RECEIVER) werden als Layer in der Planung definiert.
+
+**Features:**
+- **Akustik-Layer:** Sonderlayer `ACOUSTICS_SOURCE` und `ACOUSTICS_RECEIVER` in der Planung; Objekte auf diesen Layern markieren Schallquellen/-senken
+- **CNIVG-Import:** `POST /projects/:id/import/acoustics` – importiert CNIVG-Datei, speichert Voxel-Grid-Daten
+- **Voxel-Grid-Visualisierung:** Falschfarbenkarte über Grundriss/3D-Ansicht – Darstellungsmodi: Karte (Landkarte) oder Punkte; transparent schaltbar
+- **Akustikgröße wählen:** Schalldruckpegel (dB), A-bewerteter Pegel (dBA), Nachhallzeit T20, STI
+- **Frequenzband-Filter:** Darstellung für einzelne Frequenzbereiche
+- **Querschnittshöhe:** Horizontalschnitt durch das Voxel-Grid in konfigurierbarer Höhe
+- **Farblegende:** Automatisch generierte Legende mit Klassen und Farbwerten; Schwellwert, Interpolation und Klassenunterteilung konfigurierbar
+- **Layer-Sichtbarkeit:** Akustik-Layer standardmäßig ausgeblendet; nur bei aktivem Akustik-Plugin sichtbar
+
+**Neues Datenmodell:**
+```
+acoustic_grids – (project_id, alternative_id, grid_data JSONB, source_file, imported_at)
+acoustic_layers – (project_id, layer_type VARCHAR, object_refs JSON)
+```
+
+**Deliverables:** CNIVG-Import-Parser, Voxel-Grid-Speicherung, Visualisierungs-API (Grid-Daten als GeoJSON/Tile), Akustik-Layer-CRUD, Frontend-Overlay-Komponente, 20 Tests.
+
+**DoD:** CNIVG-Datei importiert und Grid korrekt über Grundriss positioniert; Falschfarbenkarte in 2D-Ansicht sichtbar; Akustikvariable wählbar; Farblegende generierbar; Layer ohne Plugin ausgeblendet.
+
+---
+
 ### Meilenstein Phase 7
 
 | Nach Sprint | Ergebnis |
@@ -633,6 +687,8 @@ Sprint-Planung für MVP (Sprints 0-19), Phase 2 (Sprints 20-24) und Phase 3 (Spr
 | 51 | GLTF/GLB-Export: Planung als Web-3D-Datei für Renderer und AR/VR |
 | 52 | IFC-Integration: BIM-Austausch mit Architekturbüros und Planungssoftware |
 | 53 | CAD-Parität: DWG, SKP, DXF vollständig – offene Plattform für alle Dateiformate |
+| 54 | OFML-Parität: Konfigurierbare Artikel mit Abhängigkeitslogik und Preistabellen |
+| 55 | Raumakustik: Voxel-Grid-Visualisierung für professionelle Akustikplanung |
 
 ### Risiken Phase 7
 
@@ -641,3 +697,6 @@ Sprint-Planung für MVP (Sprints 0-19), Phase 2 (Sprints 20-24) und Phase 3 (Spr
 3. GLTF-Export bei großen Planungen (100+ Objekte) kann speicherintensiv sein – Streaming/Chunking prüfen.
 4. IFC-Mapping ist komplex: Nicht alle Katalog-Attribute haben IFC-Entsprechungen – explizite Mapping-Tabelle definieren.
 5. SKP-Format ist proprietär und schlecht dokumentiert – Reverse-Engineering-Risiko; Community-Bibliotheken evaluieren.
+6. OFML-Abhängigkeitsgraph kann zyklisch werden – Validierung auf Zyklen beim Speichern erforderlich.
+7. CNIVG-Format ist proprietär (Akustikpartner) – Format-Spec muss vom Partner bezogen werden; Fallback-Parser für alternatives Format vorsehen.
+8. Voxel-Grid-Daten können sehr groß sein (hochauflösende Räume) – Tile-basierte Übertragung und clientseitige LOD nötig.
