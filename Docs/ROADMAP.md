@@ -1,6 +1,6 @@
 # ROADMAP.md
 
-Sprint-Planung für MVP (Sprints 0-19), Phase 2 (Sprints 20-24) und Phase 3 (Sprints 25-30) inkl. aktuellem Fortschritt.
+Sprint-Planung für MVP (Sprints 0–19), Phase 2 (Sprints 20–24), Phase 3 (Sprints 25–30), Phase 4 (Sprints 31–40), Phase 5 (Sprints 41–45), Phase 6 (Sprints 46–50), Phase 7 (Sprints 51–55) und Phase 8 (Sprints 56–60) inkl. aktuellem Fortschritt. Stand: 2026-03-02.
 
 ---
 
@@ -232,12 +232,12 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 | Sprint | Status | Owner | ETA | Hinweis |
 |--------|--------|-------|-----|---------|
-| 25 | `in_progress` | Full-Stack | Phase 3 | Projektboard/Gantt und Status-/Assign-Pfade bereits vorhanden, weitere Härtung offen |
+| 25 | `done` | Full-Stack | Phase 3 | Projektboard/Gantt und Status-/Assign-Pfade aktiv |
 | 26 | `done` | Backend-Lead | Phase 3 | Dokumentrouten und Kern-Integration inkl. Auto-Attach/Download aktiv |
 | 27 | `done` | Backend-Lead | Phase 3 | Kontakt-API + Projektverknüpfung + CRM-Ansicht mit KPIs aktiv |
 | 28 | `done` | Full-Stack | Phase 3 | DashboardConfig + KPI-Endpunkte + Dashboard-UI integriert |
 | 29 | `done` | Backend-Lead | Phase 3 | CatalogIndex-API + Pricing-Einfluss + Batch-UI integriert |
-| 30 | `in_progress` | Full-Stack | Phase 3 | Suche/Export/Notifications/Backup-Endpunkte und Frontend-Anbindung vorhanden |
+| 30 | `done` | Full-Stack | Phase 3 | Suche/Export/Notifications/Backup-Endpunkte und Frontend-Anbindung aktiv |
 
 ### Sprint-Übersicht
 
@@ -288,7 +288,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 31 – Projektliste & 3-Punkte-Menü
 
-**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 4 · Abhängigkeiten: S30
+**Meta:** Status: `done` · Owner: Full-Stack · ETA: Phase 4 · Abhängigkeiten: S30
 
 **Ziel:** Dashboard-ähnliche Projektliste mit Filtern, Suche, 3-Punkte-Menü.
 
@@ -306,7 +306,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 32 – Bereiche / Alternativen & Modellauswahl
 
-**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 4 · Abhängigkeiten: S31
+**Meta:** Status: `done` · Owner: Full-Stack · ETA: Phase 4 · Abhängigkeiten: S31
 
 **Ziel:** Baumstruktur + globale Kopfdaten pro Alternative – F7 öffnet überall.
 
@@ -323,7 +323,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 33 – Onboarding & Lernreise
 
-**Meta:** Status: `planned` · Owner: Frontend-Lead · ETA: Phase 4 · Abhängigkeiten: S31, S32
+**Meta:** Status: `done` · Owner: Frontend-Lead · ETA: Phase 4 · Abhängigkeiten: S31, S32
 
 **Ziel:** Neuer User kann sich selbstständig einrichten – mit Tutorials und Helpdesk-Links.
 
@@ -339,7 +339,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 34 – Workspace-Layout & Projekt-Details
 
-**Meta:** Status: `planned` · Owner: Frontend-Lead · ETA: Phase 4 · Abhängigkeiten: S33
+**Meta:** Status: `done` · Owner: Frontend-Lead · ETA: Phase 4 · Abhängigkeiten: S33
 
 **Ziel:** Layout anpassbar + Projekt-Details erweitern.
 
@@ -385,7 +385,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 41 – Planungseffizienz: Passstücke, Höhentypen & Sockeloptionen
 
-**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 5 · Abhängigkeiten: S34, S8
+**Meta:** Status: `done` · Owner: Full-Stack · ETA: Phase 5 · Abhängigkeiten: S34, S8
 
 **Ziel:** Automatisierte Füllstück-Generierung + farbcodierte Höhenzonierung + flexible Sockeloptionen.
 
@@ -408,7 +408,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 42 – Angebotsworkflow: Schreibschutz, Aufschläge & EK-Nachtrag
 
-**Meta:** Status: `planned` · Owner: Backend-Lead · ETA: Phase 5 · Abhängigkeiten: S41, S13
+**Meta:** Status: `done` · Owner: Backend-Lead · ETA: Phase 5 · Abhängigkeiten: S41, S13
 
 **Ziel:** Angebotsversand sperrt Alternative; Negativ-Rabatt-Konvention korrekt implementiert; EK nach Auftragsbestätigung nachtragbar.
 
@@ -432,7 +432,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 43 – UX & Eingabe: Taschenrechner, Favoriten & Vorlagen
 
-**Meta:** Status: `planned` · Owner: Frontend-Lead · ETA: Phase 5 · Abhängigkeiten: S42
+**Meta:** Status: `done` · Owner: Frontend-Lead · ETA: Phase 5 · Abhängigkeiten: S42
 
 **Ziel:** Alltagskomfort im Planer: Rechenketten in Maßfeldern, Favoriten-Filter, Modellvorlagen.
 
@@ -455,7 +455,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 44 – Druck & Export: Batchdruck, S/W-Modus & befristeter Link
 
-**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 5 · Abhängigkeiten: S43, S13
+**Meta:** Status: `done` · Owner: Full-Stack · ETA: Phase 5 · Abhängigkeiten: S43, S13
 
 **Ziel:** Druckworkflow professionalisieren: mehrere Formulare auf einmal, Schwarz/Weiß, zeitbegrenzte Freigabelinks.
 
@@ -478,7 +478,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 45 – Erweiterte Planung: Nischenverkleidung, Abdeckboden & Tiefenkürzung
 
-**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 5 · Abhängigkeiten: S44, S33
+**Meta:** Status: `done` · Owner: Full-Stack · ETA: Phase 5 · Abhängigkeiten: S44, S33
 
 **Ziel:** Spezielle Schranktypen und Maßanpassungen mit korrekter BOM- und Preiswirkung.
 
@@ -839,3 +839,169 @@ acoustic_layers – (project_id, layer_type VARCHAR, object_refs JSON)
 6. OFML-Abhängigkeitsgraph kann zyklisch werden – Validierung auf Zyklen beim Speichern erforderlich.
 7. CNIVG-Format ist proprietär (Akustikpartner) – Format-Spec muss vom Partner bezogen werden; Fallback-Parser für alternatives Format vorsehen.
 8. Voxel-Grid-Daten können sehr groß sein (hochauflösende Räume) – Tile-basierte Übertragung und clientseitige LOD nötig.
+
+---
+
+## Phase 8 – Sprints 56–60: Planerqualität & erweiterte Raumdefinition
+
+**Ausgangslage (nach Sprint 55):** Vollständige Interop-Parität, OFML-ähnliche Artikelkonfiguration und Raumakustik vorhanden. Die Werkzeuge für Raumzeichnung, Bemaßung und Katalogtiefe sind jedoch noch deutlich hinter professionellen Studio-Systemen (CARAT, KPS.MAX, pCon.planner, Chief Architect).
+
+**Ziel:** Qualitätssprung im täglichen Planungsworkflow – Wand-Interaktoren für direkte Grundrissbearbeitung, Live-Bemaßung, erweiterte Wandobjekte, Grundriss-Nachzeichnen aus Bildern/DXF und tiefere Katalogstruktur.
+
+**Inspiration:** pCon.planner (Wand-Interaktoren, Bemaßung, 2D-Projektionen), CARAT/KPS.MAX (Kitchen Assistant, Live-Dims, Makros), Chief Architect (Toe-Kick, Countertop-Mods), 2020 Design (Multi-Point-Panorama).
+
+---
+
+### Sprint 56 – Canvas-Editor UX: Wand-Interaktoren & Live-Bemaßung
+
+**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S55, S4
+
+**Ziel:** Direktes Bearbeiten von Wänden via Griffe im 2D-Grundriss; Maße aktualisieren sich live beim Verschieben.
+
+**Features:**
+
+- **Wand-Interaktoren:** Endpunkt-Griffe (Kreis) und Mittelpunkt-Griffe (Raute) werden auf jeder Wand-Kante im Select-Modus eingeblendet. Ziehen des Endpunkts verschiebt Vertex; Ziehen des Mittelpunkts verschiebt die gesamte Wand parallel. Visuelles Highlighting beim Hover.
+- **Live-Dimensioning:** Beim Ziehen eines Vertex oder Wandgriffs wird die aktuelle Kantenlänge (und ggf. Winkel zur Nachbarkante) als fliegendes Label direkt am Cursor angezeigt. Aktualisierung on-drag, keine Verzögerung.
+- **Winkelbemaßung (3-Punkt):** Im Select-Modus: Klick auf Ecke → Winkelanzeige zwischen den angrenzenden Wänden eingeblendet.
+- **Stage-Sizing Fix:** Konva-Stage erhält korrekte Höhe (CanvasArea-Höhe abzüglich Toolbar und Info-Bar via ResizeObserver auf innerem Wrapper-Div) – Info-Bar nicht mehr außerhalb des sichtbaren Bereichs.
+- **Keyboard-Shortcuts:** `D` = Draw-Modus, `S` = Select-Modus, `Backspace` = markierten Vertex löschen, `Escape` = Auswahl aufheben.
+
+**Neues Datenmodell:** keine neuen DB-Tabellen; nur Frontend-State-Erweiterungen im `usePolygonEditor`.
+
+**Deliverables:** Interaktor-Shapes in `PolygonEditor.tsx`, Live-Dim-Overlay-Komponente, Stage-Sizing-Fix in `CanvasArea.tsx`, Keyboard-Event-Handler, 15 Tests.
+
+**DoD:** Wand-Endpunkt per Drag verschoben → Kantenlänge live aktualisiert; Winkelanzeige korrekt; Stage zeigt Info-Bar vollständig; Shortcuts funktionieren.
+
+---
+
+### Sprint 57 – Erweiterte Wandobjekte (WallAttachments)
+
+**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S56, S5
+
+**Ziel:** Das `Opening`-Modell zu einem generischen `WallAttachment` ausbauen: Heizkörper, Steckdosen, Schalter, Nischen und generische Wandelemente als eigene Typen mit 2D-Symbolen.
+
+**Hintergrund:** Professionelle Studio-Systeme (pCon, CARAT) kennen neben Türen/Fenstern auch Installationsobjekte (Heizkörper, Steckdose, Wasserleitungen), die bei der Schrank-/Platzierungsplanung berücksichtigt werden müssen. Das bestehende `Opening`-Schema ist auf `door/window/pass-through` beschränkt.
+
+**Features:**
+
+- **Neuer Entity-Typ `WallAttachment`:** Ersetzt/erweitert `Opening` um Typen: `door`, `window`, `pass-through`, `radiator`, `socket`, `switch`, `niche`, `pipe`, `custom`.
+- **2D-Symbole:** Für jeden Typ ein eigenes Konva-Symbol in `PolygonEditor` (Tür-Schwingbogen, Fenster-Doppellinie, Heizkörper-Raster, Steckdose-Kreis usw.).
+- **Tiefenversatz:** `WallAttachment` erhält optionales Feld `wall_offset_depth_mm` – Objekte mit Tiefe (Heizkörper, Nische) können den minimalen Schrankabstand automatisch anpassen.
+- **API-Erweiterung:** `opening_type`-Enum in `openings`-Tabelle erweitern; bestehende Einträge bleiben kompatibel.
+- **RightSidebar:** Typ-Dropdown, Symbol-Vorschau, Tiefenfeld.
+
+**Neues Datenmodell:**
+```
+openings.type: enum  door | window | pass-through | radiator | socket | switch | niche | pipe | custom
+openings.wall_offset_depth_mm: INTEGER nullable
+```
+
+**Deliverables:** Typ-Enum-Migration, Symbol-Renderer in `PolygonEditor`, Tiefenversatz-Logik in Kollisionsprüfung, RightSidebar-Erweiterung, 20 Tests.
+
+**DoD:** Heizkörper platziert → beeinflusst Mindestabstand in Prüf-Engine; Steckdose zeigt korrektes Symbol im Grundriss; bestehende Tür/Fenster-Daten bleiben kompatibel.
+
+---
+
+### Sprint 58 – Grundriss-Nachzeichnen: Bildimport als Canvas-Overlay
+
+**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S57, S3.5
+
+**Ziel:** Foto oder Scan eines Grundrisses als halbtransparentes Hintergrundbild in den Canvas laden und darüber den Raum nachzeichnen.
+
+**Hintergrund:** Handgezeichnete oder eingescannte Grundrisse sind im Handwerk der häufigste Ausgangspunkt. CARAT und pCon.planner unterstützen diesen Workflow mit Bild-Import + Maßband-Kalibrierung. Eigenes Nachzeichnen spart Zeit gegenüber vollem DXF-Import.
+
+**Features:**
+
+- **Bild-Upload in Canvas:** Button „Grundriss laden" → JPG/PNG/PDF (Seite 1) → wird als Konva-`Image`-Layer unter dem Zeichenlayer gerendert; transparenz-adjustierbar (Slider 20–100 %).
+- **Maßstab-Kalibrierung:** Werkzeug „Referenzlinie": 2 Punkte auf dem Bild anklicken → Referenzlänge eingeben (z. B. 3000 mm) → Canvas skaliert automatisch so, dass 1 px = korrekte mm-Anzahl.
+- **Bild-Transformationen:** Verschieben (Drag), Drehen (Drehgriff), Skalieren (Eckgriffe) – so dass Bild und Polygonzeichnung übereinander ausgerichtet werden können.
+- **Speicherung:** Bild-URL (S3-kompatibel) + Transformationsparameter (x, y, rotation, scale) in `rooms.reference_image` (JSONB) persistiert.
+- **DXF-Overlay-Snap:** Wenn bereits ein DXF importiert wurde, können die DXF-Linien als Snap-Ziele für neue Vertices genutzt werden (Fanglinien aus DXF-Layer `0`/`WALLS`).
+
+**Neues Datenmodell:**
+```
+rooms.reference_image: JSONB nullable  { url, x, y, rotation, scale, opacity }
+```
+
+**Deliverables:** Bild-Upload-Endpoint (`POST /rooms/:id/reference-image`), Konva-Overlay-Layer, Kalibrierungs-Werkzeug, Transformations-Griffe, DXF-Snap-Erweiterung, 20 Tests.
+
+**DoD:** Bild geladen, kalibriert und halbtransparent sichtbar; Vertices snappen auf Bild-Linien; Transformationen nach Reload wiederhergestellt.
+
+---
+
+### Sprint 59 – 2D-Bemaßung & Frontansichten
+
+**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S58, S14
+
+**Ziel:** Bemaßungs-Entity im Grundriss und automatische 2D-Frontansichten für jede Küchenzeile – für professionelle Planungsunterlagen ohne DXF-Export.
+
+**Features:**
+
+- **Bemaßungs-Entity `Dimension`:** Typ `linear` (2 Punkte → Maßkette) und `angular` (3 Punkte → Winkelmaß). Stil-Felder: Einheit (mm/cm), Schriftgröße, Pfeiltyp (offener/geschlossener Pfeil), Abstand der Maßlinie vom Objekt. Interaktoren: Textposition verschieben, Maßlinie-Abstand anpassen.
+- **Automatische Raummaße:** Button „Raummaße einfügen" → Bemaßungen aller Wandkanten automatisch generiert (außen umlaufend), anpassbar.
+- **2D-Frontansichten generieren:** Pro Wand mit platzierten Schränken: Frontansicht-Button in RightSidebar → Schränke werden orthogonal auf die Wandfläche projiziert, inkl. Höhenbemaßung (Sockel/Unterschrank/Oberschrank/Decke) und Breitenbemaßung. Ergebnis als SVG (direkt im Browser).
+- **Export:** Frontansichten + Grundriss (inkl. Bemaßungen) als einzeln wählbare PDF/SVG-Exportseiten im Print-Workflow (Sprint 44).
+
+**Neues Datenmodell:**
+```
+dimensions: id, room_id, type (linear|angular), points JSON, style JSON, created_at
+```
+
+**Deliverables:** `Dimension`-Entity + CRUD-API, Konva-Rendering für Maßketten, Frontansichts-Generator-Service, SVG-Export-Endpunkt, PDF-Integration in Batch-Print, 25 Tests.
+
+**DoD:** Lineare Bemaßung platziert und mit Raummaßen beschriftet; Frontansicht für Zeile korrekt projiziert inkl. Höhen/Breiten; SVG öffnet in Browser ohne Artefakte; PDF-Batch-Print um Frontansicht erweiterbar.
+
+---
+
+### Sprint 60 – Katalog-Hierarchie, Kitchen Assistant & Schnellfilter
+
+**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S59, S20
+
+**Ziel:** Tiefere Katalogstruktur (Familien/Kollektionen), auto-generierte Layout-Vorschläge (Kitchen Assistant) und schnellere Artikel-Navigation.
+
+**Features:**
+
+- **Katalog-Hierarchie:** `catalog_articles` um Felder `family`, `collection`, `style_tag` erweitern; Katalog-Sidebar zeigt hierarchischen Filter (Kollektion → Familie → Artikel); Breadcrumb-Navigation.
+- **Einheitliche Katalog-Quellen:** LeftSidebar-Katalogbereich bündelt intern: Herstellerkataloge, SKP-Referenzen, generische Imports, Nutzerfavoriten – in einer einheitlichen Listenansicht mit Quellenicon.
+- **Kitchen Assistant (Light):** Button „Layout vorschlagen" → Analysiert Raumgeometrie (Wandlängen, Ecken, Öffnungen) → Schlägt 2–3 Grundlayouts vor (L-Form, U-Form, Einzeiler, Insel) als Vorschau; Klick übernimmt Schrankreihen-Grundstruktur als Makro.
+- **Live-Suche & Schnellfilter:** Suche in Katalog-Sidebar reagiert on-keystroke (< 100 ms); Schnellfilter-Chips: Favoriten, Zuletzt verwendet, Neuheiten (nach `created_at`), Aktionsartikel.
+- **Makro-Vorlagen aus Katalog:** Häufig genutzte Zeilen/Inseln (CARAT-„Makros"-Konzept) im Katalog als `CatalogMacro` speichern; beim Platzieren als Gruppe einfügen.
+
+**Neues Datenmodell:**
+```
+catalog_articles.family:      VARCHAR nullable
+catalog_articles.collection:  VARCHAR nullable
+catalog_articles.style_tag:   VARCHAR nullable
+catalog_macros: id, tenant_id, name, positions JSON (wall_id, offset_mm, article_id, dims), created_by
+```
+
+**Deliverables:** Migration für Felder, Hierarchie-Filter-UI, Kitchen-Assistant-Service (Regelbasiert), Makro-CRUD + Platzierungs-Handler, Live-Suche mit Debounce, 25 Tests.
+
+**DoD:** Kollektion-Filter zeigt korrekte Artikel-Teilmenge; Kitchen Assistant schlägt L/U/Einzeiler-Layout vor; Makro wird als Gruppe platziert; Suche reagiert < 100 ms.
+
+---
+
+### Meilenstein Phase 8
+
+| Nach Sprint | Ergebnis |
+|-------------|----------|
+| 56 | Interaktiver Grundriss: direkte Wand-Handles, Live-Maße, Keyboard-Shortcuts |
+| 57 | Vollständige Wandobjekte: Heizkörper, Steckdosen, Nischen mit 2D-Symbolen |
+| 58 | Nachzeichnen-Workflow: Bild-Import, Kalibrierung, DXF-Snap |
+| 59 | Professionelle Planungsunterlagen: Bemaßung + Frontansichten direkt im Tool |
+| 60 | Profi-Katalog: Hierarchie, Kitchen Assistant, Makros, Schnellfilter |
+
+### Security & Tenant-Isolation (Phase 8)
+
+**Datenisolation:** `dimensions` und `catalog_macros` erhalten `tenant_id NOT NULL`. `rooms.reference_image` enthält S3-URL mit Tenant-Prefix; Download nur über Signed URL.
+
+**Migrations-/Index-Disziplin:** `catalog_articles.family/collection/style_tag` nullable, kein Rewrite bestehender Zeilen. `dimensions`-Tabelle neu mit `tenant_id + room_id`-Index. `opening_type`-Enum-Erweiterung via nicht-brechender Migration.
+
+### Risiken Phase 8
+
+1. Wand-Interaktoren erfordern genaue Konva-Hit-Detection für Handles – Überlappung mit Vertex-Circles bei kurzen Kanten prüfen.
+2. Live-Dimensioning darf nicht zu Re-Render-Schleifen führen – Debounce/Throttle auf Drag-Events.
+3. Bild-Upload und Kalibrierung sind komplex im mobilen/Touch-Kontext – Desktop-First, Touch-Optimierung als Follow-up.
+4. Kitchen-Assistant-Layouts müssen bei ungewöhnlichen Raumformen graceful degradieren – Fallback: „Kein Vorschlag möglich".
+5. Frontansichts-Generator muss Dachschrägen-Constraints (Sprint 6) berücksichtigen – Höhenlinien dürfen nicht ignoriert werden.
+6. `opening_type`-Enum-Erweiterung muss mit bestehenden Öffnungsdaten und der Prüf-Engine (Sprint 22) abgestimmt werden.

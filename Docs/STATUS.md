@@ -11,8 +11,9 @@ Projektstatus per 2026-03-02 - MVP, Phase 2, Phase 3 und Phase 4 abgeschlossen. 
 - **Sprints 25-30 (Phase 3): abgeschlossen**
 - **Sprints 31-40 (Phase 4 + Sprints 35-40): abgeschlossen** (PR #8 gemergt 2026-03-02)
 - **Sprints 41-45 (Phase 5 – Profi-Parität): abgeschlossen** (Sprints 41-45 gemergt 2026-03-02)
-- **Sprints 46-50 (Phase 6 – Vernetzte Branchenlösung): geplant**
-- **Sprints 51-53 (Phase 7 – Interoperabilität & Dateiformate): geplant**
+- **Sprints 46-50 (Phase 6 – Vernetzte Branchenlösung): geplant** (Sprint 46 teilweise: PurchaseOrder fertig, ProductionOrder ausstehend)
+- **Sprints 51-55 (Phase 7 – Interoperabilität & Dateiformate): geplant**
+- **Sprints 56-60 (Phase 8 – Planerqualität & erweiterte Raumdefinition): geplant**
 
 Sprint 01 wurde extern bearbeitet. Alle übrigen Sprints lieferten Artefakte in:
 - `shared-schemas` - Polygon, Öffnungen, Decken/Wände, Kollision/Höhe
@@ -108,10 +109,9 @@ Alle Reviews (TASK-3-R01 bis TASK-11-R01) intern ausgeführt. Alle Findings umge
 ## Nächste Schritte
 
 - Phase 5 (Sprints 41–45): abgeschlossen ✅
-- Phase 6 (Sprints 46–50) starten: Auftragssteuerung, Mobile PWA, ERP-Anbindung, Analytics, Compliance.
-- Phase 7 (Sprints 51–55) geplant: GLTF/GLB-Export, IFC-BIM-Integration, DWG/SKP-Vollimplementierung, OFML-Artikel-Konfiguration, Raumakustik-Plugin.
-- Referenzplanung Phase 5: `Docs/PHASE_5_DOD_AND_EXECUTION_PLAN.md`
+- Phase 6 (Sprints 46–50): Sprint 46 teilweise (PurchaseOrder ✅, ProductionOrder + Freeze-Guard ausstehend).
+- Phase 7 (Sprints 51–55): geplant – GLTF/GLB-Export, IFC-BIM, DWG/SKP, OFML, Raumakustik.
+- Phase 8 (Sprints 56–60): geplant – Wand-Interaktoren, WallAttachments, Bild-Nachzeichnen, 2D-Bemaßung, Kitchen Assistant.
 - Sprint 46 vervollständigen: `ProductionOrder` + Freeze-Guard + Produktionsübersicht.
-- Phase 6 (Sprints 46–50) folgt nach Phase 5: Auftragssteuerung, Mobile PWA, ERP-Anbindung, Analytics, Compliance.
 - Referenzplanung Phase 6: `Docs/PHASE_6_DOD_AND_EXECUTION_PLAN.md` (noch zu erstellen)
 
