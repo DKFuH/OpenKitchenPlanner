@@ -568,7 +568,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 47 – Mobile Aufmaß & Baustellenprotokoll
 
-**Meta:** Status: `planned` · Owner: Frontend-Lead · ETA: Phase 6 · Abhängigkeiten: S46
+**Meta:** Status: `done` · Owner: Frontend-Lead · ETA: Phase 6 · Abhängigkeiten: S46 · **Abgeschlossen: 2026-03-02**
 
 **Ziel:** Progressive Web App für Außendienst: Aufmaß, Fotos, Installationscheckliste, automatisches Protokoll.
 
@@ -592,7 +592,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 48 – ERP-Anbindung & Lieferantenportal
 
-**Meta:** Status: `planned` · Owner: Backend-Lead · ETA: Phase 6 · Abhängigkeiten: S47, S46
+**Meta:** Status: `done` · Owner: Backend-Lead · ETA: Phase 6 · Abhängigkeiten: S47, S46
 
 **Ziel:** Bestehende `PurchaseOrder` (Sprint 46) um ERP-Konnektoren erweitern: automatische Übertragung an externe Systeme, Webhook-Rückmeldung, Lieferantenportal.
 
@@ -615,7 +615,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 49 – Erweiterte Analytics & individuelle Reports
 
-**Meta:** Status: `planned` · Owner: Backend-Lead · ETA: Phase 6 · Abhängigkeiten: S48, S28
+**Meta:** Status: `done` · Owner: Backend-Lead · ETA: Phase 6 · Abhängigkeiten: S48, S28
 
 **Ziel:** Report-Builder mit Drill-down, Trichteranalyse und geplanter E-Mail-Verteilung.
 
@@ -639,7 +639,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 50 – Compliance, Plattformhärtung & SLA-Management
 
-**Meta:** Status: `planned` · Owner: Security-Lead · ETA: Phase 6 · Abhängigkeiten: S49, S23
+**Meta:** Status: `done` · Owner: Security-Lead · ETA: Phase 6 · Abhängigkeiten: S49, S23 · **Abgeschlossen: 2026-03-02**
 
 **Ziel:** DSGVO-Tooling, SSO/SAML 2.0, granulares RBAC, SLA-Monitoring.
 
@@ -690,7 +690,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 51 – GLTF/GLB Export & 3D-Render-Pipeline
 
-**Meta:** Status: `planned` · Owner: Frontend-Lead · ETA: Phase 7 · Abhängigkeiten: S50, S14
+**Meta:** Status: `done` · Owner: Frontend-Lead · ETA: Phase 7 · Abhängigkeiten: S50, S14
 
 **Ziel:** Planung als GLTF/GLB exportieren für externe Renderer, AR/VR-Viewer und Kundenvisualisierung.
 
@@ -713,7 +713,7 @@ Vollständige Interop-Dokumentation: [`Docs/INTEROP.md`](./INTEROP.md)
 
 ### Sprint 52 – IFC Import/Export (BIM-Integration)
 
-**Meta:** Status: `planned` · Owner: Interop-Lead · ETA: Phase 7 · Abhängigkeiten: S51, S3.5
+**Meta:** Status: `done` · Owner: Interop-Lead · ETA: Phase 7 · Abhängigkeiten: S51, S3.5
 
 **Ziel:** IFC 2×3 und IFC 4 Import/Export für Austausch mit Architekten, Planungsbüros und BIM-Software (Revit, ArchiCAD, Allplan).
 
@@ -850,7 +850,7 @@ acoustic_layers – (project_id, layer_type VARCHAR, object_refs JSON)
 
 ### Sprint 56 – Canvas-Editor UX: Wand-Interaktoren & Live-Bemaßung
 
-**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S55, S4
+**Meta:** Status: `done` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S55, S4
 
 **Ziel:** Direktes Bearbeiten von Wänden via Griffe im 2D-Grundriss; Maße aktualisieren sich live beim Verschieben.
 

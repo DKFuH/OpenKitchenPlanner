@@ -8,6 +8,7 @@ import {
 } from '../api/catalog.js'
 import { placementsApi, type Placement } from '../api/placements.js'
 import { roomsApi, type RoomBoundaryPayload, type RoomPayload } from '../api/rooms.js'
+import { areasApi } from '../api/areas.js'
 import { openingsApi, type Opening } from '../api/openings.js'
 import { validateApi, type ValidateResponse } from '../api/validate.js'
 import { autoCompletionApi, type AutoCompleteResult } from '../api/autoCompletion.js'
@@ -87,6 +88,8 @@ export function Editor() {
   const [autoCompleteResult, setAutoCompleteResult] = useState<AutoCompleteResult | null>(null)
   const [isPreviewPopoutOpen, setIsPreviewPopoutOpen] = useState(false)
   const [showAreasPanel, setShowAreasPanel] = useState(false)
+  const [selectedAlternativeId, setSelectedAlternativeId] = useState<string | null>(null)
+  const [gltfExportLoading, setGltfExportLoading] = useState(false)
 
   // Editor-State nach oben gehoben, damit RightSidebar darauf zugreifen kann
   const editor = usePolygonEditor()
@@ -107,6 +110,19 @@ export function Editor() {
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false))
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    areasApi.list(id)
+      .then((areas) => {
+        const allAlternatives = areas.flatMap((area) => area.alternatives)
+        const preferred = allAlternatives.find((alternative) => alternative.is_active) ?? allAlternatives[0] ?? null
+        setSelectedAlternativeId(preferred?.id ?? null)
+      })
+      .catch(() => {
+        setSelectedAlternativeId(null)
+      })
   }, [id])
 
   // Editor-Vertices + Öffnungen neu laden wenn Raum wechselt
@@ -327,6 +343,38 @@ export function Editor() {
     }
   }, [id])
 
+  const handleGltfExport = useCallback(async () => {
+    if (!selectedAlternativeId) {
+      alert('Keine Alternative ausgewählt')
+      return
+    }
+
+    setGltfExportLoading(true)
+    try {
+      const response = await fetch(`/api/v1/alternatives/${selectedAlternativeId}/export/gltf`, {
+        method: 'POST',
+        headers: { 'X-Tenant-Id': '00000000-0000-0000-0000-000000000001' },
+      })
+
+      if (!response.ok) {
+        alert('Export fehlgeschlagen')
+        return
+      }
+
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `planung-${selectedAlternativeId}.glb`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      alert('Export fehlgeschlagen')
+    } finally {
+      setGltfExportLoading(false)
+    }
+  }, [selectedAlternativeId])
+
   // Geometrieprüfung ausführen
   const handleRunValidation = useCallback(async () => {
     if (!selectedRoomRef.current || !id) return
@@ -458,6 +506,14 @@ export function Editor() {
           <button type="button" className={styles.btnSecondary} onClick={() => navigate(`/projects/${id}/quote-lines`)}>
             Angebotspositionen
           </button>
+          <button
+            type="button"
+            className={styles.btnSecondary}
+            onClick={() => { void handleGltfExport() }}
+            disabled={gltfExportLoading || !selectedAlternativeId}
+          >
+            {gltfExportLoading ? 'GLB exportiere…' : 'GLB exportieren'}
+          </button>
           <button type="button" className={styles.btnSecondary} onClick={() => setShowAreasPanel((prev) => !prev)}>
             {showAreasPanel ? 'Bereiche ausblenden' : 'Bereiche / Alternativen'}
           </button>
@@ -466,7 +522,7 @@ export function Editor() {
 
       <div className={styles.workspace}>
         {showAreasPanel && id && (
-          <AreasPanel projectId={id} />
+          <AreasPanel projectId={id} onOpenAlternative={setSelectedAlternativeId} />
         )}
         <LeftSidebar
           rooms={project.rooms}

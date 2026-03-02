@@ -10,6 +10,10 @@ import { DocumentsPage } from './pages/DocumentsPage.js'
 import { WebplannerPage } from './pages/WebplannerPage.js'
 import { QuoteLinesPage } from './pages/QuoteLinesPage.js'
 import { ProductionOrdersPage } from './pages/ProductionOrdersPage.js'
+import { SiteSurveyPage } from './pages/SiteSurveyPage.js'
+import { SupplierPortalPage } from './pages/SupplierPortalPage.js'
+import { ReportsPage } from './pages/ReportsPage.js'
+import { CompliancePage } from './pages/CompliancePage.js'
 import './global.css'
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
@@ -46,6 +50,10 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/projects/:id" element={<Editor />} />
         <Route path="/projects/:id/quote-lines" element={<QuoteLinesPage />} />
         <Route path="/production-orders" element={<ProductionOrdersPage />} />
+        <Route path="/site-surveys" element={<SiteSurveyPage />} />
+        <Route path="/supplier-portal" element={<SupplierPortalPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/compliance" element={<CompliancePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

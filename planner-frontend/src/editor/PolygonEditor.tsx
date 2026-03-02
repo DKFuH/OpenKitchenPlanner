@@ -1,5 +1,5 @@
-import { useRef, useCallback } from 'react'
-import { Stage, Layer, Line, Circle, Group, Rect } from 'react-konva'
+import { useRef, useCallback, useEffect, useState } from 'react'
+import { Stage, Layer, Line, Circle, Group, Rect, Text } from 'react-konva'
 import type Konva from 'konva'
 import type { Point2D } from '@shared/types'
 import type { Opening } from '../api/openings.js'
@@ -90,6 +90,7 @@ export function PolygonEditor({
   placements = [], selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement,
 }: Props) {
   const stageRef = useRef<Konva.Stage>(null)
+  const [dragLabel, setDragLabel] = useState<{ x: number; y: number; text: string } | null>(null)
 
   const handleStageClick = useCallback((_e: Konva.KonvaEventObject<MouseEvent>) => {
     if (state.tool !== 'draw') return
@@ -102,6 +103,23 @@ export function PolygonEditor({
   const handleStageDblClick = useCallback(() => {
     if (state.tool === 'draw' && state.vertices.length >= 3) onClosePolygon()
   }, [state.tool, state.vertices.length, onClosePolygon])
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key === 'd' || e.key === 'D') onSetTool('draw')
+      if (e.key === 's' || e.key === 'S') onSetTool('select')
+      if ((e.key === 'Backspace' || e.key === 'Delete') && state.selectedIndex !== null) {
+        onDeleteVertex(state.selectedIndex)
+      }
+      if (e.key === 'Escape') {
+        onSelectVertex(null)
+        onSelectEdge(null)
+      }
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [state.selectedIndex, state.tool, onSetTool, onDeleteVertex, onSelectVertex, onSelectEdge])
 
   const pts = state.vertices.map(v => ({
     x: worldToCanvas(v.x_mm),
@@ -259,6 +277,44 @@ export function PolygonEditor({
             </Group>
           )}
 
+          {/* Mittelpunkt-Griffe für Wand-Verschiebung */}
+          {state.closed && state.tool === 'select' && (
+            <Group>
+              {pts.map((p, i) => {
+                const next = pts[(i + 1) % pts.length]
+                const mx = (p.x + next.x) / 2
+                const my = (p.y + next.y) / 2
+                return (
+                  <Rect
+                    key={`mid-${state.wallIds[i] ?? i}`}
+                    x={mx}
+                    y={my}
+                    width={10}
+                    height={10}
+                    offsetX={5}
+                    offsetY={5}
+                    rotation={45}
+                    fill={COLOR.edgeSelected}
+                    opacity={0.85}
+                    draggable
+                    onDragMove={(e) => {
+                      const dx = canvasToWorld(e.target.x() - mx)
+                      const dy = canvasToWorld(e.target.y() - my)
+                      const iV = i
+                      const iNext = (i + 1) % state.vertices.length
+                      const vI = state.vertices[iV]
+                      const vNext = state.vertices[iNext]
+                      onMoveVertex(iV, { x_mm: vI.x_mm + dx, y_mm: vI.y_mm + dy })
+                      onMoveVertex(iNext, { x_mm: vNext.x_mm + dx, y_mm: vNext.y_mm + dy })
+                      e.target.x(mx)
+                      e.target.y(my)
+                    }}
+                  />
+                )
+              })}
+            </Group>
+          )}
+
           {/* Öffnungen an Wänden */}
           {state.closed && (
             <Group>
@@ -356,15 +412,57 @@ export function PolygonEditor({
                     if (state.tool === 'select') onDeleteVertex(i)
                   }}
                   onDragEnd={(e) => {
+                    setDragLabel(null)
                     onMoveVertex(i, {
                       x_mm: canvasToWorld(e.target.x()),
                       y_mm: canvasToWorld(e.target.y()),
+                    })
+                  }}
+                  onDragMove={(e) => {
+                    const x = e.target.x()
+                    const y = e.target.y()
+                    const nextIdx = (i + 1) % pts.length
+                    const prevIdx = (i - 1 + pts.length) % pts.length
+                    const toNext = Math.hypot(
+                      canvasToWorld(pts[nextIdx].x - x),
+                      canvasToWorld(pts[nextIdx].y - y),
+                    )
+                    const toPrev = Math.hypot(
+                      canvasToWorld(pts[prevIdx].x - x),
+                      canvasToWorld(pts[prevIdx].y - y),
+                    )
+                    const activeLen = state.selectedEdgeIndex === i ? toPrev : toNext
+                    setDragLabel({
+                      x: x + 12,
+                      y: y - 16,
+                      text: `${Math.round(activeLen)} mm`,
                     })
                   }}
                 />
               )
             })}
           </Group>
+
+          {dragLabel && (
+            <Group>
+              <Rect
+                x={dragLabel.x - 4}
+                y={dragLabel.y - 12}
+                width={dragLabel.text.length * 7 + 8}
+                height={18}
+                fill="rgba(0,0,0,0.75)"
+                cornerRadius={3}
+              />
+              <Text
+                x={dragLabel.x}
+                y={dragLabel.y - 10}
+                text={dragLabel.text}
+                fill="white"
+                fontSize={12}
+                fontFamily="monospace"
+              />
+            </Group>
+          )}
         </Layer>
       </Stage>
 
@@ -374,7 +472,7 @@ export function PolygonEditor({
           <span>Klick: Punkt setzen · Doppelklick oder erster Punkt: Polygon schließen</span>
         )}
         {state.tool === 'select' && (
-          <span>Ziehen: Punkt verschieben · Doppelklick: löschen · Kante/Öffnung klicken: auswählen</span>
+          <span>Ziehen: Punkt/Wand verschieben · Doppelklick: löschen · D=Zeichnen · S=Auswählen · Esc=Abwählen</span>
         )}
         <span className={styles.vertexCount}>{state.vertices.length} Punkte · {openings.length} Öffnungen</span>
       </div>

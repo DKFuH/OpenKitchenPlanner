@@ -9,6 +9,9 @@ const { prismaMock } = vi.hoisted(() => ({
     project: {
       findFirst: vi.fn(),
     },
+    alternative: {
+      findFirst: vi.fn(),
+    },
   },
 }))
 
@@ -66,7 +69,12 @@ function createPayload() {
 describe('exportRoutes', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    prismaMock.project.findFirst.mockResolvedValue({ id: projectId })
+    prismaMock.project.findFirst.mockResolvedValue({ id: projectId, rooms: [] })
+    prismaMock.alternative.findFirst.mockResolvedValue({
+      area: {
+        project_id: projectId,
+      },
+    })
   })
 
   it('returns a DXF document as attachment', async () => {
@@ -197,6 +205,64 @@ describe('exportRoutes', () => {
     expect(response.json()).toMatchObject({
       error: 'NOT_FOUND',
       message: 'Project not found in tenant scope',
+    })
+
+    await app.close()
+  })
+
+  it('exports GLB for an alternative', async () => {
+    prismaMock.project.findFirst.mockResolvedValueOnce({
+      id: projectId,
+      rooms: [
+        {
+          ceiling_height_mm: 2500,
+          boundary: {
+            wall_segments: [
+              { id: 'w1', x0_mm: 0, y0_mm: 0, x1_mm: 4000, y1_mm: 0 },
+            ],
+          },
+          placements: [
+            { id: 'p1', wall_id: 'w1', offset_mm: 0, width_mm: 600, depth_mm: 600, height_mm: 720 },
+          ],
+        },
+      ],
+    })
+
+    const app = Fastify()
+    await app.register(tenantMiddleware)
+    await app.register(exportRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/alternatives/alt-1/export/gltf',
+      headers: { 'x-tenant-id': tenantId },
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.headers['content-type']).toContain('model/gltf-binary')
+    expect(response.headers['content-disposition']).toContain('alternative-alt-1.glb')
+    expect(response.rawPayload.readUInt32LE(0)).toBe(0x46546c67)
+
+    await app.close()
+  })
+
+  it('returns 404 when alternative does not exist for tenant scope', async () => {
+    prismaMock.alternative.findFirst.mockResolvedValueOnce(null)
+
+    const app = Fastify()
+    await app.register(tenantMiddleware)
+    await app.register(exportRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/alternatives/missing-alt/export/gltf',
+      headers: { 'x-tenant-id': tenantId },
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(response.json()).toMatchObject({
+      error: 'NOT_FOUND',
+      message: 'Alternative not found',
     })
 
     await app.close()

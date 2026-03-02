@@ -6,6 +6,26 @@ import { prisma } from '../db.js'
 
 import { sendBadRequest, sendForbidden, sendNotFound } from '../errors.js'
 
+type GltfBoundary = {
+  wall_segments?: Array<{
+    id: string
+    x0_mm: number
+    y0_mm: number
+    x1_mm: number
+    y1_mm: number
+  }>
+}
+
+type GltfPlacement = {
+  id: string
+  wall_id: string
+  offset_mm: number
+  width_mm: number
+  depth_mm: number
+  height_mm?: number
+  label?: string
+}
+
 const PointSchema = z.object({
   x_mm: z.number(),
   y_mm: z.number(),
@@ -195,4 +215,58 @@ export async function exportRoutes(app: FastifyInstance) {
   app.post('/projects/:projectId/export-dxf', dxfHandler)
   app.post('/exports/dwg', dwgHandler)
   app.post('/projects/:projectId/export-dwg', dwgHandler)
+
+  app.post<{ Params: { id: string } }>('/alternatives/:id/export/gltf', async (request, reply) => {
+    const tenantId = getTenantId(request)
+    if (!tenantId) {
+      return sendForbidden(reply, 'Tenant scope is required')
+    }
+
+    const { exportToGlb } = await import('../services/gltfExporter.js')
+
+    const alternative = await prisma.alternative.findFirst({
+      where: {
+        id: request.params.id,
+        area: {
+          project: {
+            tenant_id: tenantId,
+          },
+        },
+      },
+      select: {
+        area: {
+          select: {
+            project_id: true,
+          },
+        },
+      },
+    })
+
+    if (!alternative) {
+      return sendNotFound(reply, 'Alternative not found')
+    }
+
+    const project = await prisma.project.findFirst({
+      where: { id: alternative.area.project_id, tenant_id: tenantId },
+      include: { rooms: { take: 1 } },
+    })
+
+    if (!project) {
+      return sendNotFound(reply, 'Project not found in tenant scope')
+    }
+
+    const room = project.rooms[0]
+    const boundary = (room?.boundary ?? null) as GltfBoundary | null
+    const placements = (room?.placements ?? null) as GltfPlacement[] | null
+
+    const glbBuffer = await exportToGlb({
+      walls: boundary?.wall_segments ?? [],
+      placements: placements ?? [],
+      room_height_mm: room?.ceiling_height_mm ?? 2500,
+    })
+
+    reply.header('Content-Type', 'model/gltf-binary')
+    reply.header('Content-Disposition', `attachment; filename="alternative-${request.params.id}.glb"`)
+    return reply.send(glbBuffer)
+  })
 }

@@ -17,16 +17,19 @@
   "dependencies": {
     "@fastify/cors": "^11.2.0",
     "@fastify/multipart": "^9.4.0",
-    "@prisma/client": "^5.22.0",
-    "@types/adm-zip": "^0.5.7",
     "@okp/dxf-export": "file:../interop-cad/dxf-export",
     "@okp/dxf-import": "file:../interop-cad/dxf-import",
     "@okp/shared-schemas": "file:../shared-schemas",
     "@okp/skp-import": "file:../interop-sketchup/skp-import",
+    "@prisma/client": "^5.22.0",
+    "@types/adm-zip": "^0.5.7",
+    "@types/three": "^0.183.1",
     "adm-zip": "^0.5.16",
     "fast-xml-parser": "^5.4.1",
     "fastify": "^5.7.2",
     "iconv-lite": "^0.7.2",
+    "three": "^0.183.2",
+    "web-ifc": "^0.0.75",
     "zod": "^3.23.8"
   },
   "devDependencies": {

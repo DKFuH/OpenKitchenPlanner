@@ -48,6 +48,12 @@ import { shareLinkRoutes } from './routes/shareLinks.js'
 import { coverPanelRoutes } from './routes/coverPanels.js'
 // Phase 6 Routes
 import { productionOrderRoutes } from './routes/productionOrders.js'
+import { siteSurveyRoutes } from './routes/siteSurveys.js'
+import { checklistRoutes } from './routes/checklists.js'
+import { erpConnectorRoutes } from './routes/erpConnectors.js'
+import { reportRoutes } from './routes/reports.js'
+import { complianceRoutes } from './routes/compliance.js'
+import { ifcInteropRoutes } from './routes/ifcInterop.js'
 
 const app = Fastify({ logger: true })
 
@@ -105,6 +111,12 @@ await app.register(shareLinkRoutes, { prefix: '/api/v1' })
 await app.register(coverPanelRoutes, { prefix: '/api/v1' })
 // Phase 6 Routes
 await app.register(productionOrderRoutes, { prefix: '/api/v1' })
+await app.register(siteSurveyRoutes, { prefix: '/api/v1' })
+await app.register(checklistRoutes, { prefix: '/api/v1' })
+await app.register(erpConnectorRoutes, { prefix: '/api/v1' })
+await app.register(reportRoutes, { prefix: '/api/v1' })
+await app.register(complianceRoutes, { prefix: '/api/v1' })
+await app.register(ifcInteropRoutes, { prefix: '/api/v1' })
 
 // Health check
 app.get('/health', async () => ({ status: 'ok' }))

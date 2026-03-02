@@ -64,6 +64,7 @@ model Project {
   quotes            Quote[]
   render_jobs       RenderJob[]
   import_jobs       ImportJob[]
+  ifc_import_jobs   IfcImportJob[]
   documents         Document[]
   catalog_indices   CatalogIndex[]
   project_contacts  ProjectContact[]
@@ -73,6 +74,7 @@ model Project {
   project_block_evaluations ProjectBlockEvaluation[]
   areas             Area[]    // Phase 4 – Sprint 32: Bereiche
   purchase_orders   PurchaseOrder[]   // Phase 5 – Sprint 35: Bestellverwaltung
+  site_surveys      SiteSurvey[]      // Phase 6 – Sprint 47: Aufmaß
   production_orders ProductionOrder[] // Phase 6 – Sprint 46: Produktionsaufträge
   quote_lines         Json      @default("[]")
   pricing_groups_json Json      @default("[]")
@@ -555,6 +557,33 @@ model ImportJob {
 
 enum ImportJobStatus {
   queued
+  processing
+  done
+  failed
+}
+
+// ─────────────────────────────────────────
+// PHASE 7 – Sprint 52: IFC BIM-Integration
+// ─────────────────────────────────────────
+
+model IfcImportJob {
+  id           String       @id @default(uuid())
+  project_id   String
+  filename     String
+  status       IfcJobStatus @default(pending)
+  result       Json?
+  error        String?
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+
+  project      Project      @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id])
+  @@map("ifc_import_jobs")
+}
+
+enum IfcJobStatus {
+  pending
   processing
   done
   failed
@@ -1212,6 +1241,8 @@ model PurchaseOrder {
   notes               String?
   created_by          String
   production_order_id String?             // Phase 6 – Sprint 46: Verknüpfung mit internem Produktionsauftrag
+  erp_order_ref       String?             // Phase 6 – Sprint 48: befüllt nach ERP-Übertragung
+  erp_connector_id    String?             // Phase 6 – Sprint 48: verwendeter ERP-Konnektor
   created_at          DateTime            @default(now())
   updated_at          DateTime            @updatedAt
 
@@ -1399,4 +1430,210 @@ model CabinetProperties {
   updated_at      DateTime    @updatedAt
 
   @@map("cabinet_properties")
+}
+
+// ─────────────────────────────────────────
+// PHASE 6 – Sprint 47: Mobile Aufmaß & Baustellenprotokoll
+// ─────────────────────────────────────────
+
+model SiteSurvey {
+  id           String   @id @default(uuid())
+  project_id   String
+  tenant_id    String
+  measurements Json     @default("{}")
+  photos       Json     @default("[]")
+  notes        String?
+  synced_at    DateTime?
+  created_by   String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  project      Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@index([project_id])
+  @@index([tenant_id])
+  @@map("site_surveys")
+}
+
+model InstallationChecklist {
+  id                  String          @id @default(uuid())
+  production_order_id String?
+  project_id          String
+  tenant_id           String
+  title               String          @default("Abnahmeprotokoll")
+  completed_at        DateTime?
+  created_by          String
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+
+  items               ChecklistItem[]
+
+  @@index([project_id])
+  @@index([production_order_id])
+  @@map("installation_checklists")
+}
+
+model ChecklistItem {
+  id           String                @id @default(uuid())
+  checklist_id String
+  position     Int                   @default(0)
+  label        String
+  checked      Boolean               @default(false)
+  photo_url    String?
+  note         String?
+  created_at   DateTime              @default(now())
+  updated_at   DateTime              @updatedAt
+
+  checklist    InstallationChecklist @relation(fields: [checklist_id], references: [id], onDelete: Cascade)
+
+  @@index([checklist_id])
+  @@map("checklist_items")
+}
+
+// ─────────────────────────────────────────
+// PHASE 6 – Sprint 48: ERP-Anbindung
+// ─────────────────────────────────────────
+
+model ErpConnector {
+  id             String   @id @default(uuid())
+  tenant_id      String
+  name           String   @db.VarChar(200)
+  endpoint       String
+  auth_config    Json     @default("{}")
+  field_mapping  Json     @default("{}")
+  enabled        Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([tenant_id])
+  @@map("erp_connectors")
+}
+
+// ─────────────────────────────────────────
+// PHASE 6 – Sprint 49: Analytics & Reports
+// ─────────────────────────────────────────
+
+model ReportDefinition {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  name        String   @db.VarChar(200)
+  description String?
+  dimensions  Json     @default("[]")
+  metrics     Json     @default("[]")
+  filters     Json     @default("{}")
+  created_by  String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  schedules   ReportSchedule[]
+
+  @@index([tenant_id])
+  @@map("report_definitions")
+}
+
+model ReportSchedule {
+  id                   String           @id @default(uuid())
+  report_definition_id String
+  cron_expression      String           @db.VarChar(100)
+  recipients           Json             @default("[]")
+  format               ReportFormat     @default(pdf)
+  enabled              Boolean          @default(true)
+  last_run_at          DateTime?
+  created_at           DateTime         @default(now())
+  updated_at           DateTime         @updatedAt
+
+  report_definition    ReportDefinition @relation(fields: [report_definition_id], references: [id], onDelete: Cascade)
+  runs                 ReportRun[]
+
+  @@index([report_definition_id])
+  @@map("report_schedules")
+}
+
+enum ReportFormat {
+  pdf
+  excel
+  csv
+}
+
+model ReportRun {
+  id           String          @id @default(uuid())
+  schedule_id  String?
+  tenant_id    String
+  report_name  String
+  generated_at DateTime        @default(now())
+  file_url     String?
+  status       ReportRunStatus @default(pending)
+  error        String?
+
+  schedule     ReportSchedule? @relation(fields: [schedule_id], references: [id], onDelete: SetNull)
+
+  @@index([tenant_id, generated_at])
+  @@map("report_runs")
+}
+
+enum ReportRunStatus {
+  pending
+  running
+  done
+  failed
+}
+
+// ─────────────────────────────────────────
+// PHASE 6 – Sprint 50: Compliance & RBAC
+// ─────────────────────────────────────────
+
+model GdprDeletionRequest {
+  id           String    @id @default(uuid())
+  tenant_id    String
+  contact_id   String?
+  user_id      String?
+  requested_at DateTime  @default(now())
+  completed_at DateTime?
+  performed_by String
+  scope_json   Json      @default("[]")
+  result_json  Json      @default("{}")
+
+  @@index([tenant_id])
+  @@map("gdpr_deletion_requests")
+}
+
+model SsoProvider {
+  id          String   @id @default(uuid())
+  tenant_id   String   @unique
+  entity_id   String
+  sso_url     String
+  certificate String
+  enabled     Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("sso_providers")
+}
+
+model RolePermission {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  role       String   @db.VarChar(50)
+  resource   String   @db.VarChar(100)
+  action     String   @db.VarChar(50)
+  branch_id  String?
+  created_at DateTime @default(now())
+
+  @@unique([tenant_id, role, resource, action, branch_id])
+  @@index([tenant_id, role])
+  @@map("role_permissions")
+}
+
+model SlaSnapshot {
+  id          String   @id @default(uuid())
+  tenant_id   String?
+  endpoint    String   @db.VarChar(200)
+  p50_ms      Float
+  p95_ms      Float
+  uptime_pct  Float    @default(100)
+  sample_size Int      @default(0)
+  recorded_at DateTime @default(now())
+
+  @@index([endpoint, recorded_at])
+  @@map("sla_snapshots")
 }

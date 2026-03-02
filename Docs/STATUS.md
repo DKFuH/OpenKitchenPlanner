@@ -1,19 +1,25 @@
 # STATUS.md
 
-Projektstatus per 2026-03-02 - MVP, Phase 2, Phase 3 und Phase 4 abgeschlossen. Phase 5 und 6 geplant.
+Projektstatus per 2026-03-02 – MVP bis Phase 7 (Sprints 0–51) + Sprint 56 abgeschlossen.
 
 ---
 
 ## Gesamtstatus (Stand 2026-03-02)
 
-- **Sprints 0-19 (MVP): abgeschlossen**
-- **Sprints 20-24 (Phase 2): abgeschlossen**
-- **Sprints 25-30 (Phase 3): abgeschlossen**
-- **Sprints 31-40 (Phase 4 + Sprints 35-40): abgeschlossen** (PR #8 gemergt 2026-03-02)
-- **Sprints 41-45 (Phase 5 – Profi-Parität): abgeschlossen** (Sprints 41-45 gemergt 2026-03-02)
-- **Sprints 46-50 (Phase 6 – Vernetzte Branchenlösung): in_progress** (Sprint 46 vollständig: PurchaseOrder ✅ + ProductionOrder ✅ + Freeze-Guard ✅)
-- **Sprints 51-55 (Phase 7 – Interoperabilität & Dateiformate): geplant**
-- **Sprints 56-60 (Phase 8 – Planerqualität & erweiterte Raumdefinition): geplant**
+- **Sprints 0-19 (MVP): abgeschlossen** ✅
+- **Sprints 20-24 (Phase 2): abgeschlossen** ✅
+- **Sprints 25-30 (Phase 3): abgeschlossen** ✅
+- **Sprints 31-40 (Phase 4): abgeschlossen** ✅ (PR #8 gemergt 2026-03-02)
+- **Sprints 41-45 (Phase 5 – Profi-Parität): abgeschlossen** ✅
+- **Sprint 46 (Phase 6 – Auftragssteuerung): abgeschlossen** ✅ (PurchaseOrder + ProductionOrder + Freeze-Guard)
+- **Sprint 47 (Mobile Aufmaß & Baustellenprotokoll): abgeschlossen** ✅ (SiteSurvey, InstallationChecklist)
+- **Sprint 48 (ERP-Anbindung & Lieferantenportal): abgeschlossen** ✅ (ErpConnector, Push-Service, Webhook, SupplierPortal)
+- **Sprint 49 (Analytics & Reports): abgeschlossen** ✅ (ReportDefinition, Schedule, Run, 5 Built-in-Reports)
+- **Sprint 50 (Compliance & RBAC): abgeschlossen** ✅ (GDPR, SSO, SLA, Rollen)
+- **Sprint 51 (GLTF/GLB-Export): abgeschlossen** ✅ (Three.js BoxGeometry, GLB-Magic-Bytes validiert)
+- **Sprint 56 (Canvas-UX): abgeschlossen** ✅ (Wand-Interaktoren, Live-Dims, Stage-Fix, Keyboard-Shortcuts)
+- **Sprints 52-55 (IFC, DWG/SKP, OFML, Akustik): geplant** (Specs in Docs/AGENT_SPRINTS/)
+- **Sprints 57-60 (WallAttachments, Nachzeichnen, Bemaßung, Kitchen Assistant): geplant**
 
 Sprint 01 wurde extern bearbeitet. Alle übrigen Sprints lieferten Artefakte in:
 - `shared-schemas` - Polygon, Öffnungen, Decken/Wände, Kollision/Höhe
@@ -99,21 +105,57 @@ Alle Reviews (TASK-3-R01 bis TASK-11-R01) intern ausgeführt. Alle Findings umge
 - Sprint 31–34 (Projektliste, Bereiche/Alternativen, Onboarding, Workspace-Layout): PR #8 gemergt 2026-03-02.
 - Sprints 35–40 (Makros, Arbeitsplattenschemas, Annotationen, Raumdekoration, Lichtprofile, Angebotszeilen): backend complete, frontend implemented.
 
-## Phase-6-Fortschritt (Sprint 46 – vollständig)
+## Phase-6 + Phase-7-Start – Sprints 46–51 + S56 (vollständig)
 
-- `PurchaseOrder` + `PurchaseOrderItem` Prisma-Schema implementiert (PR #10, gemergt 2026-03-02).
-- `ProductionOrder` + `ProductionOrderEvent` Prisma-Schema implementiert (2026-03-02).
-- 6 CRUD-Routen für Bestellwesen + Status-Workflow-Übergänge + Notification-Trigger aktiv.
-- 8 CRUD-Routen für Produktionsaufträge: CRUD, Status-Lifecycle (`draft→confirmed→in_production→ready→delivered→installed`), Freeze-Guard, Audit-Log, PO↔PurchaseOrder-Verknüpfung, Freeze-Status-Endpunkt.
-- Produktionsübersicht-UI unter `/production-orders` implementiert: Projekt-Filter, Status-Filter, Workflow-Bar, Audit-Log, Verknüpfte Bestellungen.
-- **Aktueller Teststand: 297 Tests grün** (+17 aus Sprint 46).
+### Sprint 46 – Auftragssteuerung & Produktionsübergabe ✅
+- `PurchaseOrder` + `PurchaseOrderItem` Prisma-Schema implementiert.
+- `ProductionOrder` + `ProductionOrderEvent` Prisma-Schema implementiert.
+- 8 Routen: CRUD, Status-Lifecycle, Freeze-Guard, Audit-Log, PO↔ProductionOrder-Verknüpfung.
+- UI unter `/production-orders`: Workflow-Bar, Audit-Log, verknüpfte Bestellungen.
+
+### Sprint 47 – Mobile Aufmaß & Baustellenprotokoll ✅
+- `SiteSurvey`, `InstallationChecklist`, `ChecklistItem` Prisma-Modelle angelegt.
+- Routes: `siteSurveys.ts` (7 Endpunkte) + `checklists.ts` (8 Endpunkte) aktiv.
+- Frontend: SiteSurveyPage unter `/site-surveys`.
+
+### Sprint 48 – ERP-Anbindung & Lieferantenportal ✅
+- `ErpConnector` Prisma-Modell + `erp_order_ref`/`erp_connector_id` auf `PurchaseOrder`.
+- `erpPushService.ts`: REST-Push mit Auth-Mapping.
+- Routes: `erpConnectors.ts` (CRUD + Push-to-ERP + Webhook).
+- Frontend: SupplierPortalPage unter `/supplier-portal`.
+
+### Sprint 49 – Analytics & individuelle Reports ✅
+- `ReportDefinition`, `ReportSchedule`, `ReportRun` Prisma-Modelle angelegt.
+- `reports.ts`: 5 Built-in-Report-Endpunkte + Schedule-CRUD + manueller Run.
+- Frontend: ReportsPage mit 3 Tabs + Inline-SVG-Charts.
+
+### Sprint 50 – Compliance, RBAC & SLA-Management ✅
+- `GdprDeletionRequest`, `SsoProvider`, `RolePermission`, `SlaSnapshot` Modelle.
+- `compliance.ts`: GDPR-Anonymisierung, Daten-Export, SSO-Upsert, RBAC-CRUD, SLA-Snapshots.
+- Frontend: CompliancePage mit 3 Tabs.
+
+### Sprint 51 – GLTF/GLB-Export ✅
+- `gltfExporter.ts`: Three.js BoxGeometry für Wände + Platzierungen → GLB-Buffer.
+- `POST /alternatives/:id/export/gltf` in `exports.ts` ergänzt.
+- GLB-Magic-Bytes (`0x46546C67`) in 5 Unit-Tests verifiziert.
+- Frontend: Download-Button in Editor.
+
+### Sprint 56 – Canvas-Editor UX ✅
+- Wand-Endpunkt-Griffe (Kreis) + Mittelpunkt-Griffe (Raute) in `PolygonEditor.tsx`.
+- Live-Dimensioning: fliegendes Längen-Label beim Drag.
+- Stage-Sizing-Fix: ResizeObserver in `CanvasArea.tsx`.
+- Keyboard-Shortcuts: `D/S/Backspace/Delete/Escape`.
+
+**Aktueller Teststand: 409 Tests grün** (56 Test-Dateien, 2026-03-02).
 
 ## Nächste Schritte
 
-- Phase 5 (Sprints 41–45): abgeschlossen ✅
-- Phase 6 (Sprints 46–50): Sprint 46 vollständig ✅ (PurchaseOrder + ProductionOrder + Freeze-Guard + Produktionsübersicht-UI). Sprint 47 als nächstes.
-- Phase 7 (Sprints 51–55): geplant – GLTF/GLB-Export, IFC-BIM, DWG/SKP, OFML, Raumakustik.
-- Phase 8 (Sprints 56–60): geplant – Wand-Interaktoren, WallAttachments, Bild-Nachzeichnen, 2D-Bemaßung, Kitchen Assistant.
-- Sprint 47 starten: Mobile Aufmaß & Baustellenprotokoll.
-- Referenzplanung Phase 6: `Docs/PHASE_6_DOD_AND_EXECUTION_PLAN.md` (noch zu erstellen)
+- Sprint 52 (IFC Import/Export): Spec in `Docs/AGENT_SPRINTS/S52-ifc-import-export.md`
+- Sprint 53 (DWG/SKP): Spec in `Docs/AGENT_SPRINTS/S53-dwg-skp.md`
+- Sprint 54 (OFML-Konfigurator): Spec in `Docs/AGENT_SPRINTS/S54-ofml-konfigurator.md`
+- Sprint 55 (Raumakustik): Spec in `Docs/AGENT_SPRINTS/S55-raumakustik.md`
+- Sprint 57 (WallAttachments): Spec in `Docs/AGENT_SPRINTS/S57-wall-attachments.md`
+- Sprint 58 (Bild-Nachzeichnen): Spec in `Docs/AGENT_SPRINTS/S58-bild-nachzeichnen.md`
+- Sprint 59 (2D-Bemaßung): Spec in `Docs/AGENT_SPRINTS/S59-bemassung-frontansicht.md`
+- Sprint 60 (Kitchen Assistant): Spec in `Docs/AGENT_SPRINTS/S60-katalog-kitchen-assistant.md`
 

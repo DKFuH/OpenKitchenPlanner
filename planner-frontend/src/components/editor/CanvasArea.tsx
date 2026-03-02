@@ -24,7 +24,7 @@ interface Props {
 
 export function CanvasArea({ room, onRoomUpdated, editor, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -35,8 +35,12 @@ export function CanvasArea({ room, onRoomUpdated, editor, openings, selectedOpen
   useEffect(() => {
     if (!containerRef.current) return
     const observer = new ResizeObserver(entries => {
-      const { width, height } = entries[0].contentRect
-      setDimensions({ width, height })
+      const entry = entries[0]
+      if (!entry) return
+      setCanvasSize({
+        width: Math.floor(entry.contentRect.width),
+        height: Math.floor(entry.contentRect.height),
+      })
     })
     observer.observe(containerRef.current)
     return () => observer.disconnect()
@@ -70,36 +74,38 @@ export function CanvasArea({ room, onRoomUpdated, editor, openings, selectedOpen
   }, [room, onRoomUpdated])
 
   return (
-    <main className={styles.canvas} ref={containerRef}>
+    <main className={styles.canvas}>
       {saving && <div className={styles.overlay}>Speichere…</div>}
       {saveError && <div className={styles.errorOverlay}>{saveError}</div>}
 
       {room ? (
-        <PolygonEditor
-          width={dimensions.width}
-          height={dimensions.height}
-          state={editor.state}
-          isValid={editor.isValid}
-          onAddVertex={editor.addVertex}
-          onClosePolygon={editor.closePolygon}
-          onMoveVertex={editor.moveVertex}
-          onSelectVertex={editor.selectVertex}
-          onSelectEdge={editor.selectEdge}
-          onHoverVertex={editor.hoverVertex}
-          onDeleteVertex={editor.deleteVertex}
-          onSetTool={editor.setTool}
-          onReset={editor.reset}
-          onSave={handleSave}
-          openings={openings}
-          selectedOpeningId={selectedOpeningId}
-          onSelectOpening={onSelectOpening}
-          onAddOpening={onAddOpening}
-          placements={placements}
-          selectedPlacementId={selectedPlacementId}
-          onSelectPlacement={onSelectPlacement}
-          canAddPlacement={canAddPlacement}
-          onAddPlacement={onAddPlacement}
-        />
+        <div ref={containerRef} style={{ flex: 1, overflow: 'hidden' }}>
+          <PolygonEditor
+            width={canvasSize.width}
+            height={canvasSize.height}
+            state={editor.state}
+            isValid={editor.isValid}
+            onAddVertex={editor.addVertex}
+            onClosePolygon={editor.closePolygon}
+            onMoveVertex={editor.moveVertex}
+            onSelectVertex={editor.selectVertex}
+            onSelectEdge={editor.selectEdge}
+            onHoverVertex={editor.hoverVertex}
+            onDeleteVertex={editor.deleteVertex}
+            onSetTool={editor.setTool}
+            onReset={editor.reset}
+            onSave={handleSave}
+            openings={openings}
+            selectedOpeningId={selectedOpeningId}
+            onSelectOpening={onSelectOpening}
+            onAddOpening={onAddOpening}
+            placements={placements}
+            selectedPlacementId={selectedPlacementId}
+            onSelectPlacement={onSelectPlacement}
+            canAddPlacement={canAddPlacement}
+            onAddPlacement={onAddPlacement}
+          />
+        </div>
       ) : (
         <div className={styles.placeholder}>
           <p>Kein Raum ausgewählt</p>
