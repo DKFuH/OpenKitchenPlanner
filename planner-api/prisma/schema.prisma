@@ -166,6 +166,29 @@ model Room {
 }
 
 // ─────────────────────────────────────────
+// PHASE 8 – Sprint 59: 2D-Bemaßung
+// ─────────────────────────────────────────
+
+model Dimension {
+  id         String        @id @default(uuid())
+  room_id    String
+  type       DimensionType
+  points     Json
+  style      Json          @default("{}")
+  label      String?
+  created_at DateTime      @default(now())
+  updated_at DateTime      @updatedAt
+
+  @@index([room_id])
+  @@map("dimensions")
+}
+
+enum DimensionType {
+  linear
+  angular
+}
+
+// ─────────────────────────────────────────
 // Kaufmännische Stammdaten
 // ─────────────────────────────────────────
 
@@ -816,6 +839,11 @@ model CatalogArticle {
   manufacturer_id String
   sku             String
   name            String
+  family          String?
+  collection      String?
+  style_tag       String?
+  is_favorite     Boolean         @default(false)
+  usage_count     Int             @default(0)
   article_type    ArticleType     @default(base_cabinet)
   base_dims_json  Json            // { width_mm, height_mm, depth_mm }
   meta_json       Json            @default("{}")
@@ -833,6 +861,44 @@ model CatalogArticle {
 
   @@unique([manufacturer_id, sku])
   @@map("catalog_articles")
+}
+
+model CatalogMacro {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  name        String
+  description String?
+  thumbnail   String?
+  positions   Json
+  created_by  String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([tenant_id])
+  @@map("catalog_macros")
+}
+
+model KitchenLayoutSuggestion {
+  id          String        @id @default(uuid())
+  project_id  String
+  room_id     String
+  layout_type KitchenLayout
+  positions   Json
+  score       Float         @default(0)
+  applied     Boolean       @default(false)
+  created_at  DateTime      @default(now())
+
+  @@index([project_id])
+  @@index([room_id])
+  @@map("kitchen_layout_suggestions")
+}
+
+enum KitchenLayout {
+  einzeiler
+  zweizeiler
+  l_form
+  u_form
+  insel
 }
 
 enum ArticleType {

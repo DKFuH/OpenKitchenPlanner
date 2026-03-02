@@ -57,6 +57,8 @@ import { ifcInteropRoutes } from './routes/ifcInterop.js'
 import { cadInteropRoutes } from './routes/cadInterop.js'
 import { articleConfiguratorRoutes } from './routes/articleConfigurator.js'
 import { acousticsRoutes } from './routes/acoustics.js'
+import { dimensionRoutes } from './routes/dimensions.js'
+import { kitchenAssistantRoutes } from './routes/kitchenAssistant.js'
 
 const app = Fastify({ logger: true })
 
@@ -123,6 +125,8 @@ await app.register(ifcInteropRoutes, { prefix: '/api/v1' })
 await app.register(cadInteropRoutes, { prefix: '/api/v1' })
 await app.register(articleConfiguratorRoutes, { prefix: '/api/v1' })
 await app.register(acousticsRoutes, { prefix: '/api/v1' })
+await app.register(dimensionRoutes, { prefix: '/api/v1' })
+await app.register(kitchenAssistantRoutes, { prefix: '/api/v1' })
 
 // Health check
 app.get('/health', async () => ({ status: 'ok' }))

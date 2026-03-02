@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react'
 import type { Opening } from '../../api/openings.js'
 import type { Placement } from '../../api/placements.js'
+import type { Dimension } from '../../api/dimensions.js'
 import type { RoomPayload } from '../../api/rooms.js'
 import type { GeoJsonGrid } from '../../api/acoustics.js'
 import { roomsApi } from '../../api/rooms.js'
@@ -17,6 +18,7 @@ interface Props {
   onSelectOpening: (id: string | null) => void
   onAddOpening: (wallId: string, wallLengthMm: number) => void
   placements: Placement[]
+  dimensions: Dimension[]
   selectedPlacementId: string | null
   onSelectPlacement: (id: string | null) => void
   canAddPlacement: boolean
@@ -27,7 +29,7 @@ interface Props {
   onReferenceImageUpdate: (img: NonNullable<RoomPayload['reference_image']>) => void
 }
 
-export function CanvasArea({ room, onRoomUpdated, editor, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, onReferenceImageUpdate }: Props) {
+export function CanvasArea({ room, onRoomUpdated, editor, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, onReferenceImageUpdate }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
   const [saving, setSaving] = useState(false)
@@ -105,6 +107,7 @@ export function CanvasArea({ room, onRoomUpdated, editor, openings, selectedOpen
             onSelectOpening={onSelectOpening}
             onAddOpening={onAddOpening}
             placements={placements}
+            dimensions={dimensions}
             selectedPlacementId={selectedPlacementId}
             onSelectPlacement={onSelectPlacement}
             canAddPlacement={canAddPlacement}

@@ -927,7 +927,7 @@ rooms.reference_image: JSONB nullable  { url, x, y, rotation, scale, opacity }
 
 ### Sprint 59 – 2D-Bemaßung & Frontansichten
 
-**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S58, S14
+**Meta:** Status: `done` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S58, S14
 
 **Ziel:** Bemaßungs-Entity im Grundriss und automatische 2D-Frontansichten für jede Küchenzeile – für professionelle Planungsunterlagen ohne DXF-Export.
 
@@ -951,7 +951,7 @@ dimensions: id, room_id, type (linear|angular), points JSON, style JSON, created
 
 ### Sprint 60 – Katalog-Hierarchie, Kitchen Assistant & Schnellfilter
 
-**Meta:** Status: `planned` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S59, S20
+**Meta:** Status: `done` · Owner: Full-Stack · ETA: Phase 8 · Abhängigkeiten: S59, S20
 
 **Ziel:** Tiefere Katalogstruktur (Familien/Kollektionen), auto-generierte Layout-Vorschläge (Kitchen Assistant) und schnellere Artikel-Navigation.
 

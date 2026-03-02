@@ -7,6 +7,7 @@ import {
   type UnifiedCatalogItem,
 } from '../api/catalog.js'
 import { placementsApi, type Placement } from '../api/placements.js'
+import { dimensionsApi, type Dimension } from '../api/dimensions.js'
 import { roomsApi, type ReferenceImagePayload, type RoomBoundaryPayload, type RoomPayload } from '../api/rooms.js'
 import { areasApi } from '../api/areas.js'
 import { openingsApi, type Opening } from '../api/openings.js'
@@ -94,6 +95,7 @@ export function Editor() {
   const [openings, setOpenings] = useState<Opening[]>([])
   const [selectedOpeningId, setSelectedOpeningId] = useState<string | null>(null)
   const [placements, setPlacements] = useState<Placement[]>([])
+  const [dimensions, setDimensions] = useState<Dimension[]>([])
   const [selectedPlacementId, setSelectedPlacementId] = useState<string | null>(null)
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<UnifiedCatalogItem | null>(null)
   const [configuredDimensions, setConfiguredDimensions] = useState<ConfiguredDimensions | null>(null)
@@ -262,6 +264,7 @@ export function Editor() {
       editor.reset()
       setOpenings([])
       setPlacements([])
+      setDimensions([])
       return
     }
     const room = project.rooms.find(r => r.id === selectedRoomId)
@@ -275,6 +278,19 @@ export function Editor() {
     // Öffnungen aus room.openings laden (JSONB, bereits im room-Objekt)
     setOpenings((room?.openings as unknown as Opening[]) ?? [])
     setPlacements((room?.placements as unknown as Placement[]) ?? [])
+
+    let cancelled = false
+    dimensionsApi.list(selectedRoomId)
+      .then((items) => {
+        if (!cancelled) setDimensions(items)
+      })
+      .catch(() => {
+        if (!cancelled) setDimensions([])
+      })
+
+    return () => {
+      cancelled = true
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRoomId])
 
@@ -686,6 +702,7 @@ export function Editor() {
             onSelectOpening={setSelectedOpeningId}
             onAddOpening={handleAddOpening}
             placements={placements}
+            dimensions={dimensions}
             selectedPlacementId={selectedPlacementId}
             onSelectPlacement={setSelectedPlacementId}
             canAddPlacement={selectedCatalogItem !== null}

@@ -4,6 +4,7 @@ import type Konva from 'konva'
 import type { Point2D } from '@shared/types'
 import type { Opening } from '../api/openings.js'
 import type { Placement } from '../api/placements.js'
+import type { Dimension } from '../api/dimensions.js'
 import type { GeoJsonGrid } from '../api/acoustics.js'
 import type { EditorState, EditorTool } from './usePolygonEditor.js'
 import { AcousticOverlay } from '../pages/AcousticOverlay.js'
@@ -86,6 +87,8 @@ interface Props {
   onSelectPlacement?: (id: string | null) => void
   canAddPlacement?: boolean
   onAddPlacement?: (wallId: string, wallLengthMm: number) => void
+  dimensions?: Dimension[]
+  onAddDimension?: (dimension: Pick<Dimension, 'type' | 'points' | 'style' | 'label'>) => void
   acousticGrid?: GeoJsonGrid | null
   acousticVisible?: boolean
   acousticOpacity?: number
@@ -99,6 +102,7 @@ export function PolygonEditor({
   onSetTool, onReset, onSave,
   openings = [], selectedOpeningId, onSelectOpening, onAddOpening,
   placements = [], selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement,
+  dimensions = [],
   acousticGrid = null,
   acousticVisible = false,
   acousticOpacity = 0.5,
@@ -481,6 +485,56 @@ export function PolygonEditor({
                         opacity={0.5}
                       />
                     )}
+                  </Group>
+                )
+              })}
+            </Group>
+          )}
+
+          {/* Bemaßungslinien */}
+          {state.closed && (
+            <Group>
+              {dimensions.map((dimension) => {
+                if (dimension.type !== 'linear' || dimension.points.length < 2) return null
+
+                const p1 = {
+                  x: worldToCanvas(dimension.points[0].x_mm),
+                  y: worldToCanvas(dimension.points[0].y_mm),
+                }
+                const p2 = {
+                  x: worldToCanvas(dimension.points[1].x_mm),
+                  y: worldToCanvas(dimension.points[1].y_mm),
+                }
+                const style = dimension.style as { offset_mm?: number }
+                const offsetPx = worldToCanvas(style.offset_mm ?? 50)
+                const dx = p2.x - p1.x
+                const dy = p2.y - p1.y
+                const len = Math.hypot(dx, dy)
+                if (len === 0) return null
+
+                const nx = -dy / len
+                const ny = dx / len
+                const lx1 = p1.x + nx * offsetPx
+                const ly1 = p1.y + ny * offsetPx
+                const lx2 = p2.x + nx * offsetPx
+                const ly2 = p2.y + ny * offsetPx
+
+                const lengthMm = Math.round(Math.hypot(
+                  dimension.points[1].x_mm - dimension.points[0].x_mm,
+                  dimension.points[1].y_mm - dimension.points[0].y_mm,
+                ))
+                const label = dimension.label ?? `${lengthMm} mm`
+
+                return (
+                  <Group key={dimension.id}>
+                    <Line points={[lx1, ly1, lx2, ly2]} stroke={COLOR.preview} strokeWidth={1} dash={[4, 2]} />
+                    <Text
+                      x={(lx1 + lx2) / 2 - 24}
+                      y={(ly1 + ly2) / 2 - 8}
+                      text={label}
+                      fontSize={10}
+                      fill={COLOR.polygon}
+                    />
                   </Group>
                 )
               })}
