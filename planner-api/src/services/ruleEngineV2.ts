@@ -6,6 +6,12 @@ import { prisma } from '../db.js'
 
 // ─── Typen ───────────────────────────────────────────────────────
 
+export interface WallDef {
+    id: string
+    start: { x_mm: number; y_mm: number }
+    end: { x_mm: number; y_mm: number }
+}
+
 export interface PlacedObjectV2 {
     id: string
     wall_id: string
