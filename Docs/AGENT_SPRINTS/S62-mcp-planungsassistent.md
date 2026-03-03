@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-62-mcp-planungsassistent`
 **Gruppe:** A (unabhängig, baut auf S9-MCP auf)
-**Status:** `planned`
+**Status:** `done`
 **Abhängigkeiten:** Sprint 9-MCP (mcp.ts + mcpService.ts vorhanden)
 
 ---
