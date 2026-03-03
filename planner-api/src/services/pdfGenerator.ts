@@ -51,6 +51,29 @@ export type QuotePdfInput = {
   recipient?: PdfRecipient
 }
 
+export type CutlistPdfPart = {
+  label: string
+  width_mm: number
+  height_mm: number
+  quantity: number
+  material_code: string
+  grain_direction: 'none' | 'length' | 'width'
+  article_name: string
+}
+
+export type CutlistPdfSummary = {
+  total_parts: number
+  by_material: Record<string, { count: number; area_sqm: number; material_label: string }>
+}
+
+export type CutlistPdfInput = {
+  project_name: string
+  room_name?: string
+  generated_at: string | Date
+  parts: CutlistPdfPart[]
+  summary: CutlistPdfSummary
+}
+
 type PdfLine = {
   text: string
   size: number
@@ -255,6 +278,49 @@ function renderQuoteLines(input: QuotePdfInput): PdfLine[] {
   return lines
 }
 
+function cutlistGrainLabel(value: CutlistPdfPart['grain_direction']): string {
+  if (value === 'length') return 'laengs'
+  if (value === 'width') return 'quer'
+  return 'kein'
+}
+
+function renderCutlistLines(input: CutlistPdfInput): PdfLine[] {
+  const lines: PdfLine[] = []
+
+  lines.push({ text: 'ZUSCHNITTLISTE', size: 16 })
+  lines.push({ text: `Projekt: ${input.project_name}`, size: 11 })
+  if (input.room_name) {
+    lines.push({ text: `Raum: ${input.room_name}`, size: 11 })
+  }
+  lines.push({ text: `Datum: ${formatDate(input.generated_at)}`, size: 11 })
+  lines.push({ text: '', size: 11 })
+  lines.push({ text: 'Nr | Bezeichnung | BxH mm | Anzahl | Material | Korn', size: 11 })
+
+  if (input.parts.length === 0) {
+    lines.push({ text: 'Keine Teile vorhanden.', size: 11 })
+  } else {
+    input.parts.forEach((part, index) => {
+      const line = `${index + 1} | ${part.label} | ${part.width_mm}x${part.height_mm} | ${part.quantity} | ${part.material_code} | ${cutlistGrainLabel(part.grain_direction)}`
+      wrapText(line, 88).forEach((wrapped) => lines.push({ text: wrapped, size: 10 }))
+    })
+  }
+
+  lines.push({ text: '', size: 11 })
+  lines.push({ text: `Gesamtteile: ${input.summary.total_parts}`, size: 11 })
+  lines.push({ text: 'Material-Zusammenfassung:', size: 11 })
+
+  const materialEntries = Object.entries(input.summary.by_material)
+  if (materialEntries.length === 0) {
+    lines.push({ text: '- keine Materialien -', size: 10 })
+  } else {
+    for (const [code, data] of materialEntries) {
+      lines.push({ text: `${code}: ${data.count} Teile, ${data.area_sqm.toFixed(3)} m2`, size: 10 })
+    }
+  }
+
+  return lines
+}
+
 function paginate(lines: PdfLine[]): PdfLine[][] {
   const pages: PdfLine[][] = []
   let currentPage: PdfLine[] = []
@@ -341,6 +407,13 @@ function toPdfBuffer(contentStreams: string[]): Buffer {
 
 export function buildQuotePdf(input: QuotePdfInput): Buffer {
   const lines = renderQuoteLines(input)
+  const pages = paginate(lines)
+  const contentStreams = pages.map((page) => buildContentStream(page))
+  return toPdfBuffer(contentStreams)
+}
+
+export function buildCutlistPdf(input: CutlistPdfInput): Buffer {
+  const lines = renderCutlistLines(input)
   const pages = paginate(lines)
   const contentStreams = pages.map((page) => buildContentStream(page))
   return toPdfBuffer(contentStreams)
