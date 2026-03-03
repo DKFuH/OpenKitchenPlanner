@@ -1099,3 +1099,30 @@ planner-api/src/plugins/
 | UI-Modernisierung | Editor und Projektliste mit Workflow-UX, Flyout, Kanban |
 | Plugin-System | Erweiterbare Plugin-Architektur für Branche-Features |
 | MCP-Server | KI-Systeme können Planner-Daten lesen und Layout-Vorschläge abrufen |
+
+---
+
+## Phase 10 – Professionalisierung (Sprints 61–62)
+
+**Ziel:** Vertriebsreife Features — professionelle Kundendokumente und KI-gestützter Planungsassistent.
+
+### Sprint-Übersicht
+
+| Sprint | Status | Thema | Deliverables |
+|--------|--------|-------|--------------|
+| 61 | `planned` | Angebots-PDF mit Firmenprofil | TenantSetting erweitert, PDF mit Absender/Empfänger/Bank/USt, Frontend-Download, Firmenprofil-Seite |
+| 62 | `planned` | MCP: Claude als Planungsassistent | 10 neue Tools (Read+Write), Räume/Placements/Angebote via MCP, MCP-Info-Seite |
+
+### Sprint-Metadaten
+
+| Sprint | Owner | ETA | Abhängigkeiten | DoD-Kurzfassung |
+|--------|-------|-----|----------------|-----------------|
+| 61 | Full-Stack | Phase 10 | S13, TenantSetting | PDF mit Firmenbriefkopf downloadbar; Firmenprofil in UI pflegbar |
+| 62 | Backend | Phase 10 | S9-MCP | 15 MCP-Tools; Claude kann Projekte, Räume, Placements und Angebote verwalten |
+
+### Meilenstein Phase 10
+
+| Nach Sprint | Ergebnis |
+|-------------|----------|
+| 61 | Angebot als professionelles PDF mit Firmenbranding versendbar |
+| 62 | Claude kann als vollwertiger Planungsassistent über MCP arbeiten |

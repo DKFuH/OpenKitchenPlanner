@@ -1,9 +1,8 @@
-# AGENT_SPRINTS – Abschluss-Dokumentation
+# AGENT_SPRINTS – Sprint-Dokumentation
 
-Alle Sprints S47–S60 sind implementiert und in `main` gemergt.
-Die Spec-Dateien dienen als Referenz und Abnahme-Dokumentation.
+Sprints S47–S60 implementiert und gemergt. S61–S62 geplant (Phase 10).
 
-Stand: 2026-03-02 · Teststand: **501 Tests grün**
+Stand: 2026-03-03 · Teststand: **501 Tests grün** (Phase 8)
 
 ---
 
@@ -25,6 +24,8 @@ Stand: 2026-03-02 · Teststand: **501 Tests grün**
 | 58 | `S58-bild-nachzeichnen.md` | ✅ done | `411028b` | +3 |
 | 59 | `S59-bemassung-frontansicht.md` | ✅ done | `299276a` | +10 |
 | 60 | `S60-katalog-kitchen-assistant.md` | ✅ done | `299276a` | +15 |
+| 61 | `S61-angebots-pdf-firmenprofil.md` | 🔲 planned | – | 8 geplant |
+| 62 | `S62-mcp-planungsassistent.md` | 🔲 planned | – | 12 geplant |
 
 ---
 
