@@ -1,0 +1,21 @@
+ALTER TABLE "dimensions" ADD COLUMN IF NOT EXISTS "ref_a_type" VARCHAR(20);
+ALTER TABLE "dimensions" ADD COLUMN IF NOT EXISTS "ref_a_id" TEXT;
+ALTER TABLE "dimensions" ADD COLUMN IF NOT EXISTS "ref_b_type" VARCHAR(20);
+ALTER TABLE "dimensions" ADD COLUMN IF NOT EXISTS "ref_b_id" TEXT;
+ALTER TABLE "dimensions" ADD COLUMN IF NOT EXISTS "auto_update" BOOLEAN NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS "centerlines" (
+  "id" TEXT NOT NULL PRIMARY KEY,
+  "room_id" TEXT NOT NULL,
+  "label" TEXT,
+  "x0_mm" DOUBLE PRECISION NOT NULL,
+  "y0_mm" DOUBLE PRECISION NOT NULL,
+  "x1_mm" DOUBLE PRECISION NOT NULL,
+  "y1_mm" DOUBLE PRECISION NOT NULL,
+  "style" JSONB NOT NULL DEFAULT '{}',
+  "ref_type" TEXT,
+  "ref_id" TEXT,
+  "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS "centerlines_room_id_idx" ON "centerlines"("room_id");

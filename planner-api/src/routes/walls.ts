@@ -3,6 +3,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../db.js'
 import { sendNotFound, sendBadRequest } from '../errors.js'
+import { refreshRoomDimensions } from '../services/dimensionResolver.js'
 
 // ---- Wall Segment helpers ----
 
@@ -134,6 +135,7 @@ export async function wallRoutes(app: FastifyInstance) {
       where: { id: parsed.data.room_id },
       data: { boundary: newBoundary as object },
     })
+    await refreshRoomDimensions(prisma, parsed.data.room_id)
     return reply.send({ wall_id: id, delta_mm: delta, room: updatedRoom })
   })
 
@@ -200,6 +202,7 @@ export async function wallRoutes(app: FastifyInstance) {
       where: { id: parsed.data.room_id },
       data: { boundary: newBoundary as object },
     })
+    await refreshRoomDimensions(prisma, parsed.data.room_id)
     return reply.status(201).send({ wall1_id: newWall1.id, wall2_id: newWall2.id, vertex_id: newVertex.id, room: updatedRoom })
   })
 
@@ -236,6 +239,7 @@ export async function wallRoutes(app: FastifyInstance) {
           where: { id },
           data: { boundary: newBoundary as object },
         })
+        await refreshRoomDimensions(prisma, id)
         return reply.status(201).send({ mode, room: updatedRoom })
       }
 

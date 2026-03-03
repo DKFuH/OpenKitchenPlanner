@@ -12,6 +12,11 @@ export interface Dimension {
   points: DimensionPoint[]
   style: Record<string, unknown>
   label: string | null
+  ref_a_type?: 'wall' | 'placement' | 'opening' | 'point' | null
+  ref_a_id?: string | null
+  ref_b_type?: 'wall' | 'placement' | 'opening' | 'point' | null
+  ref_b_id?: string | null
+  auto_update?: boolean
   created_at: string
   updated_at: string
 }
@@ -44,6 +49,9 @@ export const dimensionsApi = {
 
   smartGenerate: (roomId: string): Promise<Dimension[]> =>
     api.post<Dimension[]>(`/rooms/${roomId}/dimensions/smart`, {}),
+
+  autoChain: (roomId: string, data: { wall_id: string; offset_mm?: number }): Promise<{ created: number; dimension_ids: string[] }> =>
+    api.post<{ created: number; dimension_ids: string[] }>(`/rooms/${roomId}/dimensions/auto-chain`, data),
 
   delete: (id: string): Promise<void> =>
     api.delete(`/dimensions/${id}`),

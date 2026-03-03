@@ -6,6 +6,7 @@ import type { Opening, Placement, WallSegment } from '@okp/shared-schemas'
 
 import { prisma } from '../db.js'
 import { sendBadRequest, sendNotFound } from '../errors.js'
+import { refreshRoomDimensions } from '../services/dimensionResolver.js'
 
 const PointSchema = z.object({
   x_mm: z.number(),
@@ -145,6 +146,7 @@ export async function placementRoutes(app: FastifyInstance) {
         where: { id: request.params.id },
         data: { placements: placements as object[] },
       })
+      await refreshRoomDimensions(prisma, request.params.id)
     } catch (e: any) {
       return reply.status(500).send({ error: 'DB_UPDATE_FAIL', message: e.message })
     }
@@ -169,6 +171,7 @@ export async function placementRoutes(app: FastifyInstance) {
       where: { id: request.params.id },
       data: { placements: placements as object[] },
     })
+    await refreshRoomDimensions(prisma, request.params.id)
 
     return reply.send(placements)
   })
@@ -202,6 +205,7 @@ export async function placementRoutes(app: FastifyInstance) {
         where: { id: request.params.id },
         data: { placements: placements as object[] },
       })
+      await refreshRoomDimensions(prisma, request.params.id)
 
       return reply.send(parsed.data)
     },
@@ -221,6 +225,7 @@ export async function placementRoutes(app: FastifyInstance) {
         where: { id: request.params.id },
         data: { placements: placements as object[] },
       })
+      await refreshRoomDimensions(prisma, request.params.id)
 
       return reply.status(204).send()
     },

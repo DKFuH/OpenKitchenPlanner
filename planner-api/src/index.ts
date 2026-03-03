@@ -57,6 +57,7 @@ import { ifcInteropRoutes } from './routes/ifcInterop.js'
 import { cadInteropRoutes } from './routes/cadInterop.js'
 import { articleConfiguratorRoutes } from './routes/articleConfigurator.js'
 import { dimensionRoutes } from './routes/dimensions.js'
+import { centerlineRoutes } from './routes/centerlines.js'
 import { kitchenAssistantRoutes } from './routes/kitchenAssistant.js'
 import { layoutSheetRoutes } from './routes/layoutSheets.js'
 // Sprint 61
@@ -131,6 +132,7 @@ await app.register(ifcInteropRoutes, { prefix: '/api/v1' })
 await app.register(cadInteropRoutes, { prefix: '/api/v1' })
 await app.register(articleConfiguratorRoutes, { prefix: '/api/v1' })
 await app.register(dimensionRoutes, { prefix: '/api/v1' })
+await app.register(centerlineRoutes, { prefix: '/api/v1' })
 await app.register(layoutSheetRoutes, { prefix: '/api/v1' })
 await app.register(kitchenAssistantRoutes, { prefix: '/api/v1' })
 await app.register(tenantSettingsRoutes, { prefix: '/api/v1' })

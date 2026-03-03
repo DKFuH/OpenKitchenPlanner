@@ -26,10 +26,74 @@ const UpdateDimensionSchema = z.object({
 })
 
 type RoomBoundary = {
-  wall_segments?: Array<{ id: string; x0_mm: number; y0_mm: number; x1_mm: number; y1_mm: number }>
+  vertices?: Array<{ id: string; x_mm: number; y_mm: number }>
+  wall_segments?: Array<{
+    id: string
+    x0_mm?: number
+    y0_mm?: number
+    x1_mm?: number
+    y1_mm?: number
+    start_vertex_id?: string
+    end_vertex_id?: string
+  }>
 } | null
 
 type RoomPlacement = { id: string; wall_id: string; offset_mm: number; width_mm: number; depth_mm?: number }
+type RoomOpening = { id: string; wall_id: string; offset_mm: number; width_mm: number }
+
+const AutoChainBodySchema = z.object({
+  wall_id: z.string().min(1),
+  offset_mm: z.number().min(0).max(1000).optional(),
+})
+
+type ChainPoint = {
+  x_mm: number
+  ref_type: 'wall' | 'placement' | 'opening'
+  ref_id: string
+}
+
+function wallEndpoints(boundary: RoomBoundary, wallId: string): { x0_mm: number; y0_mm: number; x1_mm: number; y1_mm: number } | null {
+  const wall = boundary?.wall_segments?.find((entry) => entry.id === wallId)
+  if (!wall) return null
+
+  if (
+    typeof wall.x0_mm === 'number' &&
+    typeof wall.y0_mm === 'number' &&
+    typeof wall.x1_mm === 'number' &&
+    typeof wall.y1_mm === 'number'
+  ) {
+    return {
+      x0_mm: wall.x0_mm,
+      y0_mm: wall.y0_mm,
+      x1_mm: wall.x1_mm,
+      y1_mm: wall.y1_mm,
+    }
+  }
+
+  const start = boundary?.vertices?.find((vertex) => vertex.id === wall.start_vertex_id)
+  const end = boundary?.vertices?.find((vertex) => vertex.id === wall.end_vertex_id)
+  if (!start || !end) return null
+
+  return {
+    x0_mm: start.x_mm,
+    y0_mm: start.y_mm,
+    x1_mm: end.x_mm,
+    y1_mm: end.y_mm,
+  }
+}
+
+function wallPointAt(wall: { x0_mm: number; y0_mm: number; x1_mm: number; y1_mm: number }, offsetMm: number): { x_mm: number; y_mm: number } {
+  const dx = wall.x1_mm - wall.x0_mm
+  const dy = wall.y1_mm - wall.y0_mm
+  const len = Math.hypot(dx, dy)
+  if (len < 1e-6) return { x_mm: wall.x0_mm, y_mm: wall.y0_mm }
+  const ux = dx / len
+  const uy = dy / len
+  return {
+    x_mm: wall.x0_mm + ux * offsetMm,
+    y_mm: wall.y0_mm + uy * offsetMm,
+  }
+}
 
 export async function dimensionRoutes(app: FastifyInstance) {
   app.post('/dimensions', async (request, reply) => {
@@ -109,11 +173,14 @@ export async function dimensionRoutes(app: FastifyInstance) {
     await prisma.dimension.deleteMany({ where: { room_id: request.params.id } })
 
     const offsetMm = 300
-    const walls = boundary.wall_segments.filter((wall) => {
-      const dx = wall.x1_mm - wall.x0_mm
-      const dy = wall.y1_mm - wall.y0_mm
-      return Math.hypot(dx, dy) >= 50
-    })
+    const walls = boundary.wall_segments
+      .map((wall) => wallEndpoints(boundary, wall.id))
+      .filter((wall): wall is NonNullable<typeof wall> => Boolean(wall))
+      .filter((wall) => {
+        const dx = wall.x1_mm - wall.x0_mm
+        const dy = wall.y1_mm - wall.y0_mm
+        return Math.hypot(dx, dy) >= 50
+      })
 
     const created = await Promise.all(
       walls.map((wall) => prisma.dimension.create({
@@ -149,7 +216,10 @@ export async function dimensionRoutes(app: FastifyInstance) {
     const INNER_OFFSET_MM = 150
     const results: Awaited<ReturnType<typeof prisma.dimension.create>>[] = []
 
-    for (const wall of boundary.wall_segments) {
+    for (const wallSegment of boundary.wall_segments) {
+      const wall = wallEndpoints(boundary, wallSegment.id)
+      if (!wall) continue
+
       const dx = wall.x1_mm - wall.x0_mm
       const dy = wall.y1_mm - wall.y0_mm
       const len = Math.hypot(dx, dy)
@@ -172,7 +242,7 @@ export async function dimensionRoutes(app: FastifyInstance) {
       }))
 
       const wallPlacements = placements
-        .filter(p => p.wall_id === wall.id)
+        .filter(p => p.wall_id === wallSegment.id)
         .sort((a, b) => a.offset_mm - b.offset_mm)
 
       for (const placement of wallPlacements) {
@@ -198,6 +268,74 @@ export async function dimensionRoutes(app: FastifyInstance) {
     return reply.status(201).send(results)
   })
 
+  app.post<{ Params: { id: string } }>('/rooms/:id/dimensions/auto-chain', async (request, reply) => {
+    const parsed = AutoChainBodySchema.safeParse(request.body)
+    if (!parsed.success) {
+      return sendBadRequest(reply, parsed.error.errors[0]?.message ?? 'Invalid')
+    }
+
+    const room = await prisma.room.findUnique({ where: { id: request.params.id } })
+    if (!room) return sendNotFound(reply, 'Room not found')
+
+    const boundary = room.boundary as RoomBoundary
+    const wall = wallEndpoints(boundary, parsed.data.wall_id)
+    if (!wall) return sendNotFound(reply, 'Wall not found')
+
+    const placements = ((room.placements as RoomPlacement[] | null) ?? [])
+      .filter((placement) => placement.wall_id === parsed.data.wall_id)
+    const openings = ((room.openings as RoomOpening[] | null) ?? [])
+      .filter((opening) => opening.wall_id === parsed.data.wall_id)
+
+    const wallLength = Math.hypot(wall.x1_mm - wall.x0_mm, wall.y1_mm - wall.y0_mm)
+    const chainPoints: ChainPoint[] = [{ x_mm: 0, ref_type: 'wall', ref_id: parsed.data.wall_id }]
+
+    for (const opening of openings) {
+      chainPoints.push({ x_mm: opening.offset_mm, ref_type: 'opening', ref_id: opening.id })
+      chainPoints.push({ x_mm: opening.offset_mm + opening.width_mm, ref_type: 'opening', ref_id: opening.id })
+    }
+
+    for (const placement of placements) {
+      chainPoints.push({ x_mm: placement.offset_mm, ref_type: 'placement', ref_id: placement.id })
+      chainPoints.push({ x_mm: placement.offset_mm + placement.width_mm, ref_type: 'placement', ref_id: placement.id })
+    }
+
+    chainPoints.push({ x_mm: wallLength, ref_type: 'wall', ref_id: parsed.data.wall_id })
+
+    const sorted = chainPoints
+      .sort((a, b) => a.x_mm - b.x_mm)
+      .filter((point, index, items) => index === 0 || Math.abs(point.x_mm - items[index - 1].x_mm) >= 5)
+
+    const dimensionIds: string[] = []
+    const offsetMm = parsed.data.offset_mm ?? 150
+
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const from = sorted[i]
+      const to = sorted[i + 1]
+
+      const p1 = wallPointAt(wall, from.x_mm)
+      const p2 = wallPointAt(wall, to.x_mm)
+
+      const created = await prisma.dimension.create({
+        data: {
+          room_id: request.params.id,
+          type: 'linear',
+          points: [p1, p2],
+          style: { chain: true, wall_id: parsed.data.wall_id, offset_mm: offsetMm },
+          label: null,
+          ref_a_type: from.ref_type,
+          ref_a_id: from.ref_id,
+          ref_b_type: to.ref_type,
+          ref_b_id: to.ref_id,
+          auto_update: true,
+        },
+      })
+
+      dimensionIds.push(created.id)
+    }
+
+    return reply.status(201).send({ created: dimensionIds.length, dimension_ids: dimensionIds })
+  })
+
   app.get<{ Params: { id: string; wallIndex: string } }>(
     '/rooms/:id/elevation/:wallIndex',
     async (request, reply) => {
@@ -210,13 +348,16 @@ export async function dimensionRoutes(app: FastifyInstance) {
       }
 
       const boundary = room.boundary as RoomBoundary
-      const wall = boundary?.wall_segments?.[wallIndex]
+      const wallSegment = boundary?.wall_segments?.[wallIndex]
+      if (!wallSegment) return sendNotFound(reply, 'Wall not found')
+
+      const wall = wallEndpoints(boundary, wallSegment.id)
       if (!wall) return sendNotFound(reply, 'Wall not found')
 
       const wallLength = Math.hypot(wall.x1_mm - wall.x0_mm, wall.y1_mm - wall.y0_mm)
       const roomHeight = room.ceiling_height_mm
       const placements = ((room.placements as RoomPlacement[] | null) ?? [])
-        .filter((placement) => placement.wall_id === wall.id)
+        .filter((placement) => placement.wall_id === wallSegment.id)
 
       const scale = 0.1
       const svgWidth = Math.round(wallLength * scale) + 100

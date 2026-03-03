@@ -41,6 +41,7 @@ const roomFixture = {
   placements: [
     { id: 'pl-1', wall_id: 'wall-1', offset_mm: 150, width_mm: 600, depth_mm: 560 },
   ],
+  openings: [],
 }
 
 function createDimensionFixture(overrides: Record<string, unknown> = {}) {
@@ -448,6 +449,89 @@ describe('dimensionRoutes', () => {
     expect(response.statusCode).toBe(201)
     const body = response.json()
     expect(body.length).toBe(4)
+    await app.close()
+  })
+
+  it('POST /rooms/:id/dimensions/auto-chain returns 201 and creates chain dimensions', async () => {
+    const app = await createApp()
+
+    const chainRoom = {
+      ...roomFixture,
+      openings: [
+        { id: 'op-1', wall_id: 'wall-1', offset_mm: 1000, width_mm: 800 },
+      ],
+      placements: [
+        { id: 'pl-1', wall_id: 'wall-1', offset_mm: 150, width_mm: 600 },
+      ],
+    }
+    prismaMock.room.findUnique.mockResolvedValueOnce(chainRoom)
+
+    prismaMock.dimension.create
+      .mockResolvedValueOnce(createDimensionFixture({ id: 'ac-1' }))
+      .mockResolvedValueOnce(createDimensionFixture({ id: 'ac-2' }))
+      .mockResolvedValueOnce(createDimensionFixture({ id: 'ac-3' }))
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/rooms/${roomId}/dimensions/auto-chain`,
+      payload: { wall_id: 'wall-1' },
+    })
+
+    expect(response.statusCode).toBe(201)
+    expect(response.json()).toMatchObject({ created: expect.any(Number), dimension_ids: expect.any(Array) })
+    expect(prismaMock.dimension.create).toHaveBeenCalled()
+    await app.close()
+  })
+
+  it('POST /rooms/:id/dimensions/auto-chain sets auto_update and reference fields', async () => {
+    const app = await createApp()
+
+    prismaMock.room.findUnique.mockResolvedValueOnce({
+      ...roomFixture,
+      placements: [{ id: 'pl-a', wall_id: 'wall-1', offset_mm: 100, width_mm: 600 }],
+      openings: [],
+    })
+    prismaMock.dimension.create.mockResolvedValue(createDimensionFixture({ id: 'ac-ref' }))
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/rooms/${roomId}/dimensions/auto-chain`,
+      payload: { wall_id: 'wall-1' },
+    })
+
+    expect(response.statusCode).toBe(201)
+    const calls = prismaMock.dimension.create.mock.calls
+    expect(calls.length).toBeGreaterThanOrEqual(1)
+    const firstData = calls[0][0].data
+    expect(firstData.auto_update).toBe(true)
+    expect(firstData.ref_a_id).toBeDefined()
+    expect(firstData.ref_b_id).toBeDefined()
+    await app.close()
+  })
+
+  it('POST /rooms/:id/dimensions/auto-chain dedupes near-duplicate points (< 5mm)', async () => {
+    const app = await createApp()
+
+    prismaMock.room.findUnique.mockResolvedValueOnce({
+      ...roomFixture,
+      openings: [
+        { id: 'op-1', wall_id: 'wall-1', offset_mm: 1000, width_mm: 300 },
+      ],
+      placements: [
+        { id: 'pl-1', wall_id: 'wall-1', offset_mm: 1002, width_mm: 200 },
+      ],
+    })
+    prismaMock.dimension.create.mockResolvedValue(createDimensionFixture({ id: 'ac-dedupe' }))
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/rooms/${roomId}/dimensions/auto-chain`,
+      payload: { wall_id: 'wall-1' },
+    })
+
+    expect(response.statusCode).toBe(201)
+    const body = response.json()
+    expect(body.created).toBeLessThan(6)
     await app.close()
   })
 })

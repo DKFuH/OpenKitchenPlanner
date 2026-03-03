@@ -8,6 +8,7 @@ import {
 } from '../api/catalog.js'
 import { placementsApi, type Placement } from '../api/placements.js'
 import { dimensionsApi, type Dimension } from '../api/dimensions.js'
+import { centerlinesApi, type Centerline } from '../api/centerlines.js'
 import { roomsApi, type ReferenceImagePayload, type RoomBoundaryPayload, type RoomPayload } from '../api/rooms.js'
 import { areasApi } from '../api/areas.js'
 import { openingsApi, type Opening } from '../api/openings.js'
@@ -22,8 +23,8 @@ import { LeftSidebar } from '../components/editor/LeftSidebar.js'
 import { RightSidebar, type CeilingConstraint, type ConfiguredDimensions } from '../components/editor/RightSidebar.js'
 import { StatusBar } from '../components/editor/StatusBar.js'
 import { AreasPanel } from '../components/editor/AreasPanel.js'
-import styles from './Editor.module.css'
 import { LayoutSheetTabs } from '../components/editor/LayoutSheetTabs.js'
+import styles from './Editor.module.css'
 
 function resolveArticleVariantId(article: CatalogArticle, chosenOptions: Record<string, string>): string | undefined {
   if (!article.variants || article.variants.length === 0) {
@@ -97,6 +98,7 @@ export function Editor() {
   const [selectedOpeningId, setSelectedOpeningId] = useState<string | null>(null)
   const [placements, setPlacements] = useState<Placement[]>([])
   const [dimensions, setDimensions] = useState<Dimension[]>([])
+  const [centerlines, setCenterlines] = useState<Centerline[]>([])
   const [selectedPlacementId, setSelectedPlacementId] = useState<string | null>(null)
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<UnifiedCatalogItem | null>(null)
   const [configuredDimensions, setConfiguredDimensions] = useState<ConfiguredDimensions | null>(null)
@@ -282,6 +284,7 @@ export function Editor() {
       setOpenings([])
       setPlacements([])
       setDimensions([])
+      setCenterlines([])
       return
     }
     const room = project.rooms.find(r => r.id === selectedRoomId)
@@ -303,6 +306,14 @@ export function Editor() {
       })
       .catch(() => {
         if (!cancelled) setDimensions([])
+      })
+
+    centerlinesApi.list(selectedRoomId)
+      .then((items) => {
+        if (!cancelled) setCenterlines(items)
+      })
+      .catch(() => {
+        if (!cancelled) setCenterlines([])
       })
 
     return () => {
@@ -782,6 +793,7 @@ export function Editor() {
             onAddOpening={handleAddOpening}
             placements={placements}
             dimensions={dimensions}
+            centerlines={centerlines}
             selectedPlacementId={selectedPlacementId}
             onSelectPlacement={setSelectedPlacementId}
             canAddPlacement={selectedCatalogItem !== null}

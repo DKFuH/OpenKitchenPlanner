@@ -5,8 +5,10 @@ import type { Point2D } from '@shared/types'
 import type { Opening } from '../api/openings.js'
 import type { Placement } from '../api/placements.js'
 import type { Dimension } from '../api/dimensions.js'
+import type { Centerline } from '../api/centerlines.js'
 import type { GeoJsonGrid } from '../api/acoustics.js'
 import type { EditorState, EditorTool } from './usePolygonEditor.js'
+import { CenterlineLayer } from '../components/canvas/CenterlineLayer.js'
 import { AcousticOverlay } from '../pages/AcousticOverlay.js'
 import styles from './PolygonEditor.module.css'
 
@@ -46,6 +48,7 @@ const COLOR = {
   placementStroke: resolveColor('--primary-color'),
   placementSelectedFill: resolveColor('--status-warning'),
   placementSelectedStroke: resolveColor('--status-warning-strong', '--status-warning-text'),
+  centerline: resolveColor('--status-info', '--primary-color'),
   vertexStroke: resolveColor('--text-inverse'),
 } as const
 
@@ -88,6 +91,7 @@ interface Props {
   canAddPlacement?: boolean
   onAddPlacement?: (wallId: string, wallLengthMm: number) => void
   dimensions?: Dimension[]
+  centerlines?: Centerline[]
   onAddDimension?: (dimension: Pick<Dimension, 'type' | 'points' | 'style' | 'label'>) => void
   showCenterlines?: boolean
   onToggleCenterlines?: () => void
@@ -105,6 +109,7 @@ export function PolygonEditor({
   openings = [], selectedOpeningId, onSelectOpening, onAddOpening,
   placements = [], selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement,
   dimensions = [],
+  centerlines = [],
   showCenterlines = false,
   onToggleCenterlines,
   acousticGrid = null,
@@ -315,7 +320,7 @@ export function PolygonEditor({
             + Platzieren
           </button>
         )}
-        {state.closed && placements.length > 0 && onToggleCenterlines && (
+        {state.closed && (placements.length > 0 || centerlines.length > 0) && onToggleCenterlines && (
           <ToolBtn active={showCenterlines} onClick={onToggleCenterlines}>
             ⊕ Mittellinien
           </ToolBtn>
@@ -550,38 +555,13 @@ export function PolygonEditor({
             </Group>
           )}
 
-          {/* Centerlines (Mittellinien der Placements) */}
+          {/* Centerlines (persistierte Mittellinien) */}
           {state.closed && showCenterlines && (
-            <Group>
-              {placements.map(placement => {
-                const wallIdx = state.wallIds.indexOf(placement.wall_id)
-                if (wallIdx < 0 || wallIdx >= pts.length) return null
-                const p0 = pts[wallIdx]
-                const p1 = pts[(wallIdx + 1) % pts.length]
-                const dx = p1.x - p0.x
-                const dy = p1.y - p0.y
-                const len = Math.hypot(dx, dy)
-                if (len === 0) return null
-                const dirX = dx / len
-                const dirY = dy / len
-                const centerOffset = worldToCanvas(placement.offset_mm + placement.width_mm / 2)
-                const cx = p0.x + dirX * centerOffset
-                const cy = p0.y + dirY * centerOffset
-                const TICK_PX = 16
-                const nx = -dirY
-                const ny = dirX
-                return (
-                  <Line
-                    key={`cl-${placement.id}`}
-                    points={[cx - nx * TICK_PX, cy - ny * TICK_PX, cx + nx * TICK_PX, cy + ny * TICK_PX]}
-                    stroke="#0080ff"
-                    strokeWidth={1}
-                    dash={[4, 3]}
-                    opacity={0.8}
-                  />
-                )
-              })}
-            </Group>
+            <CenterlineLayer
+              centerlines={centerlines}
+              worldToCanvas={worldToCanvas}
+              stroke={COLOR.centerline}
+            />
           )}
 
           {/* Platzierungen an Wänden */}

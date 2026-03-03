@@ -14,6 +14,10 @@ vi.mock('../db.js', () => ({
   prisma: prismaMock,
 }))
 
+vi.mock('../services/dimensionResolver.js', () => ({
+  refreshRoomDimensions: vi.fn().mockResolvedValue(0),
+}))
+
 import { placementRoutes } from './placements.js'
 
 const roomId = 'room-1'
