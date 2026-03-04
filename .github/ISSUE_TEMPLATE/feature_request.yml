@@ -1,0 +1,48 @@
+name: Feature Request
+description: Neues Feature oder Sprint-Idee fuer OKP vorschlagen
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem oder Bedarf
+      description: Welches konkrete Problem soll geloest werden?
+      placeholder: Beschreibe den Anwendungsfall knapp und konkret.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Vorschlag
+      description: Wie sollte die Loesung aus deiner Sicht aussehen?
+      placeholder: Feature, Workflow, UI oder API kurz beschreiben.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Betroffene Bereiche, Plugins oder moegliche Sprints
+      placeholder: z. B. S98, Editor, Plugin materials, Backend + Frontend
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Akzeptanzkriterien
+      description: Woran erkennt man, dass das Feature fertig ist?
+      placeholder: |
+        - ...
+        - ...
+        - ...
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Erwarteter Nutzen
+      options:
+        - hoch
+        - mittel
+        - niedrig
+    validations:
+      required: true
+

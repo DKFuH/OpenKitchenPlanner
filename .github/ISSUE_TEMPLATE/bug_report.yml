@@ -1,0 +1,62 @@
+name: Bug Report
+description: Fehler oder Regression in OKP melden
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Kurzbeschreibung
+      description: Was ist kaputt oder unerwartet?
+      placeholder: Kurze, konkrete Beschreibung des Problems.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduktionsschritte
+      description: Wie kann man den Fehler reproduzieren?
+      placeholder: |
+        1. Zu ...
+        2. Auf ...
+        3. Fehler sehen
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Erwartetes Verhalten
+      placeholder: Was sollte stattdessen passieren?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Tatsaechliches Verhalten
+      placeholder: Was passiert aktuell?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Betroffener Bereich
+      description: Betroffene Sprints, Plugins, Seiten, Routen oder Dateien
+      placeholder: z. B. S87, Navigation, planner-frontend/src/pages/Editor.tsx
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, Screenshots, Testfehler
+      description: Relevante Ausgaben, Screenshots oder Fehlermeldungen
+      render: shell
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Prioritaet
+      options:
+        - hoch
+        - mittel
+        - niedrig
+    validations:
+      required: true
+
