@@ -78,3 +78,7 @@ Stand: 2026-03-04
 | 84 | `S84-i18n-core-und-locale-switcher.md` | planned | Core-i18n, Language Switcher und locale-aware Formatierung |
 | 85 | `S85-language-packs-und-uebersetzungsverwaltung.md` | planned | Sprachpakete und tenant-spezifische Uebersetzungsverwaltung |
 | 86 | `S86-mehrsprachige-dokumente-und-shares.md` | planned | Mehrsprachige PDFs, Exporte, Viewer und Shares |
+| 87 | `S87-navigation-ux-und-input-profile.md` | planned | Navigation-UX, CAD-Profil, Touchpad- und MMB-Steuerung |
+| 88 | `S88-locking-visibility-safe-edit.md` | planned | Locking, Visibility und Safe-Edit fuer Level, Maße und Objekte |
+| 89 | `S89-browser-favoriten-ordner-kollektionen.md` | planned | Favoriten, Ordner und Kollektionen fuer Asset- und Materialbrowser |
+| 90 | `S90-cad-gruppen-bauteile-auswahlsets.md` | planned | CAD-Gruppen, Bauteile und Auswahlsets fuer Zeichnungselemente |

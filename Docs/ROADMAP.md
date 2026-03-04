@@ -1443,3 +1443,45 @@ Dokumente und Share-/Viewer-Pfade.
 | 84 | Die Anwendung ist nicht mehr implizit deutschsprachig |
 | 85 | Uebersetzungen und Fachterminologie lassen sich strukturiert verwalten |
 | 86 | Kundenartefakte werden in der passenden Sprache ausgeliefert |
+
+---
+
+## Phase 18 - Editor-Steuerung, Schutz & CAD-Gruppierung (Sprints 87-90)
+
+**Ziel:** Den Editor bei grossen und komplexen Projekten robuster und
+produktiver machen: bessere Navigation, Locking/Sichtbarkeit, geordnete
+Browser und CAD-artige Gruppen-/Bauteillogik.
+
+**Inspiration aus offenen SH3D-Feature-Requests und klassischem CAD:**
+
+- Middle mouse panning, touchpad navigation, invertierte Achsen
+- lockable levels, hidden dimensions, safe edit
+- favorite folders und browser filters
+- gruppierbare Zeichnungselemente und Auswahlsets wie in AutoCAD
+
+### Sprint-Uebersicht
+
+| Sprint | Status | Thema | Deliverables |
+|--------|--------|-------|--------------|
+| 87 | `planned` | Navigation-UX & Input-Profile | MMB-Pan, Touchpad-Profile, CAD-Navigation |
+| 88 | `planned` | Locking, Visibility & Safe-Edit | Lock-/Hide-Logik fuer Level, Maße und Objekte |
+| 89 | `planned` | Browser-Favoriten, Ordner & Kollektionen | Favoriten, Unterordner, gespeicherte Filter |
+| 90 | `planned` | CAD-Gruppen, Bauteile & Auswahlsets | Gruppen, Auswahlsets, Bauteilbloecke, Batch-Transform |
+
+### Sprint-Metadaten
+
+| Sprint | Owner | ETA | Abhaengigkeiten | DoD-Kurzfassung |
+|--------|-------|-----|----------------|-----------------|
+| 87 | Frontend | Phase 18 | S74 | Navigation fuehlt sich CAD-nah und konsistent an |
+| 88 | Full-Stack | Phase 18 | S63, S81 | gelockte/verborgene Teilmengen sind sicher beherrschbar |
+| 89 | Full-Stack | Phase 18 | S75, S78 | grosse Browser bleiben ueber Favoriten und Ordner handhabbar |
+| 90 | Full-Stack | Phase 18 | S81, S88 | Zeichnungselemente koennen wie CAD-Gruppen logisch organisiert werden |
+
+### Meilenstein Phase 18
+
+| Nach Sprint | Ergebnis |
+|-------------|----------|
+| 87 | Editor und 3D-Steuerung fuehlen sich deutlich professioneller an |
+| 88 | Komplexe Projekte lassen sich sicherer bearbeiten |
+| 89 | Asset- und Materialbibliotheken bleiben auch im Alltag uebersichtlich |
+| 90 | Zeichnungsmodelle, Bauteile und Maßgruppen sind als echte Arbeitsstruktur nutzbar |
