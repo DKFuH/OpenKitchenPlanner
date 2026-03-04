@@ -1276,7 +1276,7 @@ Asset-Import und klarer Praesentationsmodus.
 
 | Sprint | Status | Thema | Deliverables |
 |--------|--------|-------|--------------|
-| 74 | `planned` | Split-View & Virtual Visitor | 2D/3D-Split, synchroner Kameravisitor, persistente View-Settings |
+| 74 | `done` | Split-View & Virtual Visitor | 2D/3D-Split, synchroner Kameravisitor, persistente View-Settings |
 | 75 | `planned` | Plugin `asset-library`: Modell-Import & Asset-Browser Light | OBJ/DAE-Import, Bounding-Box, Auto-Scale, Asset-Bibliothek |
 | 76 | `planned` | Plugin `presentation`: Render-UX & Praesentationsmodus | Render-Presets, reduzierter Kundenmodus, vereinfachter Export |
 
@@ -1406,3 +1406,40 @@ levelfaehige Layout-/Exportpfade.
 | 81 | Projekte koennen sauber in Ebenen statt nur in Raeumen organisiert werden |
 | 82 | Vertikale Verbindungen wie Treppen werden als echte Planungselemente nutzbar |
 | 83 | Mehr-Ebenen-Projekte sind dokumentierbar, praesentierbar und exportierbar |
+
+---
+
+## Phase 17 - Internationalisierung & Sprachpakete (Sprints 84-86)
+
+**Ziel:** YAKDS bekommt echte Mehrsprachenfaehigkeit fuer UI, Tenant-Terminologie,
+Dokumente und Share-/Viewer-Pfade.
+
+**Inspiration aus Sweet Home 3D:**
+
+- eingebaute UI-Translations
+- auswaehlbare Sprache in den Einstellungen
+- optionale externe Sprachbibliotheken
+
+### Sprint-Uebersicht
+
+| Sprint | Status | Thema | Deliverables |
+|--------|--------|-------|--------------|
+| 84 | `planned` | i18n-Core & Locale Switcher | Message-Kataloge, Locale-Resolver, Sprachumschalter |
+| 85 | `planned` | Language Packs & Uebersetzungsverwaltung | verwaltbare Sprachpakete und Tenant-Overrides |
+| 86 | `planned` | Mehrsprachige Dokumente & Shares | locale-aware PDFs, Viewer und Exporte |
+
+### Sprint-Metadaten
+
+| Sprint | Owner | ETA | Abhaengigkeiten | DoD-Kurzfassung |
+|--------|-------|-----|----------------|-----------------|
+| 84 | Full-Stack | Phase 17 | S74 optional | UI kann mindestens Deutsch und Englisch nativ umschalten |
+| 85 | Full-Stack | Phase 17 | S84 | Tenant-spezifische Sprachpakete und Fachwort-Overrides sind moeglich |
+| 86 | Full-Stack | Phase 17 | S61, S80, S84 | Dokumente und Shares koennen sprachspezifisch erzeugt werden |
+
+### Meilenstein Phase 17
+
+| Nach Sprint | Ergebnis |
+|-------------|----------|
+| 84 | Die Anwendung ist nicht mehr implizit deutschsprachig |
+| 85 | Uebersetzungen und Fachterminologie lassen sich strukturiert verwalten |
+| 86 | Kundenartefakte werden in der passenden Sprache ausgeliefert |

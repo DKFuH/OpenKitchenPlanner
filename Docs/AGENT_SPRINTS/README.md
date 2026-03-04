@@ -37,7 +37,7 @@ Stand: 2026-03-04
 | 71 | `S71-gebogene-waende-2d-kern.md` | done | `local` | +9 |
 | 72 | `S72-bogen-bemassung-layout.md` | done | `local` | +39 |
 | 73 | `S73-bogen-3d-interop.md` | done | `local` | +8 |
-| 74 | `S74-split-view-virtual-visitor.md` | planned | - | Frontend |
+| 74 | `S74-split-view-virtual-visitor.md` | done | `local` | +10 |
 | 75 | `S75-modell-import-asset-browser-light.md` | planned | - | +10 |
 | 76 | `S76-render-ux-praesentationsmodus.md` | planned | - | Frontend |
 
@@ -65,7 +65,7 @@ Stand: 2026-03-04
 | 71 | `S71-gebogene-waende-2d-kern.md` | done | Gebogene Waende als eigener 2D-Geometrietyp mit Oeffnungen und Snap-Logik |
 | 72 | `S72-bogen-bemassung-layout.md` | done | Radius-, Bogenlaengen- und Sehnenmasse in Sheets und Detailansichten |
 | 73 | `S73-bogen-3d-interop.md` | done | Gebogene Waende in 3D, GLTF, IFC und DXF/DWG-Interop |
-| 74 | `S74-split-view-virtual-visitor.md` | planned | Split-View im Editor und synchroner Virtual Visitor zwischen 2D und 3D |
+| 74 | `S74-split-view-virtual-visitor.md` | done | Split-View im Editor und synchroner Virtual Visitor zwischen 2D und 3D |
 | 75 | `S75-modell-import-asset-browser-light.md` | planned | Plugin `asset-library`: OBJ/DAE-Import, Bounding-Box/Auto-Scale und Asset-Browser |
 | 76 | `S76-render-ux-praesentationsmodus.md` | planned | Plugin `presentation`: Render-Presets und Praesentationsmodus |
 | 77 | `S77-nordkompass-sonnenstand-tageslicht.md` | planned | Plugin `daylight`: Nordkompass, Sonnenstand und Tageslichtsteuerung |
@@ -75,3 +75,6 @@ Stand: 2026-03-04
 | 81 | `S81-mehr-ebenen-projektmodell.md` | planned | Mehr-Ebenen-Projekte mit Levels, Sichtbarkeit und level-spezifischen Raeumen |
 | 82 | `S82-treppen-und-vertikale-verbindungen.md` | planned | Plugin `stairs`: Treppen, Treppenaugen und vertikale Verbindungen |
 | 83 | `S83-mehr-ebenen-layout-sektionen-interop.md` | planned | Plugin `multilevel-docs`: Mehr-Ebenen-Sheets, Vertikalschnitte und Export-Metadaten |
+| 84 | `S84-i18n-core-und-locale-switcher.md` | planned | Core-i18n, Language Switcher und locale-aware Formatierung |
+| 85 | `S85-language-packs-und-uebersetzungsverwaltung.md` | planned | Sprachpakete und tenant-spezifische Uebersetzungsverwaltung |
+| 86 | `S86-mehrsprachige-dokumente-und-shares.md` | planned | Mehrsprachige PDFs, Exporte, Viewer und Shares |
