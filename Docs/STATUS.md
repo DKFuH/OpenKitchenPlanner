@@ -44,6 +44,14 @@ Aktuell auf `main`:
 
 ---
 
+## Letzte Aenderungen (2026-03-04)
+
+- RC1-Tag veroeffentlicht: `v0.1.0-rc1` (remote vorhanden auf `origin`).
+- Verifikation fuer RC1 durchgefuehrt: Frontend-Build, API-Build, Full-Testlauf und Security-Smoke gruen.
+- Haupt-README ueberarbeitet (RC1-Status, Docker-Quickstart, Setup/Verifikation vereinheitlicht).
+
+---
+
 ## Hinweise
 
 - Die detaillierte Sprintplanung liegt in `Docs/AGENT_SPRINTS/`.
