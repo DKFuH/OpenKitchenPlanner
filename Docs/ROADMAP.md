@@ -1524,3 +1524,29 @@ Browser und CAD-artige Gruppen-/Bauteillogik.
 | 94 | Bestellung und Projektstatus werden operativ transparenter |
 | 95 | Survey- und JSON-Importe werden deutlich robuster |
 | 96 | Kaufmaennische Regeln sind sauber konfigurierbar statt implizit verdrahtet |
+
+---
+
+## Phase 20 - Aufmass-Formatadapter & Feldimport (Sprint 97)
+
+**Ziel:** Konkrete Aufmassformate als saubere Plugin-Adapter auf den
+generischen `survey-import`-Rahmen aufsetzen, statt provider-spezifische
+Sonderlogik in Core-Routen zu verteilen.
+
+### Sprint-Uebersicht
+
+| Sprint | Status | Thema | Deliverables |
+|--------|--------|-------|--------------|
+| 97 | `planned` | EGI-Aufmassservice-Import | Plugin-Adapter fuer EGI-Dateien mit Wall-/Door-/Window-/Installation-Mapping |
+
+### Sprint-Metadaten
+
+| Sprint | Owner | ETA | Abhaengigkeiten | DoD-Kurzfassung |
+|--------|-------|-----|----------------|-----------------|
+| 97 | Full-Stack | Phase 20 | S57, S79 | EGI-Dateien lassen sich ueber `survey-import` mit Preview, Warnings und Mapping auf Raum, Oeffnungen und Installationen importieren |
+
+### Meilenstein Phase 20
+
+| Nach Sprint | Ergebnis |
+|-------------|----------|
+| 97 | Ein reales strukturiertes Aufmassformat ist als wiederverwendbarer Plugin-Adapter produktiv angebunden |

@@ -89,3 +89,4 @@ Stand: 2026-03-04
 | 94 | `S94-bestellstatus-positionsnummern-sperranzeige.md` | planned | Bestellstatus, Positionsnummern und Sperranzeige |
 | 95 | `S95-room-survey-json-import.md` | planned | Room-Survey-Import und robuste JSON-Interop |
 | 96 | `S96-mwst-skonto-zusatzartikel-profile.md` | planned | MwSt-, Skonto- und Zusatzartikel-Profile |
+| 97 | `S97-egi-aufmassservice-import-plugin.md` | planned | Plugin `survey-import`: EGI-Aufmassservice-Import fuer Waende, Oeffnungen und Installationen |
