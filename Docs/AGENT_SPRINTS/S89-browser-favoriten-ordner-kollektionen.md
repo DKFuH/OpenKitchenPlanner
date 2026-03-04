@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-89-browser-favorites-folders`
 **Gruppe:** B (startbar nach S75 und S78)
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** S75 (Asset-Library), S78 (Materials)
 
 ---

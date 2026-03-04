@@ -184,6 +184,48 @@
   background: var(--surface-default);
 }
 
+.inlineControls {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.4rem;
+}
+
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.typeSelectInline {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  font-size: 0.76rem;
+  background: var(--surface-default);
+}
+
+.smallBtn {
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-default);
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  padding: 0.2rem 0.35rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.smallBtn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
 .catalogList {
   list-style: none;
   margin: 0;

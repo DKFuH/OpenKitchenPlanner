@@ -31,8 +31,15 @@
 
 .filters {
   display: grid;
-  grid-template-columns: 1fr 220px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.5rem;
+}
+
+.savedFilterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
 }
 
 .createForm {
@@ -54,6 +61,14 @@
 .field {
   display: grid;
   gap: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.checkField {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.78rem;
   color: var(--text-muted);
 }
@@ -100,6 +115,21 @@
   padding: 0.38rem 0.65rem;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+.secondaryBtn {
+  border: 1px dashed var(--border-subtle);
+  background: var(--surface-default);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.36rem 0.58rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .primaryBtn:disabled,

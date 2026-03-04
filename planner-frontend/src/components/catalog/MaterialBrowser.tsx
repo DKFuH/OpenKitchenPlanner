@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   materialLibraryApi,
+  type LibraryFolder,
+  type LibrarySavedFilter,
+  type LibrarySort,
   type MaterialCreatePayload,
   type MaterialPatchPayload,
 } from '../../api/materialLibrary.js'
@@ -13,9 +16,22 @@ import styles from './MaterialBrowser.module.css'
 
 type CategoryFilter = '' | MaterialCategory
 
+const SORT_OPTIONS: Array<{ value: LibrarySort; label: string }> = [
+  { value: 'updated', label: 'Zuletzt aktualisiert' },
+  { value: 'name', label: 'Name A-Z' },
+  { value: 'favorites', label: 'Favoriten zuerst' },
+]
+
+const MATERIAL_CATEGORY_VALUES: MaterialCategory[] = ['floor', 'wall', 'front', 'worktop', 'custom']
+
+const MATERIAL_SORT_VALUES: LibrarySort[] = ['updated', 'name', 'favorites']
+
 interface MaterialFormState {
   name: string
   category: MaterialCategory
+  favorite: boolean
+  folder_id: string
+  collection: string
   texture_url: string
   preview_url: string
   scale_x_mm: string
@@ -38,6 +54,9 @@ function toFormState(item?: MaterialLibraryItem): MaterialFormState {
   return {
     name: item?.name ?? '',
     category: item?.category ?? 'custom',
+    favorite: item?.favorite ?? false,
+    folder_id: item?.folder_id ?? '',
+    collection: item?.collection ?? '',
     texture_url: item?.texture_url ?? '',
     preview_url: item?.preview_url ?? '',
     scale_x_mm: item?.scale_x_mm != null ? String(item.scale_x_mm) : '',
@@ -77,6 +96,13 @@ function parseOptionalRotation(value: string): number | undefined {
 export function MaterialBrowser() {
   const [query, setQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('')
+  const [favoriteOnly, setFavoriteOnly] = useState(false)
+  const [folderFilter, setFolderFilter] = useState('')
+  const [collectionFilter, setCollectionFilter] = useState('')
+  const [sortBy, setSortBy] = useState<LibrarySort>('updated')
+  const [folders, setFolders] = useState<LibraryFolder[]>([])
+  const [savedFilters, setSavedFilters] = useState<LibrarySavedFilter[]>([])
+  const [selectedSavedFilterId, setSelectedSavedFilterId] = useState('')
 
   const [items, setItems] = useState<MaterialLibraryItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -93,6 +119,15 @@ export function MaterialBrowser() {
   const normalizedQuery = useMemo(() => query.trim(), [query])
 
   useEffect(() => {
+    void Promise.all([
+      materialLibraryApi.listFolders().then(setFolders),
+      materialLibraryApi.listSavedFilters().then(setSavedFilters),
+    ]).catch(() => {
+      setError('Material-Metadaten konnten nicht geladen werden.')
+    })
+  }, [])
+
+  useEffect(() => {
     let active = true
     const timeout = window.setTimeout(() => {
       setLoading(true)
@@ -102,6 +137,10 @@ export function MaterialBrowser() {
         .list({
           q: normalizedQuery || undefined,
           category: categoryFilter || undefined,
+          favorite_only: favoriteOnly || undefined,
+          folder_id: folderFilter || undefined,
+          collection: collectionFilter.trim() || undefined,
+          sort: sortBy,
         })
         .then((result) => {
           if (!active) return
@@ -129,7 +168,7 @@ export function MaterialBrowser() {
       active = false
       window.clearTimeout(timeout)
     }
-  }, [normalizedQuery, categoryFilter, refreshToken])
+  }, [normalizedQuery, categoryFilter, favoriteOnly, folderFilter, collectionFilter, sortBy, refreshToken])
 
   function updateCreateForm<K extends keyof MaterialFormState>(key: K, value: MaterialFormState[K]) {
     setCreateForm((previous) => ({ ...previous, [key]: value }))
@@ -156,6 +195,9 @@ export function MaterialBrowser() {
     const payload: MaterialCreatePayload = {
       name,
       category: createForm.category,
+      favorite: createForm.favorite,
+      folder_id: createForm.folder_id || null,
+      collection: createForm.collection.trim() || null,
     }
 
     const textureUrl = createForm.texture_url.trim()
@@ -202,6 +244,9 @@ export function MaterialBrowser() {
     const payload: MaterialPatchPayload = {
       name,
       category: form.category,
+      favorite: form.favorite,
+      folder_id: form.folder_id || null,
+      collection: form.collection.trim() || null,
       texture_url: form.texture_url.trim() || null,
       preview_url: form.preview_url.trim() || null,
     }
@@ -251,6 +296,79 @@ export function MaterialBrowser() {
     }
   }
 
+  function applySavedFilter(filter: LibrarySavedFilter) {
+    const data = filter.saved_filter_json
+    const nextQuery = typeof data.q === 'string' ? data.q : ''
+    const nextCategory = typeof data.category === 'string' && MATERIAL_CATEGORY_VALUES.includes(data.category as MaterialCategory)
+      ? (data.category as MaterialCategory)
+      : ''
+    const nextFavoriteOnly = Boolean(data.favorite_only)
+    const nextFolder = typeof data.folder_id === 'string' ? data.folder_id : ''
+    const nextCollection = typeof data.collection === 'string' ? data.collection : ''
+    const nextSort = typeof data.sort === 'string' && MATERIAL_SORT_VALUES.includes(data.sort as LibrarySort)
+      ? (data.sort as LibrarySort)
+      : 'updated'
+
+    setQuery(nextQuery)
+    setCategoryFilter(nextCategory)
+    setFavoriteOnly(nextFavoriteOnly)
+    setFolderFilter(nextFolder)
+    setCollectionFilter(nextCollection)
+    setSortBy(nextSort)
+  }
+
+  async function handleCreateFolder() {
+    const name = window.prompt('Ordnername')?.trim()
+    if (!name) return
+
+    try {
+      await materialLibraryApi.createFolder({
+        name,
+        parent_id: folderFilter || null,
+      })
+      const nextFolders = await materialLibraryApi.listFolders()
+      setFolders(nextFolders)
+    } catch (requestError: unknown) {
+      setError(requestError instanceof Error ? requestError.message : 'Ordner konnte nicht erstellt werden.')
+    }
+  }
+
+  async function handleSaveFilter() {
+    const name = window.prompt('Name für den Filter')?.trim()
+    if (!name) return
+
+    const saved_filter_json: Record<string, unknown> = {
+      favorite_only: favoriteOnly,
+      sort: sortBy,
+    }
+    if (query.trim()) saved_filter_json.q = query.trim()
+    if (categoryFilter) saved_filter_json.category = categoryFilter
+    if (folderFilter) saved_filter_json.folder_id = folderFilter
+    if (collectionFilter.trim()) saved_filter_json.collection = collectionFilter.trim()
+
+    try {
+      const created = await materialLibraryApi.createSavedFilter({
+        name,
+        saved_filter_json,
+      })
+      setSavedFilters((previous) => [created, ...previous])
+      setSelectedSavedFilterId(created.id)
+    } catch (requestError: unknown) {
+      setError(requestError instanceof Error ? requestError.message : 'Filter konnte nicht gespeichert werden.')
+    }
+  }
+
+  async function handleDeleteFilter() {
+    if (!selectedSavedFilterId) return
+    try {
+      await materialLibraryApi.removeSavedFilter(selectedSavedFilterId)
+      setSavedFilters((previous) => previous.filter((entry) => entry.id !== selectedSavedFilterId))
+      setSelectedSavedFilterId('')
+    } catch (requestError: unknown) {
+      setError(requestError instanceof Error ? requestError.message : 'Filter konnte nicht gelöscht werden.')
+    }
+  }
+
   return (
     <section className={styles.panel}>
       <header className={styles.header}>
@@ -278,6 +396,75 @@ export function MaterialBrowser() {
             </option>
           ))}
         </select>
+        <label className={styles.checkField}>
+          <input
+            type="checkbox"
+            checked={favoriteOnly}
+            onChange={(event) => setFavoriteOnly(event.target.checked)}
+          />
+          Nur Favoriten
+        </label>
+        <select
+          className={styles.select}
+          aria-label="Ordner filtern"
+          value={folderFilter}
+          onChange={(event) => setFolderFilter(event.target.value)}
+        >
+          <option value="">Alle Ordner</option>
+          {folders.map((folder) => (
+            <option key={folder.id} value={folder.id}>{folder.name}</option>
+          ))}
+        </select>
+        <input
+          type="search"
+          className={styles.input}
+          placeholder="Kollektion filtern"
+          aria-label="Kollektion filtern"
+          value={collectionFilter}
+          onChange={(event) => setCollectionFilter(event.target.value)}
+        />
+        <select
+          className={styles.select}
+          aria-label="Sortierung"
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value as LibrarySort)}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className={styles.savedFilterRow}>
+        <select
+          className={styles.select}
+          aria-label="Gespeicherten Filter laden"
+          value={selectedSavedFilterId}
+          onChange={(event) => {
+            const nextId = event.target.value
+            setSelectedSavedFilterId(nextId)
+            const selected = savedFilters.find((entry) => entry.id === nextId)
+            if (selected) {
+              applySavedFilter(selected)
+            }
+          }}
+        >
+          <option value="">Gespeicherte Filter…</option>
+          {savedFilters.map((entry) => (
+            <option key={entry.id} value={entry.id}>{entry.name}</option>
+          ))}
+        </select>
+        <button type="button" className={styles.secondaryBtn} onClick={() => { void handleSaveFilter() }}>
+          Filter speichern
+        </button>
+        <button type="button" className={styles.secondaryBtn} onClick={() => { void handleDeleteFilter() }}>
+          Filter löschen
+        </button>
+        <button type="button" className={styles.secondaryBtn} onClick={() => { void handleCreateFolder() }}>
+          Ordner +
+        </button>
       </div>
 
       <form className={styles.createForm} onSubmit={(event) => { void handleCreate(event) }}>
@@ -307,6 +494,28 @@ export function MaterialBrowser() {
             </select>
           </label>
           <label className={styles.field}>
+            <span>Ordner</span>
+            <select
+              className={styles.select}
+              value={createForm.folder_id}
+              onChange={(event) => updateCreateForm('folder_id', event.target.value)}
+            >
+              <option value="">Ohne Ordner</option>
+              {folders.map((folder) => (
+                <option key={folder.id} value={folder.id}>{folder.name}</option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.field}>
+            <span>Kollektion</span>
+            <input
+              className={styles.input}
+              value={createForm.collection}
+              onChange={(event) => updateCreateForm('collection', event.target.value)}
+              placeholder="z. B. Premium Fronten"
+            />
+          </label>
+          <label className={styles.field}>
             <span>Textur-URL</span>
             <input
               className={styles.input}
@@ -323,6 +532,14 @@ export function MaterialBrowser() {
               onChange={(event) => updateCreateForm('preview_url', event.target.value)}
               placeholder="https://…"
             />
+          </label>
+          <label className={styles.checkField}>
+            <input
+              type="checkbox"
+              checked={createForm.favorite}
+              onChange={(event) => updateCreateForm('favorite', event.target.checked)}
+            />
+            Als Favorit anlegen
           </label>
         </div>
         <div className={styles.actions}>
@@ -372,6 +589,27 @@ export function MaterialBrowser() {
                       </select>
                     </label>
                     <label className={styles.field}>
+                      <span>Ordner</span>
+                      <select
+                        className={styles.select}
+                        value={form.folder_id}
+                        onChange={(event) => updateEditForm(item.id, 'folder_id', event.target.value)}
+                      >
+                        <option value="">Ohne Ordner</option>
+                        {folders.map((folder) => (
+                          <option key={folder.id} value={folder.id}>{folder.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className={styles.field}>
+                      <span>Kollektion</span>
+                      <input
+                        className={styles.input}
+                        value={form.collection}
+                        onChange={(event) => updateEditForm(item.id, 'collection', event.target.value)}
+                      />
+                    </label>
+                    <label className={styles.field}>
                       <span>Textur-URL</span>
                       <input
                         className={styles.input}
@@ -386,6 +624,14 @@ export function MaterialBrowser() {
                         value={form.preview_url}
                         onChange={(event) => updateEditForm(item.id, 'preview_url', event.target.value)}
                       />
+                    </label>
+                    <label className={styles.checkField}>
+                      <input
+                        type="checkbox"
+                        checked={form.favorite}
+                        onChange={(event) => updateEditForm(item.id, 'favorite', event.target.checked)}
+                      />
+                      Favorit
                     </label>
                   </div>
                   <div className={styles.actions}>

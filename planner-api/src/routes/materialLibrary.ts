@@ -5,17 +5,26 @@ import { prisma } from '../db.js'
 import { sendBadRequest, sendNotFound } from '../errors.js'
 import { resolveMaterialAssignment, type MaterialCategory } from '../services/materialResolver.js'
 
+const LIBRARY_KIND = 'material'
 const MaterialCategorySchema = z.enum(['floor', 'wall', 'front', 'worktop', 'custom'])
 const SurfaceTargetSchema = z.enum(['floor', 'ceiling', 'wall_north', 'wall_south', 'wall_east', 'wall_west'])
+const SortSchema = z.enum(['updated', 'name', 'favorites']).default('updated')
 
 const MaterialListQuerySchema = z.object({
   q: z.string().trim().min(1).optional(),
   category: MaterialCategorySchema.optional(),
+  favorite_only: z.coerce.boolean().optional(),
+  folder_id: z.string().uuid().optional(),
+  collection: z.string().trim().min(1).max(120).optional(),
+  sort: SortSchema.optional(),
 })
 
 const MaterialCreateBodySchema = z.object({
   name: z.string().trim().min(1).max(140),
   category: MaterialCategorySchema,
+  favorite: z.boolean().optional(),
+  folder_id: z.string().uuid().nullable().optional(),
+  collection: z.string().trim().max(120).nullable().optional(),
   texture_url: z.string().url().nullable().optional(),
   preview_url: z.string().url().nullable().optional(),
   scale_x_mm: z.number().positive().nullable().optional(),
@@ -29,6 +38,9 @@ const MaterialCreateBodySchema = z.object({
 const MaterialPatchBodySchema = z.object({
   name: z.string().trim().min(1).max(140).optional(),
   category: MaterialCategorySchema.optional(),
+  favorite: z.boolean().optional(),
+  folder_id: z.string().uuid().nullable().optional(),
+  collection: z.string().trim().max(120).nullable().optional(),
   texture_url: z.string().url().nullable().optional(),
   preview_url: z.string().url().nullable().optional(),
   scale_x_mm: z.number().positive().nullable().optional(),
@@ -74,6 +86,25 @@ const ProjectMaterialAssignmentsBodySchema = z
     (value) => value.surface_assignments.length > 0 || value.placement_assignments.length > 0,
     'Mindestens eine Surface- oder Placement-Zuweisung ist erforderlich',
   )
+
+const FolderListQuerySchema = z.object({
+  parent_id: z.string().uuid().optional(),
+})
+
+const FolderCreateBodySchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  parent_id: z.string().uuid().nullable().optional(),
+})
+
+const FolderPatchBodySchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  parent_id: z.string().uuid().nullable().optional(),
+})
+
+const SavedFilterCreateBodySchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  saved_filter_json: z.record(z.unknown()).default({}),
+})
 
 type RoomSurfaceEntry = {
   surface: 'floor' | 'ceiling' | 'wall_north' | 'wall_south' | 'wall_east' | 'wall_west'
@@ -150,6 +181,31 @@ function mergeConfigJson(
   } as Prisma.InputJsonValue
 }
 
+function normalizeCollection(value: string | null | undefined): string | null {
+  if (!value) return null
+  const normalized = value.trim()
+  return normalized.length > 0 ? normalized.slice(0, 120) : null
+}
+
+function buildOrderBy(sort: z.infer<typeof SortSchema> | undefined): Prisma.MaterialLibraryItemOrderByWithRelationInput[] {
+  const effectiveSort = sort ?? 'updated'
+  if (effectiveSort === 'name') {
+    return [{ name: 'asc' }, { updated_at: 'desc' }]
+  }
+  if (effectiveSort === 'favorites') {
+    return [{ favorite: 'desc' }, { updated_at: 'desc' }]
+  }
+  return [{ updated_at: 'desc' }]
+}
+
+async function ensureFolderInTenant(folderId: string, tenantId: string) {
+  const folder = await prisma.libraryFolder.findUnique({ where: { id: folderId } })
+  if (!folder || folder.tenant_id !== tenantId || folder.kind !== LIBRARY_KIND) {
+    return null
+  }
+  return folder
+}
+
 async function ensureProjectInTenant(projectId: string, tenantId: string) {
   const project = await prisma.project.findUnique({
     where: { id: projectId },
@@ -178,8 +234,11 @@ export async function materialLibraryRoutes(app: FastifyInstance) {
       where: {
         tenant_id: tenantId,
         ...(parsedQuery.data.category ? { category: parsedQuery.data.category } : {}),
+        ...(parsedQuery.data.folder_id ? { folder_id: parsedQuery.data.folder_id } : {}),
+        ...(parsedQuery.data.collection ? { collection: parsedQuery.data.collection.trim() } : {}),
+        ...(parsedQuery.data.favorite_only ? { favorite: true } : {}),
       },
-      orderBy: { updated_at: 'desc' },
+      orderBy: buildOrderBy(parsedQuery.data.sort),
     })
 
     const query = parsedQuery.data.q?.toLowerCase()
@@ -188,10 +247,167 @@ export async function materialLibraryRoutes(app: FastifyInstance) {
     }
 
     const filtered = items.filter((item) => {
-      return `${item.name} ${item.category}`.toLowerCase().includes(query)
+      return `${item.name} ${item.category} ${item.collection ?? ''}`.toLowerCase().includes(query)
     })
 
     return reply.send(filtered)
+  })
+
+  app.get('/tenant/materials/folders', async (request, reply) => {
+    if (!ensureTenantScope(request.tenantId, reply)) return
+    const tenantId = request.tenantId
+
+    const parsedQuery = FolderListQuerySchema.safeParse(request.query)
+    if (!parsedQuery.success) {
+      return sendBadRequest(reply, parsedQuery.error.errors[0]?.message ?? 'Ungültiger Ordner-Filter')
+    }
+
+    const folders = await prisma.libraryFolder.findMany({
+      where: {
+        tenant_id: tenantId,
+        kind: LIBRARY_KIND,
+        ...(parsedQuery.data.parent_id ? { parent_id: parsedQuery.data.parent_id } : {}),
+      },
+      orderBy: [{ name: 'asc' }, { created_at: 'asc' }],
+    })
+
+    return reply.send(folders)
+  })
+
+  app.post('/tenant/materials/folders', async (request, reply) => {
+    if (!ensureTenantScope(request.tenantId, reply)) return
+    const tenantId = request.tenantId
+
+    const parsedBody = FolderCreateBodySchema.safeParse(request.body)
+    if (!parsedBody.success) {
+      return sendBadRequest(reply, parsedBody.error.errors[0]?.message ?? 'Ungültige Ordnerdaten')
+    }
+
+    if (parsedBody.data.parent_id) {
+      const parent = await ensureFolderInTenant(parsedBody.data.parent_id, tenantId)
+      if (!parent) {
+        return sendBadRequest(reply, 'Übergeordneter Ordner nicht gefunden')
+      }
+    }
+
+    const created = await prisma.libraryFolder.create({
+      data: {
+        tenant_id: tenantId,
+        kind: LIBRARY_KIND,
+        name: parsedBody.data.name,
+        parent_id: parsedBody.data.parent_id ?? null,
+      },
+    })
+
+    return reply.status(201).send(created)
+  })
+
+  app.patch<{ Params: { id: string } }>('/tenant/materials/folders/:id', async (request, reply) => {
+    if (!ensureTenantScope(request.tenantId, reply)) return
+    const tenantId = request.tenantId
+
+    const parsedBody = FolderPatchBodySchema.safeParse(request.body)
+    if (!parsedBody.success) {
+      return sendBadRequest(reply, parsedBody.error.errors[0]?.message ?? 'Ungültige Ordnerdaten')
+    }
+
+    const existing = await ensureFolderInTenant(request.params.id, tenantId)
+    if (!existing) {
+      return sendNotFound(reply, 'Ordner nicht gefunden')
+    }
+
+    if (parsedBody.data.parent_id) {
+      if (parsedBody.data.parent_id === request.params.id) {
+        return sendBadRequest(reply, 'Ordner kann nicht sein eigener Parent sein')
+      }
+      const parent = await ensureFolderInTenant(parsedBody.data.parent_id, tenantId)
+      if (!parent) {
+        return sendBadRequest(reply, 'Übergeordneter Ordner nicht gefunden')
+      }
+    }
+
+    const updated = await prisma.libraryFolder.update({
+      where: { id: request.params.id },
+      data: {
+        ...(parsedBody.data.name !== undefined ? { name: parsedBody.data.name } : {}),
+        ...(Object.prototype.hasOwnProperty.call(parsedBody.data, 'parent_id')
+          ? { parent_id: parsedBody.data.parent_id ?? null }
+          : {}),
+      },
+    })
+
+    return reply.send(updated)
+  })
+
+  app.delete<{ Params: { id: string } }>('/tenant/materials/folders/:id', async (request, reply) => {
+    if (!ensureTenantScope(request.tenantId, reply)) return
+    const tenantId = request.tenantId
+
+    const existing = await ensureFolderInTenant(request.params.id, tenantId)
+    if (!existing) {
+      return sendNotFound(reply, 'Ordner nicht gefunden')
+    }
+
+    const [childrenCount, itemsCount] = await Promise.all([
+      prisma.libraryFolder.count({ where: { tenant_id: tenantId, kind: LIBRARY_KIND, parent_id: existing.id } }),
+      prisma.materialLibraryItem.count({ where: { tenant_id: tenantId, folder_id: existing.id } }),
+    ])
+
+    if (childrenCount > 0 || itemsCount > 0) {
+      return sendBadRequest(reply, 'Ordner ist nicht leer')
+    }
+
+    await prisma.libraryFolder.delete({ where: { id: existing.id } })
+    return reply.status(204).send()
+  })
+
+  app.get('/tenant/materials/saved-filters', async (request, reply) => {
+    if (!ensureTenantScope(request.tenantId, reply)) return
+    const tenantId = request.tenantId
+
+    const filters = await prisma.librarySavedFilter.findMany({
+      where: {
+        tenant_id: tenantId,
+        kind: LIBRARY_KIND,
+      },
+      orderBy: [{ updated_at: 'desc' }, { created_at: 'desc' }],
+    })
+
+    return reply.send(filters)
+  })
+
+  app.post('/tenant/materials/saved-filters', async (request, reply) => {
+    if (!ensureTenantScope(request.tenantId, reply)) return
+    const tenantId = request.tenantId
+
+    const parsedBody = SavedFilterCreateBodySchema.safeParse(request.body)
+    if (!parsedBody.success) {
+      return sendBadRequest(reply, parsedBody.error.errors[0]?.message ?? 'Ungültiger Filter')
+    }
+
+    const created = await prisma.librarySavedFilter.create({
+      data: {
+        tenant_id: tenantId,
+        kind: LIBRARY_KIND,
+        name: parsedBody.data.name,
+        saved_filter_json: parsedBody.data.saved_filter_json as Prisma.InputJsonValue,
+      },
+    })
+
+    return reply.status(201).send(created)
+  })
+
+  app.delete<{ Params: { id: string } }>('/tenant/materials/saved-filters/:id', async (request, reply) => {
+    if (!ensureTenantScope(request.tenantId, reply)) return
+    const tenantId = request.tenantId
+
+    const existing = await prisma.librarySavedFilter.findUnique({ where: { id: request.params.id } })
+    if (!existing || existing.tenant_id !== tenantId || existing.kind !== LIBRARY_KIND) {
+      return sendNotFound(reply, 'Filter nicht gefunden')
+    }
+
+    await prisma.librarySavedFilter.delete({ where: { id: request.params.id } })
+    return reply.status(204).send()
   })
 
   app.post('/tenant/materials', async (request, reply) => {
@@ -203,11 +419,21 @@ export async function materialLibraryRoutes(app: FastifyInstance) {
       return sendBadRequest(reply, parsedBody.error.errors[0]?.message ?? 'Ungültige Materialdaten')
     }
 
+    if (parsedBody.data.folder_id) {
+      const folder = await ensureFolderInTenant(parsedBody.data.folder_id, tenantId)
+      if (!folder) {
+        return sendBadRequest(reply, 'Ordner nicht gefunden')
+      }
+    }
+
     const created = await prisma.materialLibraryItem.create({
       data: {
         tenant_id: tenantId,
         name: parsedBody.data.name,
         category: parsedBody.data.category,
+        favorite: parsedBody.data.favorite ?? false,
+        folder_id: parsedBody.data.folder_id ?? null,
+        collection: normalizeCollection(parsedBody.data.collection),
         texture_url: parsedBody.data.texture_url ?? null,
         preview_url: parsedBody.data.preview_url ?? null,
         scale_x_mm: parsedBody.data.scale_x_mm ?? null,
@@ -236,11 +462,25 @@ export async function materialLibraryRoutes(app: FastifyInstance) {
       return sendNotFound(reply, 'Material nicht gefunden')
     }
 
+    if (parsedBody.data.folder_id) {
+      const folder = await ensureFolderInTenant(parsedBody.data.folder_id, tenantId)
+      if (!folder) {
+        return sendBadRequest(reply, 'Ordner nicht gefunden')
+      }
+    }
+
     const updated = await prisma.materialLibraryItem.update({
       where: { id: request.params.id },
       data: {
         ...(parsedBody.data.name ? { name: parsedBody.data.name } : {}),
         ...(parsedBody.data.category ? { category: parsedBody.data.category } : {}),
+        ...(parsedBody.data.favorite !== undefined ? { favorite: parsedBody.data.favorite } : {}),
+        ...(Object.prototype.hasOwnProperty.call(parsedBody.data, 'folder_id')
+          ? { folder_id: parsedBody.data.folder_id ?? null }
+          : {}),
+        ...(Object.prototype.hasOwnProperty.call(parsedBody.data, 'collection')
+          ? { collection: normalizeCollection(parsedBody.data.collection) }
+          : {}),
         ...(Object.prototype.hasOwnProperty.call(parsedBody.data, 'texture_url')
           ? { texture_url: parsedBody.data.texture_url ?? null }
           : {}),

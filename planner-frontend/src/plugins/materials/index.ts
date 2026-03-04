@@ -21,6 +21,9 @@ export interface MaterialLibraryItem {
   tenant_id: string
   name: string
   category: MaterialCategory
+  favorite: boolean
+  folder_id: string | null
+  collection: string | null
   texture_url: string | null
   preview_url: string | null
   scale_x_mm: number | null

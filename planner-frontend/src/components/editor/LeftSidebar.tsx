@@ -10,7 +10,12 @@ import {
   type UnifiedCatalogItem
 } from '../../api/catalog.js'
 import { getTenantPlugins } from '../../api/tenantSettings.js'
-import { assetLibraryApi } from '../../api/assetLibrary.js'
+import {
+  assetLibraryApi,
+  type LibraryFolder as AssetLibraryFolder,
+  type LibrarySavedFilter as AssetSavedFilter,
+  type LibrarySort as AssetLibrarySort,
+} from '../../api/assetLibrary.js'
 import {
   ASSET_CATEGORY_LABELS,
   mapAssetToCatalogItem,
@@ -44,6 +49,16 @@ const TYPE_OPTIONS: Array<{ value: '' | CatalogItemType; label: string }> = [
   { value: 'accessory', label: 'Zubehör' },
 ]
 
+const ASSET_SORT_OPTIONS: Array<{ value: AssetLibrarySort; label: string }> = [
+  { value: 'updated', label: 'Zuletzt aktualisiert' },
+  { value: 'name', label: 'Name A-Z' },
+  { value: 'favorites', label: 'Favoriten zuerst' },
+]
+
+const ASSET_CATEGORY_VALUES: AssetCategory[] = ['base', 'wall', 'appliance', 'decor', 'custom']
+
+const ASSET_SORT_VALUES: AssetLibrarySort[] = ['updated', 'name', 'favorites']
+
 export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, selectedRoomId, onSelectRoom, onAddRoom, selectedCatalogItem, onSelectCatalogItem, workflowStep }: Props) {
   const [addingRoom, setAddingRoom] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
@@ -59,6 +74,14 @@ export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, se
   const [articles, setArticles] = useState<CatalogArticle[]>([])
   const [assetItems, setAssetItems] = useState<AssetLibraryItem[]>([])
   const [assetCategoryFilter, setAssetCategoryFilter] = useState<'' | AssetCategory>('')
+  const [assetFavoriteOnly, setAssetFavoriteOnly] = useState(false)
+  const [assetFolderFilter, setAssetFolderFilter] = useState('')
+  const [assetCollectionFilter, setAssetCollectionFilter] = useState('')
+  const [assetSort, setAssetSort] = useState<AssetLibrarySort>('updated')
+  const [assetFolders, setAssetFolders] = useState<AssetLibraryFolder[]>([])
+  const [assetSavedFilters, setAssetSavedFilters] = useState<AssetSavedFilter[]>([])
+  const [selectedAssetSavedFilterId, setSelectedAssetSavedFilterId] = useState('')
+  const [assetUpdatingId, setAssetUpdatingId] = useState<string | null>(null)
 
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [catalogError, setCatalogError] = useState<string | null>(null)
@@ -85,6 +108,17 @@ export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, se
       setCatalogMode('standard')
     }
   }, [assetPluginEnabled, catalogMode])
+
+  useEffect(() => {
+    if (!assetPluginEnabled) return
+
+    void Promise.all([
+      assetLibraryApi.listFolders().then(setAssetFolders),
+      assetLibraryApi.listSavedFilters().then(setAssetSavedFilters),
+    ]).catch(() => {
+      setCatalogError('Asset-Metadaten konnten nicht geladen werden')
+    })
+  }, [assetPluginEnabled])
 
   // Load legacy items
   useEffect(() => {
@@ -156,6 +190,10 @@ export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, se
         .list({
           q: query.trim() || undefined,
           category: assetCategoryFilter || undefined,
+          favorite_only: assetFavoriteOnly || undefined,
+          folder_id: assetFolderFilter || undefined,
+          collection: assetCollectionFilter.trim() || undefined,
+          sort: assetSort,
         })
         .then((nextItems) => {
           if (requestToken !== requestTokenRef.current) return
@@ -175,7 +213,7 @@ export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, se
       if (debounceRef.current) clearTimeout(debounceRef.current)
       requestTokenRef.current += 1
     }
-  }, [catalogMode, query, assetCategoryFilter, assetPluginEnabled])
+  }, [catalogMode, query, assetCategoryFilter, assetFavoriteOnly, assetFolderFilter, assetCollectionFilter, assetSort, assetPluginEnabled])
 
   const filteredArticles = articles.filter(a => {
     if (query && !a.name.toLowerCase().includes(query.toLowerCase()) && !a.sku.toLowerCase().includes(query.toLowerCase())) return false
@@ -194,6 +232,92 @@ export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, se
       }
     } catch (error) {
       setCatalogError(error instanceof Error ? error.message : 'Asset konnte nicht gelöscht werden')
+    }
+  }
+
+  async function handlePatchAsset(asset: AssetLibraryItem, payload: Parameters<typeof assetLibraryApi.patch>[1]) {
+    setAssetUpdatingId(asset.id)
+    try {
+      const updated = await assetLibraryApi.patch(asset.id, payload)
+      setAssetItems((prev) => prev.map((entry) => (entry.id === asset.id ? updated : entry)))
+      if (selectedCatalogItem?.id === asset.id) {
+        onSelectCatalogItem(mapAssetToCatalogItem(updated))
+      }
+    } catch (error) {
+      setCatalogError(error instanceof Error ? error.message : 'Asset konnte nicht aktualisiert werden')
+    } finally {
+      setAssetUpdatingId(null)
+    }
+  }
+
+  function applyAssetSavedFilter(filter: AssetSavedFilter) {
+    const data = filter.saved_filter_json
+    const nextQuery = typeof data.q === 'string' ? data.q : ''
+    const nextCategory = typeof data.category === 'string' && ASSET_CATEGORY_VALUES.includes(data.category as AssetCategory)
+      ? (data.category as AssetCategory)
+      : ''
+    const nextFavoriteOnly = Boolean(data.favorite_only)
+    const nextFolder = typeof data.folder_id === 'string' ? data.folder_id : ''
+    const nextCollection = typeof data.collection === 'string' ? data.collection : ''
+    const nextSort = typeof data.sort === 'string' && ASSET_SORT_VALUES.includes(data.sort as AssetLibrarySort)
+      ? (data.sort as AssetLibrarySort)
+      : 'updated'
+
+    setQuery(nextQuery)
+    setAssetCategoryFilter(nextCategory)
+    setAssetFavoriteOnly(nextFavoriteOnly)
+    setAssetFolderFilter(nextFolder)
+    setAssetCollectionFilter(nextCollection)
+    setAssetSort(nextSort)
+  }
+
+  async function handleCreateAssetFolder() {
+    const name = window.prompt('Ordnername')?.trim()
+    if (!name) return
+    try {
+      await assetLibraryApi.createFolder({
+        name,
+        parent_id: assetFolderFilter || null,
+      })
+      const folders = await assetLibraryApi.listFolders()
+      setAssetFolders(folders)
+    } catch (error) {
+      setCatalogError(error instanceof Error ? error.message : 'Ordner konnte nicht erstellt werden')
+    }
+  }
+
+  async function handleSaveAssetFilter() {
+    const name = window.prompt('Name für den Filter')?.trim()
+    if (!name) return
+    const saved_filter_json: Record<string, unknown> = {
+      favorite_only: assetFavoriteOnly,
+      sort: assetSort,
+    }
+    if (query.trim()) saved_filter_json.q = query.trim()
+    if (assetCategoryFilter) saved_filter_json.category = assetCategoryFilter
+    if (assetFolderFilter) saved_filter_json.folder_id = assetFolderFilter
+    if (assetCollectionFilter.trim()) saved_filter_json.collection = assetCollectionFilter.trim()
+
+    try {
+      const created = await assetLibraryApi.createSavedFilter({
+        name,
+        saved_filter_json,
+      })
+      setAssetSavedFilters((prev) => [created, ...prev])
+      setSelectedAssetSavedFilterId(created.id)
+    } catch (error) {
+      setCatalogError(error instanceof Error ? error.message : 'Filter konnte nicht gespeichert werden')
+    }
+  }
+
+  async function handleDeleteAssetFilter() {
+    if (!selectedAssetSavedFilterId) return
+    try {
+      await assetLibraryApi.removeSavedFilter(selectedAssetSavedFilterId)
+      setAssetSavedFilters((prev) => prev.filter((entry) => entry.id !== selectedAssetSavedFilterId))
+      setSelectedAssetSavedFilterId('')
+    } catch (error) {
+      setCatalogError(error instanceof Error ? error.message : 'Filter konnte nicht gelöscht werden')
     }
   }
 
@@ -339,15 +463,96 @@ export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, se
           </select>
         )}
 
+        {catalogMode === 'assets' && (
+          <>
+            <div className={styles.inlineControls}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={assetFavoriteOnly}
+                  onChange={(event) => setAssetFavoriteOnly(event.target.checked)}
+                />
+                Nur Favoriten
+              </label>
+              <select
+                aria-label="Asset-Sortierung"
+                className={styles.typeSelectInline}
+                value={assetSort}
+                onChange={(event) => setAssetSort(event.target.value as AssetLibrarySort)}
+              >
+                {ASSET_SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <select
+              aria-label="Asset-Ordner filtern"
+              className={styles.typeSelect}
+              value={assetFolderFilter}
+              onChange={(event) => setAssetFolderFilter(event.target.value)}
+            >
+              <option value="">Alle Ordner</option>
+              {assetFolders.map((folder) => (
+                <option key={folder.id} value={folder.id}>{folder.name}</option>
+              ))}
+            </select>
+
+            <input
+              type="search"
+              aria-label="Asset-Kollektion filtern"
+              className={styles.searchInput}
+              placeholder="Kollektion"
+              value={assetCollectionFilter}
+              onChange={(event) => setAssetCollectionFilter(event.target.value)}
+            />
+
+            <div className={styles.inlineControls}>
+              <select
+                aria-label="Gespeicherter Asset-Filter"
+                className={styles.typeSelectInline}
+                value={selectedAssetSavedFilterId}
+                onChange={(event) => {
+                  const nextId = event.target.value
+                  setSelectedAssetSavedFilterId(nextId)
+                  const selected = assetSavedFilters.find((filter) => filter.id === nextId)
+                  if (selected) {
+                    applyAssetSavedFilter(selected)
+                  }
+                }}
+              >
+                <option value="">Filter laden…</option>
+                {assetSavedFilters.map((filter) => (
+                  <option key={filter.id} value={filter.id}>{filter.name}</option>
+                ))}
+              </select>
+              <button type="button" className={styles.smallBtn} onClick={() => { void handleSaveAssetFilter() }}>
+                Speichern
+              </button>
+              <button type="button" className={styles.smallBtn} onClick={() => { void handleDeleteAssetFilter() }}>
+                Löschen
+              </button>
+              <button type="button" className={styles.smallBtn} onClick={() => { void handleCreateAssetFolder() }}>
+                Ordner +
+              </button>
+            </div>
+          </>
+        )}
+
         {catalogMode === 'assets' ? (
           <AssetBrowser
             assets={assetItems}
+            folders={assetFolders}
             selectedAssetId={selectedAssetId}
+            updatingAssetId={assetUpdatingId}
             loading={catalogLoading}
             error={catalogError}
             onOpenImport={() => setAssetImportOpen(true)}
             onSelectAsset={(asset) => onSelectCatalogItem(mapAssetToCatalogItem(asset))}
             onDeleteAsset={(asset) => { void handleDeleteAsset(asset) }}
+            onToggleFavorite={(asset) => { void handlePatchAsset(asset, { favorite: !asset.favorite }) }}
+            onMoveAssetFolder={(asset, folderId) => { void handlePatchAsset(asset, { folder_id: folderId }) }}
+            onSetAssetCollection={(asset, collection) => { void handlePatchAsset(asset, { collection }) }}
           />
         ) : catalogLoading ? (
           <p className={styles.empty}>Lade…</p>

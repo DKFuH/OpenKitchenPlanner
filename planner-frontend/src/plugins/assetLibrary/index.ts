@@ -7,6 +7,9 @@ export interface AssetLibraryItem {
   tenant_id: string
   name: string
   category: AssetCategory
+  favorite: boolean
+  folder_id: string | null
+  collection: string | null
   source_format: 'obj' | 'dae'
   file_url: string
   preview_url: string | null

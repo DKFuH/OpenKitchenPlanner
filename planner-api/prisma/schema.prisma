@@ -2135,6 +2135,9 @@ model AssetLibraryItem {
   tenant_id          String
   name               String   @db.VarChar(180)
   category           String   @db.VarChar(80)
+  favorite           Boolean  @default(false)
+  folder_id          String?
+  collection         String?  @db.VarChar(120)
   source_format      String   @db.VarChar(20)
   file_url           String
   preview_url        String?
@@ -2145,7 +2148,36 @@ model AssetLibraryItem {
   updated_at         DateTime @updatedAt
 
   @@index([tenant_id, category])
+  @@index([tenant_id, favorite, updated_at])
+  @@index([tenant_id, folder_id])
   @@map("asset_library_items")
+}
+
+model LibraryFolder {
+  id          String   @id @default(uuid())
+  tenant_id   String
+  kind        String   @db.VarChar(40)
+  name        String   @db.VarChar(120)
+  parent_id   String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([tenant_id, kind])
+  @@index([tenant_id, parent_id])
+  @@map("library_folders")
+}
+
+model LibrarySavedFilter {
+  id                String   @id @default(uuid())
+  tenant_id         String
+  kind              String   @db.VarChar(40)
+  name              String   @db.VarChar(120)
+  saved_filter_json Json     @default("{}")
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@index([tenant_id, kind])
+  @@map("library_saved_filters")
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -2179,6 +2211,9 @@ model MaterialLibraryItem {
   tenant_id    String
   name         String   @db.VarChar(140)
   category     String   @db.VarChar(60)
+  favorite     Boolean  @default(false)
+  folder_id    String?
+  collection   String?  @db.VarChar(120)
   texture_url  String?
   preview_url  String?
   scale_x_mm   Float?
@@ -2191,6 +2226,8 @@ model MaterialLibraryItem {
   updated_at   DateTime @updatedAt
 
   @@index([tenant_id, category])
+  @@index([tenant_id, favorite, updated_at])
+  @@index([tenant_id, folder_id])
   @@map("material_library_items")
 }
 

@@ -7,8 +7,32 @@
 
 .header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 0.4rem;
+}
+
+.viewToggle {
+  display: inline-flex;
+  background: var(--surface-muted);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+
+.viewBtn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  padding: 0.12rem 0.36rem;
+  border-radius: calc(var(--radius-sm) - 1px);
+  cursor: pointer;
+}
+
+.viewBtnActive {
+  background: var(--surface-default);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .importBtn {
@@ -51,6 +75,11 @@
   flex: 1;
 }
 
+.gridCompact .cardMain {
+  padding: 0.24rem 0.35rem;
+  gap: 0.08rem;
+}
+
 .card {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
@@ -85,6 +114,12 @@
   font-size: 0.62rem;
   color: var(--text-inverse);
   background: var(--primary-color);
+}
+
+.previewLarge {
+  min-width: 3rem;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.4rem;
 }
 
 .name {
@@ -125,4 +160,45 @@
 
 .deleteBtn:hover {
   color: var(--status-danger);
+}
+
+.itemActions {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  padding: 0 0.4rem 0.3rem;
+}
+
+.favoriteBtn,
+.saveBtn,
+.folderSelect,
+.collectionInput {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-default);
+  color: var(--text-primary);
+  font-size: 0.68rem;
+}
+
+.favoriteBtn,
+.saveBtn {
+  padding: 0.18rem 0.36rem;
+  cursor: pointer;
+}
+
+.favoriteBtnActive {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: var(--primary-light);
+}
+
+.folderSelect {
+  padding: 0.16rem 0.24rem;
+  min-width: 5rem;
+}
+
+.collectionInput {
+  padding: 0.16rem 0.3rem;
+  min-width: 5rem;
+  width: 100%;
 }
