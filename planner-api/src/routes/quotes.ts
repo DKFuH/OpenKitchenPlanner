@@ -7,6 +7,7 @@ import { registerProjectDocument } from '../services/documentRegistry.js'
 import { queueNotification } from '../services/notificationService.js'
 import { buildQuotePdf, type PdfSender, type PdfRecipient } from '../services/pdfGenerator.js'
 import { normalizeLocaleCode, resolveLocaleCode } from '../services/localeSupport.js'
+import { recalculateFinancials } from '../services/financialProfileService.js'
 
 const QuoteParamsSchema = z.object({
   id: z.string().uuid(),
@@ -97,7 +98,12 @@ export async function quoteRoutes(app: FastifyInstance) {
     }
 
     const projectId = parsedParams.data.id
-    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true, tenant_id: true } })
+    const project = await prisma.project.findFirst({
+      where: request.tenantId
+        ? { id: projectId, tenant_id: request.tenantId }
+        : { id: projectId },
+      select: { id: true, tenant_id: true, name: true },
+    })
     if (!project) {
       return sendNotFound(reply, 'Project not found')
     }
@@ -170,22 +176,17 @@ export async function quoteRoutes(app: FastifyInstance) {
       })
     })
 
-    const projectWithTenant = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: { id: true, name: true, tenant_id: true },
-    })
-
-    if (projectWithTenant?.tenant_id) {
+    if (project.tenant_id) {
       await queueNotification({
-        tenantId: projectWithTenant.tenant_id,
+        tenantId: project.tenant_id,
         eventType: 'quote_created',
         entityType: 'quote',
         entityId: quote.id,
-        recipientEmail: `alerts+${projectWithTenant.tenant_id}@yakds.local`,
+        recipientEmail: `alerts+${project.tenant_id}@yakds.local`,
         subject: `Neues Angebot: ${quote.quote_number}`,
-        message: `Für Projekt ${projectWithTenant.name} wurde das Angebot ${quote.quote_number} erstellt.`,
+        message: `Für Projekt ${project.name} wurde das Angebot ${quote.quote_number} erstellt.`,
         metadata: {
-          project_id: projectWithTenant.id,
+          project_id: project.id,
           quote_number: quote.quote_number,
           version: quote.version,
         },
@@ -201,8 +202,11 @@ export async function quoteRoutes(app: FastifyInstance) {
       return sendBadRequest(reply, parsedParams.error.errors[0].message)
     }
 
-    const quote = await prisma.quote.findUnique({
-      where: { id: parsedParams.data.id },
+    const quote = await prisma.quote.findFirst({
+      where: {
+        id: parsedParams.data.id,
+        ...resolveQuoteTenantScope(request),
+      },
       include: {
         items: {
           orderBy: { position: 'asc' },
@@ -308,8 +312,11 @@ export async function quoteRoutes(app: FastifyInstance) {
       return sendBadRequest(reply, 'locale_code must be one of: de, en')
     }
 
-    const quote = await prisma.quote.findUnique({
-      where: { id: parsedParams.data.id },
+    const quote = await prisma.quote.findFirst({
+      where: {
+        id: parsedParams.data.id,
+        ...resolveQuoteTenantScope(request),
+      },
       include: {
         items: {
           orderBy: { position: 'asc' },
@@ -416,5 +423,111 @@ export async function quoteRoutes(app: FastifyInstance) {
     reply.header('x-document-id', document.id)
     reply.type('application/pdf')
     return reply.send(pdf)
+  })
+
+  // ── Sprint 96: Finanzielle Neuberechnung mit Profilen ──────────────────
+
+  const RecalculateFinancialsBodySchema = z.object({
+    tax_profile_id: z.string().uuid().nullable().optional(),
+    discount_profile_id: z.string().uuid().nullable().optional(),
+    persist: z.boolean().default(false),
+  })
+
+  app.post<{ Params: { id: string } }>('/quotes/:id/recalculate-financials', async (request, reply) => {
+    const parsedParams = QuoteParamsSchema.safeParse(request.params)
+    if (!parsedParams.success) {
+      return sendBadRequest(reply, parsedParams.error.errors[0].message)
+    }
+
+    const parsedBody = RecalculateFinancialsBodySchema.safeParse(request.body ?? {})
+    if (!parsedBody.success) {
+      return sendBadRequest(reply, parsedBody.error.errors[0].message)
+    }
+
+    const quote = await prisma.quote.findFirst({
+      where: request.tenantId
+        ? {
+            id: parsedParams.data.id,
+            project: {
+              tenant_id: request.tenantId,
+            },
+          }
+        : { id: parsedParams.data.id },
+      include: {
+        items: { orderBy: { position: 'asc' } },
+        tax_profile: true,
+        discount_profile: true,
+      },
+    })
+
+    if (!quote) {
+      return sendNotFound(reply, 'Quote not found')
+    }
+
+    // Resolve which tax/discount profile to apply:
+    // explicit body param > profile stored on the quote > null
+    const taxProfileId = parsedBody.data.tax_profile_id !== undefined
+      ? parsedBody.data.tax_profile_id
+      : (quote.tax_profile_id ?? null)
+
+    const discountProfileId = parsedBody.data.discount_profile_id !== undefined
+      ? parsedBody.data.discount_profile_id
+      : (quote.discount_profile_id ?? null)
+
+    const taxProfile = taxProfileId
+      ? await prisma.taxProfile.findFirst({
+          where: request.tenantId
+            ? {
+                id: taxProfileId,
+                OR: [{ tenant_id: request.tenantId }, { tenant_id: null }],
+              }
+            : { id: taxProfileId },
+        })
+      : null
+
+    if (taxProfileId && !taxProfile) {
+      return sendNotFound(reply, 'Tax profile not found')
+    }
+
+    const discountProfile = discountProfileId
+      ? await prisma.discountProfile.findFirst({
+          where: request.tenantId
+            ? {
+                id: discountProfileId,
+                OR: [{ tenant_id: request.tenantId }, { tenant_id: null }],
+              }
+            : { id: discountProfileId },
+        })
+      : null
+
+    if (discountProfileId && !discountProfile) {
+      return sendNotFound(reply, 'Discount profile not found')
+    }
+
+    const items = quote.items.map((item) => ({
+      id: item.id,
+      line_net: item.line_net,
+      tax_rate: item.tax_rate,
+    }))
+
+    const financials = recalculateFinancials(
+      quote.id,
+      items,
+      taxProfile ? { id: taxProfile.id, tax_rate: taxProfile.tax_rate } : null,
+      discountProfile ? { id: discountProfile.id, skonto_pct: discountProfile.skonto_pct, payment_days: discountProfile.payment_days } : null,
+    )
+
+    if (parsedBody.data.persist) {
+      await prisma.quote.update({
+        where: { id: quote.id },
+        data: {
+          price_snapshot: financials as unknown as Prisma.InputJsonValue,
+          tax_profile_id: taxProfileId,
+          discount_profile_id: discountProfileId,
+        },
+      })
+    }
+
+    return reply.send(financials)
   })
 }

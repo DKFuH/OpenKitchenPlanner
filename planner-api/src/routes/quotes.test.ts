@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const { prismaMock } = vi.hoisted(() => {
   const mock = {
-    project: { findUnique: vi.fn() },
+    project: { findUnique: vi.fn(), findFirst: vi.fn() },
     quote: { findFirst: vi.fn(), create: vi.fn(), findUnique: vi.fn(), update: vi.fn() },
     quoteItem: { update: vi.fn() },
     quoteSettings: { findUnique: vi.fn() },
     tenantSetting: { findUnique: vi.fn() },
     lead: { findFirst: vi.fn() },
+    taxProfile: { findFirst: vi.fn() },
+    discountProfile: { findFirst: vi.fn() },
     $transaction: vi.fn(),
   }
   mock.$transaction.mockImplementation(async (cb: (tx: typeof mock) => Promise<unknown>) => cb(mock))
@@ -39,7 +41,11 @@ describe('quoteRoutes', () => {
   })
 
   it('creates a new quote with incremented version and items', async () => {
-    prismaMock.project.findUnique.mockResolvedValue({ id: '11111111-1111-1111-1111-111111111111' })
+    prismaMock.project.findFirst.mockResolvedValue({
+      id: '11111111-1111-1111-1111-111111111111',
+      tenant_id: '00000000-0000-0000-0000-000000000001',
+      name: 'Projekt A',
+    })
     prismaMock.quote.findFirst.mockResolvedValue({ version: 2 })
     prismaMock.quoteSettings.findUnique.mockResolvedValue({
       quote_number_prefix: 'ANG',
@@ -110,7 +116,7 @@ describe('quoteRoutes', () => {
   })
 
   it('returns quote by id', async () => {
-    prismaMock.quote.findUnique.mockResolvedValue({
+    prismaMock.quote.findFirst.mockResolvedValue({
       id: '33333333-3333-3333-3333-333333333333',
       project_id: '11111111-1111-1111-1111-111111111111',
       version: 1,
@@ -133,7 +139,7 @@ describe('quoteRoutes', () => {
   })
 
   it('returns a pdf attachment for export endpoint', async () => {
-    prismaMock.quote.findUnique.mockResolvedValue({
+    prismaMock.quote.findFirst.mockResolvedValue({
       id: '44444444-4444-4444-4444-444444444444',
       project_id: '11111111-1111-1111-1111-111111111111',
       version: 4,
@@ -198,7 +204,7 @@ describe('quoteRoutes', () => {
   })
 
   it('returns 404 for pdf export when quote is missing', async () => {
-    prismaMock.quote.findUnique.mockResolvedValue(null)
+    prismaMock.quote.findFirst.mockResolvedValue(null)
 
     const app = Fastify()
     await app.register(quoteRoutes, { prefix: '/api/v1' })
@@ -361,7 +367,7 @@ describe('quoteRoutes', () => {
   })
 
   it('exports quote pdf in english when locale_code=en is requested', async () => {
-    prismaMock.quote.findUnique.mockResolvedValue({
+    prismaMock.quote.findFirst.mockResolvedValue({
       id: '44444444-4444-4444-4444-444444444444',
       project_id: '11111111-1111-1111-1111-111111111111',
       version: 4,
@@ -414,6 +420,245 @@ describe('quoteRoutes', () => {
       where: { id: '44444444-4444-4444-4444-444444444444' },
       data: { locale_code: 'en' },
     })
+
+    await app.close()
+  })
+
+  it('returns 404 when creating quote for project outside tenant scope', async () => {
+    prismaMock.project.findFirst.mockResolvedValue(null)
+
+    const app = Fastify()
+    app.decorateRequest('tenantId', null)
+    app.addHook('preHandler', (request, _reply, done) => {
+      request.tenantId = '00000000-0000-0000-0000-000000000001'
+      done()
+    })
+    await app.register(quoteRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/projects/11111111-1111-1111-1111-111111111111/create-quote',
+      payload: {
+        bom_lines: [],
+      },
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(prismaMock.project.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: '11111111-1111-1111-1111-111111111111',
+          tenant_id: '00000000-0000-0000-0000-000000000001',
+        },
+      }),
+    )
+
+    await app.close()
+  })
+
+  it('returns 404 when reading quote outside tenant scope', async () => {
+    prismaMock.quote.findFirst.mockResolvedValue(null)
+
+    const app = Fastify()
+    app.decorateRequest('tenantId', null)
+    app.addHook('preHandler', (request, _reply, done) => {
+      request.tenantId = '00000000-0000-0000-0000-000000000001'
+      done()
+    })
+    await app.register(quoteRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/api/v1/quotes/33333333-3333-3333-3333-333333333333',
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(prismaMock.quote.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: '33333333-3333-3333-3333-333333333333',
+          project: { tenant_id: '00000000-0000-0000-0000-000000000001' },
+        },
+      }),
+    )
+
+    await app.close()
+  })
+
+  // ── Sprint 96: recalculate-financials ─────────────────────────────────
+
+  function makeQuoteWithItems(overrides: Record<string, unknown> = {}) {
+    return {
+      id: '55555555-5555-5555-5555-555555555555',
+      project_id: '11111111-1111-1111-1111-111111111111',
+      version: 1,
+      quote_number: 'ANG-2026-0001',
+      status: 'draft',
+      tax_profile_id: null,
+      discount_profile_id: null,
+      tax_profile: null,
+      discount_profile: null,
+      items: [
+        {
+          id: 'qi-001',
+          position: 1,
+          type: 'cabinet',
+          description: 'Unterschrank',
+          qty: 1,
+          unit: 'stk',
+          unit_price_net: 1000,
+          line_net: 1000,
+          tax_rate: 0.19,
+          line_gross: 1190,
+          notes: null,
+          show_on_quote: true,
+        },
+      ],
+      ...overrides,
+    }
+  }
+
+  it('recalculate-financials returns correct Brutto/Netto/MwSt breakdown', async () => {
+    prismaMock.quote.findFirst.mockResolvedValue(makeQuoteWithItems())
+    prismaMock.taxProfile.findFirst.mockResolvedValue(null)
+    prismaMock.discountProfile.findFirst.mockResolvedValue(null)
+
+    const app = Fastify()
+    await app.register(quoteRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/quotes/55555555-5555-5555-5555-555555555555/recalculate-financials',
+      payload: {},
+    })
+
+    expect(response.statusCode).toBe(200)
+    const body = response.json()
+    expect(body.quote_id).toBe('55555555-5555-5555-5555-555555555555')
+    expect(body.subtotal_net).toBe(1000)
+    expect(body.vat_amount).toBe(190)
+    expect(body.total_gross).toBe(1190)
+    expect(body.skonto_pct).toBe(0)
+    expect(body.skonto_amount).toBe(0)
+    expect(body.total_gross_after_skonto).toBe(1190)
+
+    await app.close()
+  })
+
+  it('recalculate-financials applies a TaxProfile override', async () => {
+    prismaMock.quote.findFirst.mockResolvedValue(makeQuoteWithItems())
+    prismaMock.taxProfile.findFirst.mockResolvedValue({
+      id: 'tp-001',
+      tenant_id: null,
+      name: 'Reduzierter Satz',
+      description: null,
+      tax_rate: 0.07,
+      is_default: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+    prismaMock.discountProfile.findFirst.mockResolvedValue(null)
+
+    const app = Fastify()
+    await app.register(quoteRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/quotes/55555555-5555-5555-5555-555555555555/recalculate-financials',
+      payload: { tax_profile_id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    const body = response.json()
+    // tax overridden to 7%: 1000 * 0.07 = 70
+    expect(body.vat_amount).toBe(70)
+    expect(body.total_gross).toBe(1070)
+
+    await app.close()
+  })
+
+  it('recalculate-financials applies a DiscountProfile (Skonto)', async () => {
+    prismaMock.quote.findFirst.mockResolvedValue(makeQuoteWithItems())
+    prismaMock.taxProfile.findFirst.mockResolvedValue(null)
+    prismaMock.discountProfile.findFirst.mockResolvedValue({
+      id: 'dp-001',
+      tenant_id: null,
+      name: '2% Skonto',
+      description: null,
+      skonto_pct: 2,
+      payment_days: 10,
+      is_default: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+
+    const app = Fastify()
+    await app.register(quoteRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/quotes/55555555-5555-5555-5555-555555555555/recalculate-financials',
+      payload: { discount_profile_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc' },
+    })
+
+    expect(response.statusCode).toBe(200)
+    const body = response.json()
+    expect(body.skonto_pct).toBe(2)
+    expect(body.skonto_amount).toBe(23.8)  // 1190 * 2%
+    expect(body.total_gross_after_skonto).toBe(1166.2)
+
+    await app.close()
+  })
+
+  it('recalculate-financials returns 404 when quote not found', async () => {
+    prismaMock.quote.findFirst.mockResolvedValue(null)
+
+    const app = Fastify()
+    await app.register(quoteRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/quotes/55555555-5555-5555-5555-555555555555/recalculate-financials',
+      payload: {},
+    })
+
+    expect(response.statusCode).toBe(404)
+
+    await app.close()
+  })
+
+  it('recalculate-financials scopes quote/profile lookup to tenant', async () => {
+    const tenantId = 'tenant-1'
+    prismaMock.quote.findFirst.mockResolvedValue(makeQuoteWithItems())
+    prismaMock.taxProfile.findFirst.mockResolvedValue(null)
+    prismaMock.discountProfile.findFirst.mockResolvedValue(null)
+
+    const app = Fastify()
+    app.decorateRequest('tenantId', null)
+    app.addHook('preHandler', (request, _reply, done) => {
+      request.tenantId = tenantId
+      done()
+    })
+    await app.register(quoteRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/quotes/55555555-5555-5555-5555-555555555555/recalculate-financials',
+      payload: {
+        tax_profile_id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+        discount_profile_id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+      },
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(prismaMock.quote.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: '55555555-5555-5555-5555-555555555555',
+          project: { tenant_id: tenantId },
+        },
+      }),
+    )
 
     await app.close()
   })
