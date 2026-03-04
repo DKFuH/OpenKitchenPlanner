@@ -1550,3 +1550,44 @@ Sonderlogik in Core-Routen zu verteilen.
 | Nach Sprint | Ergebnis |
 |-------------|----------|
 | 97 | Ein reales strukturiertes Aufmassformat ist als wiederverwendbarer Plugin-Adapter produktiv angebunden |
+
+---
+
+## Phase 21 - Produktstabilisierung vor weiterem Ausbau (Sprint 98)
+
+**Ziel:** Vor weiteren Ausbau-Sprints wird YAKDS wieder als durchgehend
+benutzbare Anwendung stabilisiert. Fokus ist nicht Feature-Breite, sondern ein
+sauber integrierter Produktkern.
+
+**Leitidee:**
+
+- Produktpfad vor Featuretiefe
+- Goldene Pfade vor neuem Scope
+- Stabilisierung entlang von `UX`, `Security`, `Findings`, `Logik`
+
+### Sprint-Uebersicht
+
+| Sprint | Status | Thema | Deliverables |
+|--------|--------|-------|--------------|
+| 98 | `planned` | Stabilisierungsphase | Produktpfad stabilisieren, Kern-Findings abbauen, Goldene Pfade absichern |
+
+### Sprint-Metadaten
+
+| Sprint | Owner | ETA | Abhaengigkeiten | DoD-Kurzfassung |
+|--------|-------|-----|----------------|-----------------|
+| 98 | Full-Stack | Phase 21 | S61-S81 | Anwendung ist wieder zusammenhaengend benutzbar und die Goldenen Pfade laufen reproduzierbar |
+
+### Fokusbereiche
+
+| Bereich | Inhalt |
+|---------|--------|
+| UX | Hauptseiten, Navigation, tote Buttons, Encoding, Bedienbarkeit |
+| Security | Tenant-Scoping, Plugin-Gating, Fremdzugriffs-Checks |
+| Findings | bekannte Review-, Build- und Runtime-Probleme |
+| Logik | Datenmodell-, Migrations- und Service-Konsistenz |
+
+### Meilenstein Phase 21
+
+| Nach Sprint | Ergebnis |
+|-------------|----------|
+| 98 | YAKDS ist wieder als integrierte Anwendung beurteilbar statt nur als Sammlung einzelner Features |
