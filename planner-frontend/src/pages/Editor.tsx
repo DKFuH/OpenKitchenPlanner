@@ -18,6 +18,7 @@ import { acousticsApi, type AcousticGridMeta, type GeoJsonGrid } from '../api/ac
 import { getTenantPlugins, getTenantSettings, updateTenantSettings } from '../api/tenantSettings.js'
 import { projectEnvironmentApi } from '../api/projectEnvironment.js'
 import { levelsApi, type BuildingLevel } from '../api/levels.js'
+import { visibilityApi } from '../api/visibility.js'
 import { verticalConnectionsApi, type VerticalConnection, type VerticalConnectionKind } from '../api/verticalConnections.js'
 import { usePolygonEditor, edgeLengthMm, type EditorState } from '../editor/usePolygonEditor.js'
 import { CanvasArea } from '../components/editor/CanvasArea.js'
@@ -131,6 +132,65 @@ function extractRoomVertices(boundary: unknown): Array<{ x_mm: number; y_mm: num
   }
 
   return vertices
+}
+
+type WallSegmentFlags = {
+  id: string
+  visible?: boolean
+  is_hidden?: boolean
+  locked?: boolean
+  lock_scope?: string | null
+  [key: string]: unknown
+}
+
+function extractBoundaryWallSegments(boundary: unknown): WallSegmentFlags[] {
+  const candidate = asRecord(boundary)
+  if (!candidate || !Array.isArray(candidate.wall_segments)) {
+    return []
+  }
+
+  const segments: WallSegmentFlags[] = []
+  for (const entry of candidate.wall_segments) {
+    const wall = asRecord(entry)
+    if (!wall || typeof wall.id !== 'string' || wall.id.trim().length === 0) {
+      continue
+    }
+    segments.push(wall as WallSegmentFlags)
+  }
+  return segments
+}
+
+function updateBoundaryWallSegment(boundary: unknown, wallId: string, patch: Partial<WallSegmentFlags>): unknown {
+  const candidate = asRecord(boundary)
+  if (!candidate || !Array.isArray(candidate.wall_segments)) {
+    return boundary
+  }
+
+  let changed = false
+  const nextSegments = candidate.wall_segments.map((entry) => {
+    const wall = asRecord(entry)
+    if (!wall || wall.id !== wallId) {
+      return entry
+    }
+    changed = true
+    return { ...wall, ...patch }
+  })
+
+  if (!changed) {
+    return boundary
+  }
+
+  return {
+    ...candidate,
+    wall_segments: nextSegments,
+  }
+}
+
+function resolveWallVisible(segment: WallSegmentFlags | null): boolean {
+  if (!segment) return true
+  if (typeof segment.visible === 'boolean') return segment.visible
+  if (typeof segment.is_hidden === 'boolean') return !segment.is_hidden
+  return true
 }
 
 function buildFootprintFromRoom(room: RoomPayload): Record<string, unknown> {
@@ -251,6 +311,7 @@ export function Editor() {
   const [showAreasPanel, setShowAreasPanel] = useState(false)
   const [selectedAlternativeId, setSelectedAlternativeId] = useState<string | null>(null)
   const [gltfExportLoading, setGltfExportLoading] = useState(false)
+  const [safeEditMode, setSafeEditMode] = useState(false)
   const [acousticEnabled, setAcousticEnabled] = useState(false)
   const [acousticOpacityPct, setAcousticOpacityPct] = useState(50)
   const [acousticVariable, setAcousticVariable] = useState<'spl_db' | 'spl_dba' | 't20_s' | 'sti'>('spl_db')
@@ -909,6 +970,120 @@ export function Editor() {
       })
   }, [activeLevelId, levels])
 
+  const handleSetActiveLevelVisibility = useCallback((next: boolean) => {
+    if (!id || !activeLevelId) {
+      return
+    }
+
+    void visibilityApi.applyVisibility(id, {
+      levels: [{ level_id: activeLevelId, visible: next }],
+    })
+      .then(() => {
+        setLevels((previous) => {
+          const updated = previous
+            .map((entry) => (entry.id === activeLevelId ? { ...entry, visible: next } : entry))
+            .sort((left, right) => left.order_index - right.order_index)
+
+          if (!next) {
+            const fallback = updated.find((entry) => entry.id !== activeLevelId && entry.visible)
+            setActiveLevelId((current) => (current === activeLevelId ? (fallback?.id ?? null) : current))
+          }
+
+          return updated
+        })
+      })
+      .catch((visibilityError: Error) => {
+        console.error('S88: Ebene-Sichtbarkeit konnte nicht angewendet werden:', visibilityError)
+      })
+  }, [activeLevelId, id])
+
+  const handleSetDimensionsVisible = useCallback((next: boolean) => {
+    if (!id || dimensions.length === 0) {
+      return
+    }
+
+    void visibilityApi.applyVisibility(id, {
+      dimensions: dimensions.map((dimension) => ({
+        dimension_id: dimension.id,
+        visible: next,
+      })),
+    })
+      .then(() => {
+        setDimensions((previous) => previous.map((dimension) => ({ ...dimension, visible: next })))
+      })
+      .catch((visibilityError: Error) => {
+        console.error('S88: Dimensions-Sichtbarkeit konnte nicht angewendet werden:', visibilityError)
+      })
+  }, [dimensions, id])
+
+  const handleSetPlacementsVisible = useCallback((next: boolean) => {
+    if (!id || !selectedRoomId || placements.length === 0) {
+      return
+    }
+
+    void visibilityApi.applyVisibility(id, {
+      placements: placements.map((placement) => ({
+        room_id: selectedRoomId,
+        placement_id: placement.id,
+        visible: next,
+      })),
+    })
+      .then(() => {
+        setPlacements((previous) => previous.map((placement) => ({ ...placement, visible: next })))
+      })
+      .catch((visibilityError: Error) => {
+        console.error('S88: Placement-Sichtbarkeit konnte nicht angewendet werden:', visibilityError)
+      })
+  }, [id, placements, selectedRoomId])
+
+  const handleSetActiveLevelLocked = useCallback((next: boolean) => {
+    if (!id || !activeLevelId) {
+      return
+    }
+
+    void visibilityApi.applyLocks(id, {
+      levels: [{
+        level_id: activeLevelId,
+        locked: next,
+        lock_scope: next ? 'manual' : undefined,
+      }],
+    })
+      .then(() => {
+        setLevels((previous) => previous.map((entry) => (
+          entry.id === activeLevelId
+            ? { ...entry, locked: next, lock_scope: next ? 'manual' : null }
+            : entry
+        )))
+      })
+      .catch((lockError: Error) => {
+        console.error('S88: Level-Lock konnte nicht gesetzt werden:', lockError)
+      })
+  }, [activeLevelId, id])
+
+  const handleSetDimensionsLocked = useCallback((next: boolean) => {
+    if (!id || dimensions.length === 0) {
+      return
+    }
+
+    void visibilityApi.applyLocks(id, {
+      dimensions: dimensions.map((dimension) => ({
+        dimension_id: dimension.id,
+        locked: next,
+        lock_scope: next ? 'manual' : undefined,
+      })),
+    })
+      .then(() => {
+        setDimensions((previous) => previous.map((dimension) => ({
+          ...dimension,
+          locked: next,
+          lock_scope: next ? 'manual' : null,
+        })))
+      })
+      .catch((lockError: Error) => {
+        console.error('S88: Dimensions-Lock konnte nicht gesetzt werden:', lockError)
+      })
+  }, [dimensions, id])
+
   const handleCreateVerticalConnection = useCallback(async (payload: {
     from_level_id: string
     to_level_id: string
@@ -1451,16 +1626,132 @@ export function Editor() {
     : null
   const selectedOpening = openings.find(o => o.id === selectedOpeningId) ?? null
   const selectedPlacement = placements.find(p => p.id === selectedPlacementId) ?? null
+  const selectedRoomWallSegments = useMemo(() => extractBoundaryWallSegments(selectedRoom?.boundary), [selectedRoom?.boundary])
+  const selectedWallSegment = useMemo(() => {
+    const index = state.selectedEdgeIndex
+    if (index === null) {
+      return null
+    }
+    return selectedRoomWallSegments[index] ?? null
+  }, [selectedRoomWallSegments, state.selectedEdgeIndex])
+  const selectedWallId = state.selectedEdgeIndex !== null
+    ? (selectedWallSegment?.id ?? state.wallIds[state.selectedEdgeIndex] ?? null)
+    : null
+  const selectedWallVisible = selectedWallSegment ? resolveWallVisible(selectedWallSegment) : null
+  const selectedWallLocked = selectedWallSegment ? Boolean(selectedWallSegment.locked) : null
+
+  const patchSelectedRoomWallSegment = useCallback((roomId: string, wallId: string, patch: Partial<WallSegmentFlags>) => {
+    setProject((previous) => {
+      if (!previous) return previous
+
+      return {
+        ...previous,
+        rooms: previous.rooms.map((room) => {
+          if (room.id !== roomId) {
+            return room
+          }
+
+          const nextBoundary = updateBoundaryWallSegment(room.boundary, wallId, patch)
+          if (nextBoundary === room.boundary) {
+            return room
+          }
+
+          return {
+            ...room,
+            boundary: nextBoundary,
+          }
+        }),
+      }
+    })
+  }, [])
+
+  const handleSetSelectedPlacementLocked = useCallback((next: boolean) => {
+    if (!id || !selectedRoomId || !selectedPlacementId) {
+      return
+    }
+
+    void visibilityApi.applyLocks(id, {
+      placements: [{
+        room_id: selectedRoomId,
+        placement_id: selectedPlacementId,
+        locked: next,
+        lock_scope: next ? 'manual' : undefined,
+      }],
+    })
+      .then(() => {
+        setPlacements((previous) => previous.map((placement) => (
+          placement.id === selectedPlacementId
+            ? {
+                ...placement,
+                locked: next,
+                lock_scope: next ? 'manual' : null,
+              }
+            : placement
+        )))
+      })
+      .catch((lockError: Error) => {
+        console.error('S88: Placement-Lock konnte nicht gesetzt werden:', lockError)
+      })
+  }, [id, selectedPlacementId, selectedRoomId])
+
+  const handleSetSelectedWallVisible = useCallback((next: boolean) => {
+    if (!id || !selectedRoomId || !selectedWallId) {
+      return
+    }
+
+    void visibilityApi.applyVisibility(id, {
+      walls: [{
+        room_id: selectedRoomId,
+        wall_id: selectedWallId,
+        visible: next,
+      }],
+    })
+      .then(() => {
+        patchSelectedRoomWallSegment(selectedRoomId, selectedWallId, {
+          visible: next,
+          is_hidden: !next,
+        })
+      })
+      .catch((visibilityError: Error) => {
+        console.error('S88: Wand-Sichtbarkeit konnte nicht angewendet werden:', visibilityError)
+      })
+  }, [id, patchSelectedRoomWallSegment, selectedRoomId, selectedWallId])
+
+  const handleSetSelectedWallLocked = useCallback((next: boolean) => {
+    if (!id || !selectedRoomId || !selectedWallId) {
+      return
+    }
+
+    void visibilityApi.applyLocks(id, {
+      walls: [{
+        room_id: selectedRoomId,
+        wall_id: selectedWallId,
+        locked: next,
+        lock_scope: next ? 'manual' : undefined,
+      }],
+    })
+      .then(() => {
+        patchSelectedRoomWallSegment(selectedRoomId, selectedWallId, {
+          locked: next,
+          lock_scope: next ? 'manual' : null,
+        })
+      })
+      .catch((lockError: Error) => {
+        console.error('S88: Wand-Lock konnte nicht gesetzt werden:', lockError)
+      })
+  }, [id, patchSelectedRoomWallSegment, selectedRoomId, selectedWallId])
 
   // Wandgeometrie für Dachschrägen-Panel
   const selectedWallGeom = useMemo(() => {
     const i = state.selectedEdgeIndex
-    if (i === null || !state.wallIds[i]) return null
+    if (i === null) return null
     const v0 = state.vertices[i]
     const v1 = state.vertices[(i + 1) % state.vertices.length]
     if (!v0 || !v1) return null
-    return { id: state.wallIds[i], start: { x_mm: v0.x_mm, y_mm: v0.y_mm }, end: { x_mm: v1.x_mm, y_mm: v1.y_mm } }
-  }, [state.selectedEdgeIndex, state.vertices, state.wallIds])
+    const wallId = selectedWallId ?? state.wallIds[i]
+    if (!wallId) return null
+    return { id: wallId, start: { x_mm: v0.x_mm, y_mm: v0.y_mm }, end: { x_mm: v1.x_mm, y_mm: v1.y_mm } }
+  }, [selectedWallId, state.selectedEdgeIndex, state.vertices, state.wallIds])
 
   const ceilingConstraints = ((selectedRoom as unknown as RoomPayload | null)?.ceiling_constraints as CeilingConstraint[] | undefined) ?? []
 
@@ -1486,6 +1777,7 @@ export function Editor() {
       acousticOpacity={acousticOpacityPct / 100}
       onReferenceImageUpdate={handleReferenceImageUpdate}
       navigationSettings={navigationSettings}
+      safeEditMode={safeEditMode}
       showCompass={daylightEnabled}
       northAngleDeg={projectEnvironment?.north_angle_deg ?? 0}
       virtualVisitor={{
@@ -1837,9 +2129,12 @@ export function Editor() {
         <RightSidebar
           projectId={id ?? ''}
           room={selectedRoom}
+          levels={levels}
+          activeLevelId={activeLevelId}
           selectedVertexIndex={state.selectedIndex}
           selectedVertex={selectedVertex}
           selectedEdgeIndex={state.selectedEdgeIndex}
+          dimensions={dimensions}
           edgeLengthMm={selEdgeLen}
           selectedOpening={selectedOpening}
           selectedPlacement={selectedPlacement}
@@ -1850,6 +2145,8 @@ export function Editor() {
           onSetChosenOptions={setChosenOptions}
           ceilingConstraints={ceilingConstraints}
           selectedWallGeom={selectedWallGeom}
+          selectedWallVisible={selectedWallVisible}
+          selectedWallLocked={selectedWallLocked}
           onMoveVertex={editor.moveVertex}
           onSetEdgeLength={editor.setEdgeLength}
           onUpdateOpening={handleUpdateOpening}
@@ -1876,6 +2173,16 @@ export function Editor() {
           onAcousticUpload={handleAcousticUpload}
           onSelectAcousticGrid={setActiveAcousticGridId}
           onDeleteAcousticGrid={handleDeleteAcousticGrid}
+          safeEditMode={safeEditMode}
+          onToggleSafeEditMode={setSafeEditMode}
+          onToggleActiveLevelVisibility={handleSetActiveLevelVisibility}
+          onSetDimensionsVisible={handleSetDimensionsVisible}
+          onSetPlacementsVisible={handleSetPlacementsVisible}
+          onSetSelectedWallVisible={handleSetSelectedWallVisible}
+          onSetActiveLevelLocked={handleSetActiveLevelLocked}
+          onSetDimensionsLocked={handleSetDimensionsLocked}
+          onSetSelectedPlacementLocked={handleSetSelectedPlacementLocked}
+          onSetSelectedWallLocked={handleSetSelectedWallLocked}
         />
       </div>
 

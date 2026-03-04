@@ -181,6 +181,10 @@ export async function dimensionRoutes(app: FastifyInstance) {
     const existing = await prisma.dimension.findUnique({ where: { id: request.params.id } })
     if (!existing) return sendNotFound(reply, 'Dimension not found')
 
+    if (existing.locked) {
+      return sendBadRequest(reply, 'Dimension is locked and cannot be deleted')
+    }
+
     await prisma.dimension.delete({ where: { id: request.params.id } })
     return reply.status(204).send()
   })
@@ -188,6 +192,10 @@ export async function dimensionRoutes(app: FastifyInstance) {
   app.put<{ Params: { id: string } }>('/dimensions/:id', async (request, reply) => {
     const existing = await prisma.dimension.findUnique({ where: { id: request.params.id } })
     if (!existing) return sendNotFound(reply, 'Dimension not found')
+
+    if (existing.locked) {
+      return sendBadRequest(reply, 'Dimension is locked and cannot be edited')
+    }
 
     const parsed = UpdateDimensionSchema.safeParse(request.body)
     if (!parsed.success) {
@@ -207,6 +215,11 @@ export async function dimensionRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string } }>('/rooms/:id/dimensions/auto', async (request, reply) => {
     const room = await prisma.room.findUnique({ where: { id: request.params.id } })
     if (!room) return sendNotFound(reply, 'Room not found')
+
+    const existingDimensions = await prisma.dimension.findMany({ where: { room_id: request.params.id } })
+    if (existingDimensions.some((dimension) => Boolean(dimension.locked))) {
+      return sendBadRequest(reply, 'Locked dimensions prevent auto-generation')
+    }
 
     const boundary = room.boundary as RoomBoundary
     if (!boundary?.wall_segments?.length) {
@@ -247,6 +260,11 @@ export async function dimensionRoutes(app: FastifyInstance) {
   app.post<{ Params: { id: string } }>('/rooms/:id/dimensions/smart', async (request, reply) => {
     const room = await prisma.room.findUnique({ where: { id: request.params.id } })
     if (!room) return sendNotFound(reply, 'Room not found')
+
+    const existingDimensions = await prisma.dimension.findMany({ where: { room_id: request.params.id } })
+    if (existingDimensions.some((dimension) => Boolean(dimension.locked))) {
+      return sendBadRequest(reply, 'Locked dimensions prevent smart-generation')
+    }
 
     const boundary = room.boundary as RoomBoundary
     if (!boundary?.wall_segments?.length) {
@@ -343,6 +361,11 @@ export async function dimensionRoutes(app: FastifyInstance) {
 
     const room = await prisma.room.findUnique({ where: { id: request.params.id } })
     if (!room) return sendNotFound(reply, 'Room not found')
+
+    const existingDimensions = await prisma.dimension.findMany({ where: { room_id: request.params.id } })
+    if (existingDimensions.some((dimension) => Boolean(dimension.locked))) {
+      return sendBadRequest(reply, 'Locked dimensions prevent auto-chain generation')
+    }
 
     const boundary = room.boundary as RoomBoundary
     const wall = wallEndpoints(boundary, parsed.data.wall_id)

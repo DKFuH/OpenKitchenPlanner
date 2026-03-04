@@ -35,6 +35,7 @@ function createRoom(overrides: Record<string, unknown> = {}) {
           id: 'wall-1',
           start_vertex_id: 'v1',
           end_vertex_id: 'v2',
+          locked: false,
         },
       ],
     },
@@ -110,6 +111,47 @@ describe('placementRoutes', () => {
     )
     expect(prismaMock.room.update).toHaveBeenCalledTimes(1)
 
+    await app.close()
+  })
+
+  it('rejects creating a placement on locked wall', async () => {
+    prismaMock.room.findUnique.mockResolvedValue(
+      createRoom({
+        boundary: {
+          vertices: [
+            { id: 'v1', x_mm: 0, y_mm: 0 },
+            { id: 'v2', x_mm: 4000, y_mm: 0 },
+          ],
+          wall_segments: [
+            {
+              id: 'wall-1',
+              start_vertex_id: 'v1',
+              end_vertex_id: 'v2',
+              locked: true,
+            },
+          ],
+        },
+      }),
+    )
+
+    const app = Fastify()
+    await app.register(placementRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/rooms/${roomId}/placements`,
+      payload: {
+        catalog_item_id: 'catalog-1',
+        wall_id: 'wall-1',
+        offset_mm: 100,
+        width_mm: 600,
+        depth_mm: 560,
+        height_mm: 720,
+      },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(response.json()).toMatchObject({ error: 'BAD_REQUEST' })
     await app.close()
   })
 
@@ -249,6 +291,82 @@ describe('placementRoutes', () => {
       },
     })
 
+    await app.close()
+  })
+
+  it('rejects deleting a locked placement', async () => {
+    prismaMock.room.findUnique.mockResolvedValue(
+      createRoom({
+        placements: [
+          {
+            id: 'placement-locked',
+            catalog_item_id: 'catalog-1',
+            wall_id: 'wall-1',
+            offset_mm: 100,
+            width_mm: 600,
+            depth_mm: 560,
+            height_mm: 720,
+            locked: true,
+          },
+        ],
+      }),
+    )
+
+    const app = Fastify()
+    await app.register(placementRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/rooms/${roomId}/placements/placement-locked`,
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(prismaMock.room.update).not.toHaveBeenCalled()
+    await app.close()
+  })
+
+  it('rejects batch update when locked placement would be changed', async () => {
+    prismaMock.room.findUnique.mockResolvedValue(
+      createRoom({
+        placements: [
+          {
+            id: 'placement-locked',
+            catalog_item_id: 'catalog-1',
+            wall_id: 'wall-1',
+            offset_mm: 100,
+            width_mm: 600,
+            depth_mm: 560,
+            height_mm: 720,
+            locked: true,
+          },
+        ],
+      }),
+    )
+
+    const app = Fastify()
+    await app.register(placementRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: `/api/v1/rooms/${roomId}/placements`,
+      payload: {
+        placements: [
+          {
+            id: 'placement-locked',
+            catalog_item_id: 'catalog-1',
+            wall_id: 'wall-1',
+            offset_mm: 200,
+            width_mm: 600,
+            depth_mm: 560,
+            height_mm: 720,
+            locked: true,
+          },
+        ],
+      },
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(prismaMock.room.update).not.toHaveBeenCalled()
     await app.close()
   })
 

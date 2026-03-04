@@ -52,6 +52,7 @@ function createDimensionFixture(overrides: Record<string, unknown> = {}) {
     points: [{ x_mm: 0, y_mm: 0 }, { x_mm: 2000, y_mm: 0 }],
     style: { unit: 'mm', offset_mm: 120 },
     label: null,
+    locked: false,
     created_at: '2026-03-02T09:00:00.000Z',
     updated_at: '2026-03-02T09:00:00.000Z',
     ...overrides,
@@ -218,6 +219,20 @@ describe('dimensionRoutes', () => {
     await app.close()
   })
 
+  it('DELETE /dimensions/:id locked dimension returns 400', async () => {
+    prismaMock.dimension.findUnique.mockResolvedValueOnce(createDimensionFixture({ id: dimensionId, locked: true }))
+    const app = await createApp()
+
+    const response = await app.inject({
+      method: 'DELETE',
+      url: `/api/v1/dimensions/${dimensionId}`,
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(prismaMock.dimension.delete).not.toHaveBeenCalled()
+    await app.close()
+  })
+
   it('POST /rooms/:id/dimensions/auto returns 201 and creates multiple dimensions', async () => {
     const app = await createApp()
 
@@ -242,6 +257,21 @@ describe('dimensionRoutes', () => {
     expect(response.statusCode).toBe(201)
     expect(response.json()).toHaveLength(4)
     expect(prismaMock.dimension.deleteMany).toHaveBeenCalledWith({ where: { room_id: roomId } })
+    await app.close()
+  })
+
+  it('POST /rooms/:id/dimensions/auto returns 400 when locked dimensions exist', async () => {
+    prismaMock.dimension.findMany.mockResolvedValueOnce([createDimensionFixture({ id: 'locked-dim', locked: true })])
+    const app = await createApp()
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/rooms/${roomId}/dimensions/auto`,
+      payload: {},
+    })
+
+    expect(response.statusCode).toBe(400)
+    expect(prismaMock.dimension.deleteMany).not.toHaveBeenCalled()
     await app.close()
   })
 

@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-88-locking-visibility-safe-edit`
 **Gruppe:** A (startbar nach S81)
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** S63 (Bemaßung), S81 (Levels), S87 (Navigation optional)
 
 ---

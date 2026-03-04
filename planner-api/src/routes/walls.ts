@@ -17,6 +17,9 @@ type WallSeg = {
   thickness_mm?: number
   is_inner_wall?: boolean
   is_hidden?: boolean
+  visible?: boolean
+  locked?: boolean
+  lock_scope?: string | null
   wall_objects?: WallObjectType[]
   installations?: InstallationType[]
 }
@@ -60,6 +63,11 @@ function computeLength(v1: Vertex, v2: Vertex): number {
 
 function getBoundary(room: { boundary: unknown }): BoundaryJson {
   return (room.boundary as BoundaryJson) ?? {}
+}
+
+function wallIsLocked(boundary: BoundaryJson, wallId: string): boolean {
+  const wall = boundary.wall_segments?.find((entry) => entry.id === wallId)
+  return Boolean(wall?.locked)
 }
 
 // ---- Zod Schemas ----
@@ -107,6 +115,7 @@ export async function wallRoutes(app: FastifyInstance) {
     const boundary = getBoundary(room)
     const wall = boundary.wall_segments?.find(w => w.id === id)
     if (!wall) return sendNotFound(reply, 'Wall not found')
+    if (wall.locked) return sendBadRequest(reply, 'Wall is locked and cannot be shifted')
 
     const vertices = boundary.vertices ?? []
     const v1 = vertices.find(v => v.id === wall.start_vertex_id)
@@ -155,6 +164,7 @@ export async function wallRoutes(app: FastifyInstance) {
     if (wallIdx === -1) return sendNotFound(reply, 'Wall not found')
 
     const wall = walls[wallIdx]
+    if (wall.locked) return sendBadRequest(reply, 'Wall is locked and cannot be split')
     const v1 = vertices.find(v => v.id === wall.start_vertex_id)
     const v2 = vertices.find(v => v.id === wall.end_vertex_id)
     if (!v1 || !v2) return sendNotFound(reply, 'Vertices not found')
@@ -278,6 +288,7 @@ export async function wallRoutes(app: FastifyInstance) {
     const walls = boundary.wall_segments ?? []
     const wallIdx = walls.findIndex(w => w.id === id)
     if (wallIdx === -1) return sendNotFound(reply, 'Wall not found')
+    if (walls[wallIdx]?.locked) return sendBadRequest(reply, 'Wall is locked and cannot be changed')
 
     const newObj: WallObjectType = { ...bodyParsed.data.wall_object, wall_id: id }
     const updatedWalls = walls.map((w, i) => {
@@ -300,14 +311,20 @@ export async function wallRoutes(app: FastifyInstance) {
 
     const boundary = getBoundary(room)
     let found = false
+    let locked = false
     const updatedWalls = (boundary.wall_segments ?? []).map(w => ({
       ...w,
       wall_objects: (w.wall_objects ?? []).map(obj => {
         if (obj.id !== objId) return obj
+        if (w.locked) {
+          locked = true
+          return obj
+        }
         found = true
         return { ...obj, hinge_side: parsed.data.hinge_side }
       }),
     }))
+    if (locked) return sendBadRequest(reply, 'Wall is locked and wall object cannot be changed')
     if (!found) return sendNotFound(reply, 'Wall object not found')
 
     await prisma.room.update({
@@ -332,10 +349,15 @@ export async function wallRoutes(app: FastifyInstance) {
 
     const boundary = getBoundary(room)
     let found = false
+    let locked = false
     const updatedWalls = (boundary.wall_segments ?? []).map(w => ({
       ...w,
       wall_objects: (w.wall_objects ?? []).map((obj: WallObjectType) => {
         if (obj.id !== objId) return obj
+        if (w.locked) {
+          locked = true
+          return obj
+        }
         found = true
         return {
           ...obj,
@@ -344,6 +366,7 @@ export async function wallRoutes(app: FastifyInstance) {
         }
       }),
     }))
+    if (locked) return sendBadRequest(reply, 'Wall is locked and wall object cannot be changed')
     if (!found) return sendNotFound(reply, 'Wall object not found')
 
     await prisma.room.update({
@@ -369,6 +392,7 @@ export async function wallRoutes(app: FastifyInstance) {
     const walls = boundary.wall_segments ?? []
     const wallIdx = walls.findIndex(w => w.id === id)
     if (wallIdx === -1) return sendNotFound(reply, 'Wall not found')
+    if (wallIsLocked(boundary, id)) return sendBadRequest(reply, 'Wall is locked and cannot be changed')
 
     const newInst: InstallationType = { ...bodyParsed.data.installation, wall_id: id }
     const updatedWalls = walls.map((w, i) => {

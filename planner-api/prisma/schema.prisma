@@ -181,6 +181,8 @@ model BuildingLevel {
   height_mm        Int?
   order_index      Int      @default(0)
   visible          Boolean  @default(true)
+  locked           Boolean  @default(false)
+  lock_scope       String?  @db.VarChar(30)
   config_json      Json     @default("{}")
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
@@ -227,6 +229,9 @@ model Dimension {
   points     Json
   style      Json          @default("{}")
   label      String?
+  visible    Boolean       @default(true)
+  locked     Boolean       @default(false)
+  lock_scope String?       @db.VarChar(30)
   ref_a_type String?
   ref_a_id   String?
   ref_b_type String?

@@ -63,7 +63,13 @@ type BoundaryJson = {
     start_vertex_id?: string
     end_vertex_id?: string
     length_mm?: number
+    locked?: boolean
   }>
+}
+
+type PlacementLockState = {
+  id: string
+  locked?: boolean
 }
 
 function getWallSegment(boundary: BoundaryJson, wallId: string): WallSegment | null {
@@ -96,6 +102,15 @@ function getRoomPlacements(room: { placements: unknown }): Placement[] {
 
 function getRoomOpenings(room: { openings: unknown }): Opening[] {
   return ((room.openings as unknown[]) ?? []) as Opening[]
+}
+
+function isPlacementLocked(placement: Placement | PlacementLockState): boolean {
+  return Boolean((placement as PlacementLockState).locked)
+}
+
+function wallIsLocked(boundary: BoundaryJson, wallId: string): boolean {
+  const wall = boundary.wall_segments?.find((entry) => entry.id === wallId)
+  return Boolean(wall?.locked)
 }
 
 function validatePlacementSet(
@@ -143,6 +158,10 @@ export async function placementRoutes(app: FastifyInstance) {
     if (!parsed.success) return sendBadRequest(reply, parsed.error.errors[0].message)
 
     const boundary = room.boundary as BoundaryJson
+    if (wallIsLocked(boundary, parsed.data.wall_id)) {
+      return sendBadRequest(reply, 'Target wall is locked and cannot receive new placements')
+    }
+
     const wall = getWallSegment(boundary, parsed.data.wall_id)
     if (!wall) return sendBadRequest(reply, 'Wall not found in room boundary.')
 
@@ -179,6 +198,23 @@ export async function placementRoutes(app: FastifyInstance) {
     if (!room) return sendNotFound(reply, 'Room not found')
 
     const placements = parsed.data.placements as Placement[]
+    const existingPlacements = getRoomPlacements(room)
+
+    for (const existing of existingPlacements) {
+      if (!isPlacementLocked(existing)) {
+        continue
+      }
+
+      const incoming = placements.find((entry) => entry.id === existing.id)
+      if (!incoming) {
+        return sendBadRequest(reply, `Locked placement ${existing.id} cannot be removed`)
+      }
+
+      if (JSON.stringify(incoming) !== JSON.stringify(existing)) {
+        return sendBadRequest(reply, `Locked placement ${existing.id} cannot be changed`)
+      }
+    }
+
     const boundary = room.boundary as BoundaryJson
     const openings = getRoomOpenings(room)
     const error = validatePlacementSet(boundary, placements, openings)
@@ -210,6 +246,11 @@ export async function placementRoutes(app: FastifyInstance) {
         return sendNotFound(reply, 'Placement not found')
       }
 
+      const existingPlacement = existingPlacements.find((placement) => placement.id === request.params.placementId)
+      if (existingPlacement && isPlacementLocked(existingPlacement)) {
+        return sendBadRequest(reply, `Locked placement ${existingPlacement.id} cannot be changed`)
+      }
+
       const placements = existingPlacements.map((placement) =>
         placement.id === request.params.placementId ? (parsed.data as Placement) : placement,
       )
@@ -234,7 +275,13 @@ export async function placementRoutes(app: FastifyInstance) {
       const room = await prisma.room.findUnique({ where: { id: request.params.id } })
       if (!room) return sendNotFound(reply, 'Room not found')
 
-      const placements = ((room.placements as unknown[]) ?? []).filter(
+      const currentPlacements = ((room.placements as unknown[]) ?? []) as Placement[]
+      const target = currentPlacements.find((entry) => entry.id === request.params.placementId)
+      if (target && isPlacementLocked(target)) {
+        return sendBadRequest(reply, `Locked placement ${target.id} cannot be deleted`)
+      }
+
+      const placements = currentPlacements.filter(
         (entry: unknown) => (entry as { id: string }).id !== request.params.placementId,
       )
 

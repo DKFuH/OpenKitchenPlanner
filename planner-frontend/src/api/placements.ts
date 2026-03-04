@@ -17,6 +17,9 @@ export interface Placement {
   width_mm: number
   depth_mm: number
   height_mm: number
+  visible?: boolean
+  locked?: boolean
+  lock_scope?: string | null
   worldPos?: { x_mm: number; y_mm: number }
   material_assignment?: {
     target_kind?: 'placement' | 'asset'

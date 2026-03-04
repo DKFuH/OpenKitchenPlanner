@@ -34,6 +34,7 @@ interface Props {
   acousticOpacity: number
   onReferenceImageUpdate: (img: NonNullable<RoomPayload['reference_image']>) => void
   navigationSettings: NavigationSettings
+  safeEditMode: boolean
   showCompass?: boolean
   northAngleDeg?: number
   virtualVisitor?: {
@@ -45,7 +46,7 @@ interface Props {
   onRepositionVisitor?: (point: { x_mm: number; y_mm: number }) => void
 }
 
-export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, centerlines, selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, onReferenceImageUpdate, navigationSettings, showCompass = false, northAngleDeg = 0, virtualVisitor = null, onRepositionVisitor }: Props) {
+export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, centerlines, selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, onReferenceImageUpdate, navigationSettings, safeEditMode, showCompass = false, northAngleDeg = 0, virtualVisitor = null, onRepositionVisitor }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
   const [saving, setSaving] = useState(false)
@@ -55,6 +56,7 @@ export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, o
   // Ref-Trick: stabile handleSave ohne stale closure auf editor.state
   const editorRef = useRef(editor)
   editorRef.current = editor
+  const wallSegments = (((room?.boundary as unknown as { wall_segments?: Array<{ id?: string; visible?: boolean; is_hidden?: boolean; locked?: boolean }> } | undefined)?.wall_segments) ?? [])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -125,6 +127,7 @@ export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, o
             onSelectOpening={onSelectOpening}
             onAddOpening={onAddOpening}
             placements={placements}
+            wallSegments={wallSegments}
             dimensions={dimensions}
             centerlines={centerlines}
             showCenterlines={showCenterlines}
@@ -138,6 +141,7 @@ export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, o
             acousticOpacity={acousticOpacity}
             onReferenceImageUpdate={onReferenceImageUpdate}
             navigationSettings={navigationSettings}
+            safeEditMode={safeEditMode}
             virtualVisitor={virtualVisitor}
             onRepositionVisitor={onRepositionVisitor}
           />

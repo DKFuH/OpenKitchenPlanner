@@ -11,6 +11,8 @@ export interface BuildingLevel {
   height_mm: number | null
   order_index: number
   visible: boolean
+  locked: boolean
+  lock_scope: string | null
   config_json: Record<string, unknown>
   created_at: string
   updated_at: string

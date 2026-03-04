@@ -8,10 +8,13 @@ export interface DimensionPoint {
 export interface Dimension {
   id: string
   room_id: string
-  type: 'linear' | 'angular'
+  type: 'linear' | 'angular' | 'radial' | 'arc_length' | 'chord'
   points: DimensionPoint[]
   style: Record<string, unknown>
   label: string | null
+  visible: boolean
+  locked: boolean
+  lock_scope?: string | null
   ref_a_type?: 'wall' | 'placement' | 'opening' | 'point' | null
   ref_a_id?: string | null
   ref_b_type?: 'wall' | 'placement' | 'opening' | 'point' | null

@@ -31,7 +31,7 @@ const baseRoom = {
       { id: VERTEX_B, x_mm: 4000, y_mm: 0, index: 1 },
     ],
     wall_segments: [
-      { id: WALL_ID, index: 0, start_vertex_id: VERTEX_A, end_vertex_id: VERTEX_B, length_mm: 4000 },
+      { id: WALL_ID, index: 0, start_vertex_id: VERTEX_A, end_vertex_id: VERTEX_B, length_mm: 4000, locked: false },
     ],
   },
 }
@@ -73,6 +73,30 @@ describe('wallRoutes', () => {
       })
 
       expect(res.statusCode).toBe(404)
+      await app.close()
+    })
+
+    it('returns 400 when wall is locked', async () => {
+      prismaMock.room.findUnique.mockResolvedValue({
+        ...baseRoom,
+        boundary: {
+          ...baseRoom.boundary,
+          wall_segments: [
+            { id: WALL_ID, index: 0, start_vertex_id: VERTEX_A, end_vertex_id: VERTEX_B, length_mm: 4000, locked: true },
+          ],
+        },
+      })
+
+      const app = Fastify()
+      await app.register(wallRoutes, { prefix: '/api/v1' })
+
+      const res = await app.inject({
+        method: 'PATCH',
+        url: `/api/v1/walls/${WALL_ID}/shift`,
+        payload: { room_id: ROOM_ID, delta_mm: 100 },
+      })
+
+      expect(res.statusCode).toBe(400)
       await app.close()
     })
 

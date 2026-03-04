@@ -69,6 +69,12 @@ function openingColor(type: Opening['type'], selected: boolean) {
 }
 
 type OutlinePoint = { x_mm: number; y_mm: number }
+type WallSegmentMeta = {
+  id?: string
+  visible?: boolean
+  is_hidden?: boolean
+  locked?: boolean
+}
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -156,6 +162,7 @@ interface Props {
   onSelectPlacement?: (id: string | null) => void
   canAddPlacement?: boolean
   onAddPlacement?: (wallId: string, wallLengthMm: number) => void
+  wallSegments?: WallSegmentMeta[]
   dimensions?: Dimension[]
   centerlines?: Centerline[]
   onAddDimension?: (dimension: Pick<Dimension, 'type' | 'points' | 'style' | 'label'>) => void
@@ -173,6 +180,7 @@ interface Props {
     visible?: boolean
   } | null
   onRepositionVisitor?: (point: { x_mm: number; y_mm: number }) => void
+  safeEditMode?: boolean
 }
 
 export function PolygonEditor({
@@ -183,6 +191,7 @@ export function PolygonEditor({
   verticalConnections = [],
   openings = [], selectedOpeningId, onSelectOpening, onAddOpening,
   placements = [], selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement,
+  wallSegments = [],
   dimensions = [],
   centerlines = [],
   showCenterlines = false,
@@ -194,6 +203,7 @@ export function PolygonEditor({
   navigationSettings,
   virtualVisitor = null,
   onRepositionVisitor,
+  safeEditMode = false,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
@@ -261,20 +271,34 @@ export function PolygonEditor({
     }
 
     if (state.tool !== 'draw') return
+    if (safeEditMode) return
     // Child shapes (vertices, edges) set e.cancelBubble = true so they never reach here
     onAddVertex({ x_mm: canvasToWorld(pos.x), y_mm: canvasToWorld(pos.y) })
-  }, [resolveLogicalPointer, state.tool, state.referenceImage, onAddVertex, onReferenceImageUpdate, onRepositionVisitor])
+  }, [resolveLogicalPointer, safeEditMode, state.tool, state.referenceImage, onAddVertex, onReferenceImageUpdate, onRepositionVisitor])
 
   const handleStageDblClick = useCallback(() => {
+    if (safeEditMode) return
     if (state.tool === 'draw' && state.vertices.length >= 3) onClosePolygon()
-  }, [state.tool, state.vertices.length, onClosePolygon])
+  }, [safeEditMode, state.tool, state.vertices.length, onClosePolygon])
 
   useEffect(() => {
+    const isSelectedVertexLocked = (() => {
+      if (state.selectedIndex === null || state.vertices.length < 2) {
+        return false
+      }
+
+      const index = state.selectedIndex
+      const prevEdgeIndex = (index - 1 + state.vertices.length) % state.vertices.length
+      const currentWallLocked = Boolean(wallSegments[index]?.locked)
+      const previousWallLocked = Boolean(wallSegments[prevEdgeIndex]?.locked)
+      return currentWallLocked || previousWallLocked
+    })()
+
     function handleKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if (e.key === 'd' || e.key === 'D') onSetTool('draw')
       if (e.key === 's' || e.key === 'S') onSetTool('select')
-      if ((e.key === 'Backspace' || e.key === 'Delete') && state.selectedIndex !== null) {
+      if ((e.key === 'Backspace' || e.key === 'Delete') && state.selectedIndex !== null && !safeEditMode && !isSelectedVertexLocked) {
         onDeleteVertex(state.selectedIndex)
       }
       if (e.key === 'Escape') {
@@ -284,7 +308,7 @@ export function PolygonEditor({
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [state.selectedIndex, state.tool, onSetTool, onDeleteVertex, onSelectVertex, onSelectEdge])
+  }, [safeEditMode, wallSegments, state.selectedIndex, state.vertices.length, onSetTool, onDeleteVertex, onSelectVertex, onSelectEdge])
 
   useEffect(() => {
     const onMouseMove = (event: MouseEvent) => {
@@ -377,6 +401,32 @@ export function PolygonEditor({
     y: worldToCanvas(v.y_mm),
   }))
 
+  const wallVisibleByIndex = state.vertices.map((_, index) => {
+    const segment = wallSegments[index]
+    if (!segment) return true
+    if (typeof segment.visible === 'boolean') return segment.visible
+    if (typeof segment.is_hidden === 'boolean') return !segment.is_hidden
+    return true
+  })
+
+  const wallLockedByIndex = state.vertices.map((_, index) => {
+    const segment = wallSegments[index]
+    return Boolean(segment?.locked)
+  })
+
+  const isWallEditable = useCallback((index: number) => {
+    return wallVisibleByIndex[index] !== false && !wallLockedByIndex[index]
+  }, [wallLockedByIndex, wallVisibleByIndex])
+
+  const isVertexLocked = useCallback((index: number) => {
+    if (state.vertices.length < 2) {
+      return false
+    }
+
+    const prevEdgeIndex = (index - 1 + state.vertices.length) % state.vertices.length
+    return Boolean(wallLockedByIndex[index] || wallLockedByIndex[prevEdgeIndex])
+  }, [state.vertices.length, wallLockedByIndex])
+
   const linePoints = pts.flatMap(p => [p.x, p.y])
   const closedLinePoints = state.closed
     ? [...linePoints, pts[0]?.x, pts[0]?.y].filter(n => n !== undefined) as number[]
@@ -408,7 +458,7 @@ export function PolygonEditor({
 
   // Öffnung hinzufügen für ausgewählte Wand
   function handleAddOpeningForSelectedEdge() {
-    if (state.selectedEdgeIndex === null || !onAddOpening) return
+    if (state.selectedEdgeIndex === null || !onAddOpening || !isWallEditable(state.selectedEdgeIndex)) return
     const i = state.selectedEdgeIndex
     const wallId = state.wallIds[i]
     const vI = state.vertices[i]
@@ -419,7 +469,7 @@ export function PolygonEditor({
 
   // Platzierung hinzufügen für ausgewählte Wand
   function handleAddPlacementForSelectedEdge() {
-    if (state.selectedEdgeIndex === null || !onAddPlacement) return
+    if (state.selectedEdgeIndex === null || !onAddPlacement || !isWallEditable(state.selectedEdgeIndex)) return
     const i = state.selectedEdgeIndex
     const wallId = state.wallIds[i]
     const vI = state.vertices[i]
@@ -505,12 +555,12 @@ export function PolygonEditor({
         {!state.closed && state.vertices.length >= 3 && (
           <button type="button" className={styles.closeBtn} onClick={onClosePolygon}>Polygon schließen</button>
         )}
-        {state.tool === 'select' && state.selectedEdgeIndex !== null && onAddOpening && (
+        {state.tool === 'select' && state.selectedEdgeIndex !== null && onAddOpening && isWallEditable(state.selectedEdgeIndex) && (
           <button type="button" className={styles.toolBtn} onClick={handleAddOpeningForSelectedEdge}>
             + Öffnung
           </button>
         )}
-        {state.tool === 'select' && state.selectedEdgeIndex !== null && canAddPlacement && onAddPlacement && (
+        {state.tool === 'select' && state.selectedEdgeIndex !== null && canAddPlacement && onAddPlacement && isWallEditable(state.selectedEdgeIndex) && (
           <button type="button" className={styles.toolBtn} onClick={handleAddPlacementForSelectedEdge}>
             + Platzieren
           </button>
@@ -616,6 +666,7 @@ export function PolygonEditor({
           {state.closed && state.tool === 'select' && (
             <Group>
               {pts.map((p, i) => {
+                if (!wallVisibleByIndex[i]) return null
                 const next = pts[(i + 1) % pts.length]
                 const isEdgeSelected = state.selectedEdgeIndex === i
                 return (
@@ -625,6 +676,7 @@ export function PolygonEditor({
                     stroke={isEdgeSelected ? COLOR.edgeSelected : 'transparent'}
                     strokeWidth={isEdgeSelected ? 4 : 12}
                     hitStrokeWidth={12}
+                    dash={wallLockedByIndex[i] ? [6, 4] : undefined}
                     onClick={(e) => {
                       e.cancelBubble = true
                       onSelectEdge(isEdgeSelected ? null : i)
@@ -639,9 +691,11 @@ export function PolygonEditor({
           {state.closed && state.tool === 'select' && (
             <Group>
               {pts.map((p, i) => {
+                if (!wallVisibleByIndex[i]) return null
                 const next = pts[(i + 1) % pts.length]
                 const mx = (p.x + next.x) / 2
                 const my = (p.y + next.y) / 2
+                const wallLocked = wallLockedByIndex[i]
                 return (
                   <Rect
                     key={`mid-${state.wallIds[i] ?? i}`}
@@ -654,8 +708,13 @@ export function PolygonEditor({
                     rotation={45}
                     fill={COLOR.edgeSelected}
                     opacity={0.85}
-                    draggable
+                    draggable={!safeEditMode && !wallLocked}
                     onDragMove={(e) => {
+                      if (safeEditMode || wallLocked) {
+                        e.target.x(mx)
+                        e.target.y(my)
+                        return
+                      }
                       const dx = canvasToWorld(e.target.x() - mx)
                       const dy = canvasToWorld(e.target.y() - my)
                       const iV = i
@@ -667,6 +726,29 @@ export function PolygonEditor({
                       e.target.x(mx)
                       e.target.y(my)
                     }}
+                  />
+                )
+              })}
+            </Group>
+          )}
+
+          {state.closed && (
+            <Group listening={false}>
+              {pts.map((p, i) => {
+                if (!wallVisibleByIndex[i] || !wallLockedByIndex[i]) {
+                  return null
+                }
+                const next = pts[(i + 1) % pts.length]
+                const mx = (p.x + next.x) / 2
+                const my = (p.y + next.y) / 2
+                return (
+                  <Text
+                    key={`wall-lock-${state.wallIds[i] ?? i}`}
+                    x={mx - 6}
+                    y={my - 18}
+                    text="🔒"
+                    fontSize={12}
+                    fill={COLOR.edgeSelected}
                   />
                 )
               })}
@@ -732,7 +814,7 @@ export function PolygonEditor({
           {/* Bemaßungslinien */}
           {state.closed && (
             <Group>
-              {dimensions.map((dimension) => {
+              {dimensions.filter((dimension) => dimension.visible !== false).map((dimension) => {
                 if (dimension.type !== 'linear' || dimension.points.length < 2) return null
 
                 const p1 = {
@@ -791,10 +873,11 @@ export function PolygonEditor({
           {/* Platzierungen an Wänden */}
           {state.closed && (
             <Group>
-              {placements.map(placement => {
+              {placements.filter((placement) => placement.visible !== false).map(placement => {
                 const coords = placementCanvasCoords(placement)
                 if (!coords) return null
                 const isSelected = placement.id === selectedPlacementId
+                const isLocked = Boolean(placement.locked)
                 const midX = (coords.x1 + coords.x2) / 2
                 const midY = (coords.y1 + coords.y2) / 2
                 const dx = coords.x2 - coords.x1
@@ -803,24 +886,35 @@ export function PolygonEditor({
                 const w = Math.hypot(dx, dy)
                 const d = worldToCanvas(placement.depth_mm)
                 return (
-                  <Rect
-                    key={placement.id}
-                    x={midX}
-                    y={midY}
-                    width={w}
-                    height={Math.max(d, 4)}
-                    offsetX={w / 2}
-                    offsetY={Math.max(d, 4) / 2}
-                    rotation={angle}
-                    fill={isSelected ? COLOR.placementSelectedFill : COLOR.placementFill}
-                    stroke={isSelected ? COLOR.placementSelectedStroke : COLOR.placementStroke}
-                    strokeWidth={isSelected ? 2 : 1}
-                    opacity={0.7}
-                    onClick={(e) => {
-                      e.cancelBubble = true
-                      onSelectPlacement?.(isSelected ? null : placement.id)
-                    }}
-                  />
+                  <Group key={placement.id}>
+                    <Rect
+                      x={midX}
+                      y={midY}
+                      width={w}
+                      height={Math.max(d, 4)}
+                      offsetX={w / 2}
+                      offsetY={Math.max(d, 4) / 2}
+                      rotation={angle}
+                      fill={isSelected ? COLOR.placementSelectedFill : COLOR.placementFill}
+                      stroke={isSelected ? COLOR.placementSelectedStroke : COLOR.placementStroke}
+                      strokeWidth={isSelected ? 2 : 1}
+                      dash={isLocked ? [5, 3] : undefined}
+                      opacity={0.7}
+                      onClick={(e) => {
+                        e.cancelBubble = true
+                        onSelectPlacement?.(isSelected ? null : placement.id)
+                      }}
+                    />
+                    {isLocked && (
+                      <Text
+                        x={midX - 6}
+                        y={midY - 8}
+                        text="🔒"
+                        fontSize={12}
+                        fill={COLOR.placementSelectedStroke}
+                      />
+                    )}
+                  </Group>
                 )
               })}
             </Group>
@@ -875,6 +969,7 @@ export function PolygonEditor({
             {pts.map((p, i) => {
               const isHover = state.hoverIndex === i
               const isSelected = state.selectedIndex === i
+              const vertexLocked = isVertexLocked(i)
               const color = isSelected ? COLOR.vertexSelected
                 : isHover ? COLOR.vertexHover
                 : COLOR.vertex
@@ -888,12 +983,12 @@ export function PolygonEditor({
                   fill={color}
                   stroke={COLOR.vertexStroke}
                   strokeWidth={2}
-                  draggable={state.tool === 'select'}
+                  draggable={state.tool === 'select' && !safeEditMode && !vertexLocked}
                   onMouseEnter={() => onHoverVertex(i)}
                   onMouseLeave={() => onHoverVertex(null)}
                   onClick={(e) => {
                     e.cancelBubble = true
-                    if (state.tool === 'draw' && i === 0 && state.vertices.length >= 3) {
+                    if (state.tool === 'draw' && i === 0 && state.vertices.length >= 3 && !safeEditMode) {
                       onClosePolygon()
                     } else {
                       onSelectVertex(isSelected ? null : i)
@@ -901,9 +996,15 @@ export function PolygonEditor({
                   }}
                   onDblClick={(e) => {
                     e.cancelBubble = true
-                    if (state.tool === 'select') onDeleteVertex(i)
+                    if (state.tool === 'select' && !safeEditMode && !vertexLocked) onDeleteVertex(i)
                   }}
                   onDragEnd={(e) => {
+                    if (safeEditMode || vertexLocked) {
+                      e.target.x(p.x)
+                      e.target.y(p.y)
+                      setDragLabel(null)
+                      return
+                    }
                     setDragLabel(null)
                     onMoveVertex(i, {
                       x_mm: canvasToWorld(e.target.x()),
@@ -911,6 +1012,11 @@ export function PolygonEditor({
                     })
                   }}
                   onDragMove={(e) => {
+                    if (safeEditMode || vertexLocked) {
+                      e.target.x(p.x)
+                      e.target.y(p.y)
+                      return
+                    }
                     const x = e.target.x()
                     const y = e.target.y()
                     const nextIdx = (i + 1) % pts.length
@@ -965,6 +1071,9 @@ export function PolygonEditor({
         )}
         {state.tool === 'select' && (
           <span>Ziehen: Punkt/Wand verschieben · Doppelklick: löschen · D=Zeichnen · S=Auswählen · Esc=Abwählen · Mausrad=Zoom</span>
+        )}
+        {safeEditMode && (
+          <span>Safe-Edit aktiv: Geometrieänderungen sind gesperrt.</span>
         )}
         {state.tool === 'calibrate' && state.referenceImage && (
           <span>Kalibrieren: Zwei Punkte anklicken, dann Referenzlänge eingeben</span>

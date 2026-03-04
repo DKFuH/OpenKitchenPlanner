@@ -74,6 +74,7 @@ describe('levelsRoutes', () => {
       name: 'EG',
       order_index: 0,
       visible: true,
+      locked: false,
     })
     prismaMock.room.updateMany.mockResolvedValue({ count: 0 })
     prismaMock.buildingLevel.create.mockResolvedValue({
@@ -180,6 +181,31 @@ describe('levelsRoutes', () => {
     })
 
     expect(response.statusCode).toBe(404)
+    expect(prismaMock.buildingLevel.update).not.toHaveBeenCalled()
+    await app.close()
+  })
+
+  it('returns 400 for patch when level is locked', async () => {
+    prismaMock.buildingLevel.findUnique.mockResolvedValueOnce({
+      id: levelId,
+      project_id: projectId,
+      tenant_id: tenantId,
+      name: 'EG',
+      order_index: 0,
+      visible: true,
+      locked: true,
+    })
+
+    const app = await createApp()
+
+    const response = await app.inject({
+      method: 'PATCH',
+      url: `/api/v1/levels/${levelId}`,
+      headers: { 'x-tenant-id': tenantId },
+      payload: { visible: false },
+    })
+
+    expect(response.statusCode).toBe(400)
     expect(prismaMock.buildingLevel.update).not.toHaveBeenCalled()
     await app.close()
   })

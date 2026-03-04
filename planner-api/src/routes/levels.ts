@@ -174,6 +174,10 @@ export async function levelsRoutes(app: FastifyInstance) {
       return sendNotFound(reply, 'Level not found')
     }
 
+    if (level.locked) {
+      return sendBadRequest(reply, 'Level is locked and cannot be edited')
+    }
+
     const project = await resolveScopedProject(level.project_id, tenantId)
     if (!project) {
       return sendNotFound(reply, 'Level not found in tenant scope')
@@ -203,6 +207,10 @@ export async function levelsRoutes(app: FastifyInstance) {
     const level = await prisma.buildingLevel.findUnique({ where: { id: request.params.id } })
     if (!level) {
       return sendNotFound(reply, 'Level not found')
+    }
+
+    if (level.locked) {
+      return sendBadRequest(reply, 'Level is locked and cannot be deleted')
     }
 
     const project = await resolveScopedProject(level.project_id, tenantId)

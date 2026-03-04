@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import type { Vertex, Point2D } from '@shared/types'
 import type { Opening } from '../../api/openings.js'
 import type { Placement } from '../../api/placements.js'
+import type { Dimension } from '../../api/dimensions.js'
 import type { Room } from '../../api/projects.js'
+import type { BuildingLevel } from '../../api/levels.js'
 import type { AcousticGridMeta } from '../../api/acoustics.js'
 import type { UnifiedCatalogItem, CatalogArticle } from '../../api/catalog.js'
 import type { ValidateResponse } from '../../api/validate.js'
@@ -14,6 +16,8 @@ import { RoomFeaturesPanel } from './RoomFeaturesPanel.js'
 import { MacrosPanel } from './MacrosPanel.js'
 import { KitchenAssistantPanel } from '../../pages/KitchenAssistantPanel.js'
 import { ConstraintsPanel } from '../../pages/ConstraintsPanel.js'
+import { VisibilityPanel } from './VisibilityPanel.js'
+import { LockPanel } from './LockPanel.js'
 import styles from './RightSidebar.module.css'
 
 export interface CeilingConstraint {
@@ -35,9 +39,12 @@ export interface ConfiguredDimensions {
 interface Props {
   projectId: string
   room: Room | null
+  levels: BuildingLevel[]
+  activeLevelId: string | null
   selectedVertexIndex: number | null
   selectedVertex: Vertex | null
   selectedEdgeIndex: number | null
+  dimensions: Dimension[]
   edgeLengthMm: number | null
   selectedOpening: Opening | null
   selectedPlacement: Placement | null
@@ -48,6 +55,8 @@ interface Props {
   onSetChosenOptions: (options: Record<string, string>) => void
   ceilingConstraints: CeilingConstraint[]
   selectedWallGeom: { id: string; start: Point2D; end: Point2D } | null
+  selectedWallVisible: boolean | null
+  selectedWallLocked: boolean | null
   onMoveVertex: (index: number, pos: Point2D) => void
   onSetEdgeLength: (edgeIndex: number, lengthMm: number) => void
   onUpdateOpening: (opening: Opening) => void
@@ -74,13 +83,26 @@ interface Props {
   onAcousticUpload: (file: File) => void
   onSelectAcousticGrid: (gridId: string | null) => void
   onDeleteAcousticGrid: (gridId: string) => void
+  safeEditMode: boolean
+  onToggleSafeEditMode: (enabled: boolean) => void
+  onToggleActiveLevelVisibility: (next: boolean) => void
+  onSetDimensionsVisible: (next: boolean) => void
+  onSetPlacementsVisible: (next: boolean) => void
+  onSetSelectedWallVisible: (next: boolean) => void
+  onSetActiveLevelLocked: (next: boolean) => void
+  onSetDimensionsLocked: (next: boolean) => void
+  onSetSelectedPlacementLocked: (next: boolean) => void
+  onSetSelectedWallLocked: (next: boolean) => void
 }
 
 export function RightSidebar({
   projectId,
   room,
+  levels,
+  activeLevelId,
   selectedVertexIndex, selectedVertex,
   selectedEdgeIndex, edgeLengthMm,
+  dimensions,
   selectedOpening,
   selectedPlacement,
   selectedCatalogItem,
@@ -90,6 +112,8 @@ export function RightSidebar({
   onSetChosenOptions,
   ceilingConstraints,
   selectedWallGeom,
+  selectedWallVisible,
+  selectedWallLocked,
   onMoveVertex, onSetEdgeLength,
   onUpdateOpening, onDeleteOpening,
   onUpdatePlacement, onDeletePlacement,
@@ -111,7 +135,22 @@ export function RightSidebar({
   onAcousticUpload,
   onSelectAcousticGrid,
   onDeleteAcousticGrid,
+  safeEditMode,
+  onToggleSafeEditMode,
+  onToggleActiveLevelVisibility,
+  onSetDimensionsVisible,
+  onSetPlacementsVisible,
+  onSetSelectedWallVisible,
+  onSetActiveLevelLocked,
+  onSetDimensionsLocked,
+  onSetSelectedPlacementLocked,
+  onSetSelectedWallLocked,
 }: Props) {
+  const activeLevel = levels.find((level) => level.id === activeLevelId) ?? null
+  const dimensionsVisible = dimensions.length > 0 ? dimensions.every((dimension) => dimension.visible !== false) : null
+  const dimensionsLocked = dimensions.length > 0 ? dimensions.every((dimension) => dimension.locked === true) : null
+  const placementsVisible = placements.length > 0 ? placements.every((placement) => placement.visible !== false) : null
+
   async function buildQuoteCreatePayload() {
     const taxGroupId = 'tax-default'
     const taxRate = 0.19
@@ -186,6 +225,31 @@ export function RightSidebar({
 
   return (
     <aside className={styles.sidebar}>
+      <VisibilityPanel
+        activeLevelName={activeLevel?.name ?? null}
+        activeLevelVisible={activeLevel ? activeLevel.visible : null}
+        dimensionsVisible={dimensionsVisible}
+        placementsVisible={placementsVisible}
+        selectedWallVisible={selectedWallVisible}
+        onToggleActiveLevelVisibility={onToggleActiveLevelVisibility}
+        onSetDimensionsVisible={onSetDimensionsVisible}
+        onSetPlacementsVisible={onSetPlacementsVisible}
+        onSetSelectedWallVisible={onSetSelectedWallVisible}
+      />
+
+      <LockPanel
+        safeEditMode={safeEditMode}
+        activeLevelLocked={activeLevel ? activeLevel.locked : null}
+        dimensionsLocked={dimensionsLocked}
+        selectedPlacementLocked={selectedPlacement ? Boolean(selectedPlacement.locked) : null}
+        selectedWallLocked={selectedWallLocked}
+        onToggleSafeEditMode={onToggleSafeEditMode}
+        onSetActiveLevelLocked={onSetActiveLevelLocked}
+        onSetDimensionsLocked={onSetDimensionsLocked}
+        onSetSelectedPlacementLocked={onSetSelectedPlacementLocked}
+        onSetSelectedWallLocked={onSetSelectedWallLocked}
+      />
+
       {selectedOpening ? (
         <OpeningPanel
           key={selectedOpening.id}
