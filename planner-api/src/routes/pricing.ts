@@ -464,8 +464,12 @@ export async function pricingRoutes(app: FastifyInstance) {
       return sendBadRequest(reply, parsedBody.error.errors[0].message)
     }
 
+    const tenantId = getTenantId(request)
     const existing = await prisma.taxProfile.findUnique({ where: { id: parsed.data.id } })
     if (!existing) {
+      return sendNotFound(reply, 'Tax profile not found')
+    }
+    if (tenantId && existing.tenant_id !== tenantId) {
       return sendNotFound(reply, 'Tax profile not found')
     }
 

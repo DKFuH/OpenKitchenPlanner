@@ -98,7 +98,12 @@ export async function quoteRoutes(app: FastifyInstance) {
     }
 
     const projectId = parsedParams.data.id
-    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true, tenant_id: true } })
+    const project = await prisma.project.findFirst({
+      where: request.tenantId
+        ? { id: projectId, tenant_id: request.tenantId }
+        : { id: projectId },
+      select: { id: true, tenant_id: true, name: true },
+    })
     if (!project) {
       return sendNotFound(reply, 'Project not found')
     }
@@ -171,22 +176,17 @@ export async function quoteRoutes(app: FastifyInstance) {
       })
     })
 
-    const projectWithTenant = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: { id: true, name: true, tenant_id: true },
-    })
-
-    if (projectWithTenant?.tenant_id) {
+    if (project.tenant_id) {
       await queueNotification({
-        tenantId: projectWithTenant.tenant_id,
+        tenantId: project.tenant_id,
         eventType: 'quote_created',
         entityType: 'quote',
         entityId: quote.id,
-        recipientEmail: `alerts+${projectWithTenant.tenant_id}@yakds.local`,
+        recipientEmail: `alerts+${project.tenant_id}@yakds.local`,
         subject: `Neues Angebot: ${quote.quote_number}`,
-        message: `Für Projekt ${projectWithTenant.name} wurde das Angebot ${quote.quote_number} erstellt.`,
+        message: `Für Projekt ${project.name} wurde das Angebot ${quote.quote_number} erstellt.`,
         metadata: {
-          project_id: projectWithTenant.id,
+          project_id: project.id,
           quote_number: quote.quote_number,
           version: quote.version,
         },
@@ -202,8 +202,11 @@ export async function quoteRoutes(app: FastifyInstance) {
       return sendBadRequest(reply, parsedParams.error.errors[0].message)
     }
 
-    const quote = await prisma.quote.findUnique({
-      where: { id: parsedParams.data.id },
+    const quote = await prisma.quote.findFirst({
+      where: {
+        id: parsedParams.data.id,
+        ...resolveQuoteTenantScope(request),
+      },
       include: {
         items: {
           orderBy: { position: 'asc' },
@@ -309,8 +312,11 @@ export async function quoteRoutes(app: FastifyInstance) {
       return sendBadRequest(reply, 'locale_code must be one of: de, en')
     }
 
-    const quote = await prisma.quote.findUnique({
-      where: { id: parsedParams.data.id },
+    const quote = await prisma.quote.findFirst({
+      where: {
+        id: parsedParams.data.id,
+        ...resolveQuoteTenantScope(request),
+      },
       include: {
         items: {
           orderBy: { position: 'asc' },
@@ -438,8 +444,15 @@ export async function quoteRoutes(app: FastifyInstance) {
       return sendBadRequest(reply, parsedBody.error.errors[0].message)
     }
 
-    const quote = await prisma.quote.findUnique({
-      where: { id: parsedParams.data.id },
+    const quote = await prisma.quote.findFirst({
+      where: request.tenantId
+        ? {
+            id: parsedParams.data.id,
+            project: {
+              tenant_id: request.tenantId,
+            },
+          }
+        : { id: parsedParams.data.id },
       include: {
         items: { orderBy: { position: 'asc' } },
         tax_profile: true,
@@ -462,7 +475,14 @@ export async function quoteRoutes(app: FastifyInstance) {
       : (quote.discount_profile_id ?? null)
 
     const taxProfile = taxProfileId
-      ? await prisma.taxProfile.findUnique({ where: { id: taxProfileId } })
+      ? await prisma.taxProfile.findFirst({
+          where: request.tenantId
+            ? {
+                id: taxProfileId,
+                OR: [{ tenant_id: request.tenantId }, { tenant_id: null }],
+              }
+            : { id: taxProfileId },
+        })
       : null
 
     if (taxProfileId && !taxProfile) {
@@ -470,7 +490,14 @@ export async function quoteRoutes(app: FastifyInstance) {
     }
 
     const discountProfile = discountProfileId
-      ? await prisma.discountProfile.findUnique({ where: { id: discountProfileId } })
+      ? await prisma.discountProfile.findFirst({
+          where: request.tenantId
+            ? {
+                id: discountProfileId,
+                OR: [{ tenant_id: request.tenantId }, { tenant_id: null }],
+              }
+            : { id: discountProfileId },
+        })
       : null
 
     if (discountProfileId && !discountProfile) {

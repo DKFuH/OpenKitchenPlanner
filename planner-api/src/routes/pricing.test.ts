@@ -513,6 +513,38 @@ describe('pricingRoutes', () => {
     await app.close()
   })
 
+  it('PUT /pricing/tax-profiles/:id denies tenant-external profile updates', async () => {
+    prismaMock.taxProfile.findUnique.mockResolvedValue({
+      id: 'tp-001',
+      tenant_id: 'other-tenant',
+      name: 'Foreign Profile',
+      description: null,
+      tax_rate: 0.19,
+      is_default: false,
+      created_at: new Date(),
+      updated_at: new Date(),
+    })
+
+    const app = Fastify()
+    app.decorateRequest('tenantId', null)
+    app.addHook('preHandler', (request, _reply, done) => {
+      request.tenantId = 'tenant-1'
+      done()
+    })
+    await app.register(pricingRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/api/v1/pricing/tax-profiles/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+      payload: { name: 'Updated Name' },
+    })
+
+    expect(response.statusCode).toBe(404)
+    expect(prismaMock.taxProfile.update).not.toHaveBeenCalled()
+
+    await app.close()
+  })
+
   it('GET /pricing/discount-profiles returns the list of discount profiles', async () => {
     prismaMock.discountProfile.findMany.mockResolvedValue([
       {
