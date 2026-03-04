@@ -3,6 +3,7 @@ import type { Vertex, Point2D } from '@shared/types'
 import type { Opening } from '../../api/openings.js'
 import type { Placement } from '../../api/placements.js'
 import type { Dimension } from '../../api/dimensions.js'
+import type { DrawingGroup, DrawingGroupConfigPatch, DrawingGroupKind, DrawingGroupMember } from '../../api/drawingGroups.js'
 import type { Room } from '../../api/projects.js'
 import type { BuildingLevel } from '../../api/levels.js'
 import type { AcousticGridMeta } from '../../api/acoustics.js'
@@ -18,6 +19,7 @@ import { KitchenAssistantPanel } from '../../pages/KitchenAssistantPanel.js'
 import { ConstraintsPanel } from '../../pages/ConstraintsPanel.js'
 import { VisibilityPanel } from './VisibilityPanel.js'
 import { LockPanel } from './LockPanel.js'
+import { GroupsPanel } from './GroupsPanel.js'
 import styles from './RightSidebar.module.css'
 
 export interface CeilingConstraint {
@@ -93,6 +95,21 @@ interface Props {
   onSetDimensionsLocked: (next: boolean) => void
   onSetSelectedPlacementLocked: (next: boolean) => void
   onSetSelectedWallLocked: (next: boolean) => void
+  drawingGroups: DrawingGroup[]
+  selectedDrawingGroupId: string | null
+  currentSelectionMembers: DrawingGroupMember[]
+  onSelectDrawingGroup: (groupId: string | null) => void
+  onCreateDrawingGroup: (payload: {
+    name: string
+    kind: DrawingGroupKind
+    members_json: DrawingGroupMember[]
+  }) => void
+  onDeleteDrawingGroup: (groupId: string) => void
+  onApplyDrawingGroupTransform: (groupId: string, payload: {
+    translate?: { x_mm: number; y_mm: number }
+    rotation_deg?: number
+  }) => void
+  onSyncDrawingGroupConfig: (groupId: string, config: DrawingGroupConfigPatch) => void
 }
 
 export function RightSidebar({
@@ -145,6 +162,14 @@ export function RightSidebar({
   onSetDimensionsLocked,
   onSetSelectedPlacementLocked,
   onSetSelectedWallLocked,
+  drawingGroups,
+  selectedDrawingGroupId,
+  currentSelectionMembers,
+  onSelectDrawingGroup,
+  onCreateDrawingGroup,
+  onDeleteDrawingGroup,
+  onApplyDrawingGroupTransform,
+  onSyncDrawingGroupConfig,
 }: Props) {
   const activeLevel = levels.find((level) => level.id === activeLevelId) ?? null
   const dimensionsVisible = dimensions.length > 0 ? dimensions.every((dimension) => dimension.visible !== false) : null
@@ -248,6 +273,17 @@ export function RightSidebar({
         onSetDimensionsLocked={onSetDimensionsLocked}
         onSetSelectedPlacementLocked={onSetSelectedPlacementLocked}
         onSetSelectedWallLocked={onSetSelectedWallLocked}
+      />
+
+      <GroupsPanel
+        groups={drawingGroups}
+        selectedGroupId={selectedDrawingGroupId}
+        selectionMembers={currentSelectionMembers}
+        onSelectGroup={onSelectDrawingGroup}
+        onCreateGroup={onCreateDrawingGroup}
+        onDeleteGroup={onDeleteDrawingGroup}
+        onApplyTransform={onApplyDrawingGroupTransform}
+        onSyncConfig={onSyncDrawingGroupConfig}
       />
 
       {selectedOpening ? (

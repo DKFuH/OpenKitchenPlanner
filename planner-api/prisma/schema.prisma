@@ -2249,3 +2249,22 @@ model OfflineSyncJob {
   @@index([tenant_id, project_id, status])
   @@map("offline_sync_jobs")
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// PHASE 17 – Sprint 90: CAD-Gruppen & Auswahlsets
+// ─────────────────────────────────────────────────────────────────────────
+
+model DrawingGroup {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  project_id   String
+  name         String   @db.VarChar(140)
+  kind         String   @db.VarChar(40)
+  members_json Json
+  config_json  Json     @default("{}")
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  @@index([tenant_id, project_id, kind])
+  @@map("drawing_groups")
+}

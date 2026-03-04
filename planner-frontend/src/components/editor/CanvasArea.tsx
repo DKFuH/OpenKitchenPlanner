@@ -27,6 +27,8 @@ interface Props {
   centerlines: Centerline[]
   selectedPlacementId: string | null
   onSelectPlacement: (id: string | null) => void
+  highlightedOpeningIds?: string[]
+  highlightedPlacementIds?: string[]
   canAddPlacement: boolean
   onAddPlacement: (wallId: string, wallLengthMm: number) => void
   acousticGrid: GeoJsonGrid | null
@@ -46,7 +48,7 @@ interface Props {
   onRepositionVisitor?: (point: { x_mm: number; y_mm: number }) => void
 }
 
-export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, centerlines, selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, onReferenceImageUpdate, navigationSettings, safeEditMode, showCompass = false, northAngleDeg = 0, virtualVisitor = null, onRepositionVisitor }: Props) {
+export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, centerlines, selectedPlacementId, onSelectPlacement, highlightedOpeningIds = [], highlightedPlacementIds = [], canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, onReferenceImageUpdate, navigationSettings, safeEditMode, showCompass = false, northAngleDeg = 0, virtualVisitor = null, onRepositionVisitor }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
   const [saving, setSaving] = useState(false)
@@ -134,6 +136,8 @@ export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, o
             onToggleCenterlines={() => setShowCenterlines((value) => !value)}
             selectedPlacementId={selectedPlacementId}
             onSelectPlacement={onSelectPlacement}
+            highlightedOpeningIds={highlightedOpeningIds}
+            highlightedPlacementIds={highlightedPlacementIds}
             canAddPlacement={canAddPlacement}
             onAddPlacement={onAddPlacement}
             acousticGrid={acousticGrid}

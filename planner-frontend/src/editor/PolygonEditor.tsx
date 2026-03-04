@@ -46,10 +46,12 @@ const COLOR = {
   openingWindow: resolveColor('--status-info-soft', '--status-info'),
   openingPassThrough: resolveColor('--status-success'),
   openingSelected: resolveColor('--status-warning'),
+  openingGroupHighlighted: resolveColor('--status-info', '--primary-color'),
   placementFill: resolveColor('--primary-soft', '--primary-light'),
   placementStroke: resolveColor('--primary-color'),
   placementSelectedFill: resolveColor('--status-warning'),
   placementSelectedStroke: resolveColor('--status-warning-strong', '--status-warning-text'),
+  placementGroupHighlightedStroke: resolveColor('--status-info', '--primary-color'),
   centerline: resolveColor('--status-info', '--primary-color'),
   vertexStroke: resolveColor('--text-inverse'),
   verticalConnectionFill: resolveColor('--status-info-soft', '--primary-light'),
@@ -160,6 +162,8 @@ interface Props {
   placements?: Placement[]
   selectedPlacementId?: string | null
   onSelectPlacement?: (id: string | null) => void
+  highlightedOpeningIds?: string[]
+  highlightedPlacementIds?: string[]
   canAddPlacement?: boolean
   onAddPlacement?: (wallId: string, wallLengthMm: number) => void
   wallSegments?: WallSegmentMeta[]
@@ -191,6 +195,8 @@ export function PolygonEditor({
   verticalConnections = [],
   openings = [], selectedOpeningId, onSelectOpening, onAddOpening,
   placements = [], selectedPlacementId, onSelectPlacement, canAddPlacement, onAddPlacement,
+  highlightedOpeningIds = [],
+  highlightedPlacementIds = [],
   wallSegments = [],
   dimensions = [],
   centerlines = [],
@@ -400,6 +406,8 @@ export function PolygonEditor({
     x: worldToCanvas(v.x_mm),
     y: worldToCanvas(v.y_mm),
   }))
+  const highlightedOpeningSet = new Set(highlightedOpeningIds)
+  const highlightedPlacementSet = new Set(highlightedPlacementIds)
 
   const wallVisibleByIndex = state.vertices.map((_, index) => {
     const segment = wallSegments[index]
@@ -762,6 +770,7 @@ export function PolygonEditor({
                 const coords = openingCanvasCoords(opening)
                 if (!coords) return null
                 const isSelected = opening.id === selectedOpeningId
+                const isGroupHighlighted = highlightedOpeningSet.has(opening.id)
                 const dx = coords.x2 - coords.x1
                 const dy = coords.y2 - coords.y1
                 const len = Math.hypot(dx, dy)
@@ -771,9 +780,16 @@ export function PolygonEditor({
                   <Group key={opening.id}>
                     <Line
                       points={[coords.x1, coords.y1, coords.x2, coords.y2]}
-                      stroke={openingColor(opening.type, isSelected)}
+                      stroke={
+                        isSelected
+                          ? openingColor(opening.type, true)
+                          : isGroupHighlighted
+                            ? COLOR.openingGroupHighlighted
+                            : openingColor(opening.type, false)
+                      }
                       strokeWidth={
                         isSelected ? 6
+                          : isGroupHighlighted ? 5
                           : opening.type === 'radiator' ? 6
                             : opening.type === 'niche' ? 8
                               : 4
@@ -877,6 +893,7 @@ export function PolygonEditor({
                 const coords = placementCanvasCoords(placement)
                 if (!coords) return null
                 const isSelected = placement.id === selectedPlacementId
+                const isGroupHighlighted = highlightedPlacementSet.has(placement.id)
                 const isLocked = Boolean(placement.locked)
                 const midX = (coords.x1 + coords.x2) / 2
                 const midY = (coords.y1 + coords.y2) / 2
@@ -896,8 +913,14 @@ export function PolygonEditor({
                       offsetY={Math.max(d, 4) / 2}
                       rotation={angle}
                       fill={isSelected ? COLOR.placementSelectedFill : COLOR.placementFill}
-                      stroke={isSelected ? COLOR.placementSelectedStroke : COLOR.placementStroke}
-                      strokeWidth={isSelected ? 2 : 1}
+                      stroke={
+                        isSelected
+                          ? COLOR.placementSelectedStroke
+                          : isGroupHighlighted
+                            ? COLOR.placementGroupHighlightedStroke
+                            : COLOR.placementStroke
+                      }
+                      strokeWidth={isSelected || isGroupHighlighted ? 2 : 1}
                       dash={isLocked ? [5, 3] : undefined}
                       opacity={0.7}
                       onClick={(e) => {

@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-90-cad-groups-selection-sets`
 **Gruppe:** A (startbar nach S81, sinnvoll nach S88)
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** S63 (Centerlines/Bemaßung), S81 (Levels), S88 (Locking)
 
 ---
@@ -107,3 +107,14 @@ Funktionen:
 - Gruppen lassen sich gemeinsam transformieren
 - Gruppen koennen gesperrt und ausgeblendet werden
 - wiederkehrende Bauteilbloecke lassen sich schneller bearbeiten
+
+---
+
+## Umgesetzt
+
+- Prisma-Modell `DrawingGroup` inkl. Migration angelegt
+- Backend-Endpoints fuer Gruppen-CRUD und `apply-transform` implementiert
+- `groupTransformService` mit Batch-Transform und Lock-/Visibility-Sync umgesetzt
+- Frontend-API `drawingGroups.ts` und `GroupsPanel` im Editor integriert
+- Gruppenmitglieder (Placements/Openings) werden im Canvas hervorgehoben
+- Backend-Route-Tests (`drawingGroups.test.ts`) und Frontend-Build erfolgreich

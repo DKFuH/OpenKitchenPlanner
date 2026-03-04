@@ -9,6 +9,12 @@ import {
 import { placementsApi, type Placement } from '../api/placements.js'
 import { dimensionsApi, type Dimension } from '../api/dimensions.js'
 import { centerlinesApi, type Centerline } from '../api/centerlines.js'
+import {
+  drawingGroupsApi,
+  type DrawingGroup,
+  type DrawingGroupConfigPatch,
+  type DrawingGroupMember,
+} from '../api/drawingGroups.js'
 import { annotationsApi, roomsApi, type ReferenceImagePayload, type RoomBoundaryPayload, type RoomPayload } from '../api/rooms.js'
 import { areasApi } from '../api/areas.js'
 import { openingsApi, type Opening } from '../api/openings.js'
@@ -299,6 +305,8 @@ export function Editor() {
   const [placements, setPlacements] = useState<Placement[]>([])
   const [dimensions, setDimensions] = useState<Dimension[]>([])
   const [centerlines, setCenterlines] = useState<Centerline[]>([])
+  const [drawingGroups, setDrawingGroups] = useState<DrawingGroup[]>([])
+  const [selectedDrawingGroupId, setSelectedDrawingGroupId] = useState<string | null>(null)
   const [selectedPlacementId, setSelectedPlacementId] = useState<string | null>(null)
   const [selectedCatalogItem, setSelectedCatalogItem] = useState<UnifiedCatalogItem | null>(null)
   const [configuredDimensions, setConfiguredDimensions] = useState<ConfiguredDimensions | null>(null)
@@ -888,6 +896,37 @@ export function Editor() {
       .catch(() => {
         setSelectedAlternativeId(null)
       })
+  }, [id])
+
+  useEffect(() => {
+    if (!id) {
+      setDrawingGroups([])
+      setSelectedDrawingGroupId(null)
+      return
+    }
+
+    let active = true
+    drawingGroupsApi.list(id)
+      .then((groups) => {
+        if (!active) {
+          return
+        }
+        setDrawingGroups(groups)
+        setSelectedDrawingGroupId((previous) => (
+          previous && groups.some((group) => group.id === previous) ? previous : null
+        ))
+      })
+      .catch(() => {
+        if (!active) {
+          return
+        }
+        setDrawingGroups([])
+        setSelectedDrawingGroupId(null)
+      })
+
+    return () => {
+      active = false
+    }
   }, [id])
 
   // Editor-Vertices + Öffnungen neu laden wenn Raum wechselt
@@ -1626,6 +1665,38 @@ export function Editor() {
     : null
   const selectedOpening = openings.find(o => o.id === selectedOpeningId) ?? null
   const selectedPlacement = placements.find(p => p.id === selectedPlacementId) ?? null
+  const selectedDrawingGroup = useMemo(
+    () => drawingGroups.find((group) => group.id === selectedDrawingGroupId) ?? null,
+    [drawingGroups, selectedDrawingGroupId],
+  )
+  const currentSelectionMembers = useMemo(() => {
+    const members: DrawingGroupMember[] = []
+    if (selectedRoomId && selectedPlacementId) {
+      members.push({ entity_type: 'placement', entity_id: selectedPlacementId, room_id: selectedRoomId })
+    }
+    if (selectedRoomId && selectedOpeningId) {
+      members.push({ entity_type: 'opening', entity_id: selectedOpeningId, room_id: selectedRoomId })
+    }
+    return members
+  }, [selectedOpeningId, selectedPlacementId, selectedRoomId])
+  const highlightedOpeningIds = useMemo(() => {
+    if (!selectedDrawingGroup) {
+      return []
+    }
+    return selectedDrawingGroup.members_json
+      .filter((member) => member.entity_type === 'opening')
+      .filter((member) => !member.room_id || member.room_id === selectedRoomId)
+      .map((member) => member.entity_id)
+  }, [selectedDrawingGroup, selectedRoomId])
+  const highlightedPlacementIds = useMemo(() => {
+    if (!selectedDrawingGroup) {
+      return []
+    }
+    return selectedDrawingGroup.members_json
+      .filter((member) => member.entity_type === 'placement')
+      .filter((member) => !member.room_id || member.room_id === selectedRoomId)
+      .map((member) => member.entity_id)
+  }, [selectedDrawingGroup, selectedRoomId])
   const selectedRoomWallSegments = useMemo(() => extractBoundaryWallSegments(selectedRoom?.boundary), [selectedRoom?.boundary])
   const selectedWallSegment = useMemo(() => {
     const index = state.selectedEdgeIndex
@@ -1639,6 +1710,123 @@ export function Editor() {
     : null
   const selectedWallVisible = selectedWallSegment ? resolveWallVisible(selectedWallSegment) : null
   const selectedWallLocked = selectedWallSegment ? Boolean(selectedWallSegment.locked) : null
+
+  const reloadDrawingGroups = useCallback(async () => {
+    if (!id) {
+      setDrawingGroups([])
+      setSelectedDrawingGroupId(null)
+      return
+    }
+
+    const groups = await drawingGroupsApi.list(id)
+    setDrawingGroups(groups)
+    setSelectedDrawingGroupId((previous) => (
+      previous && groups.some((group) => group.id === previous) ? previous : null
+    ))
+  }, [id])
+
+  const refreshSelectedRoomCollections = useCallback(async () => {
+    if (!id || !selectedRoomId) {
+      return
+    }
+
+    const [rooms, nextDimensions, nextCenterlines] = await Promise.all([
+      roomsApi.list(id),
+      dimensionsApi.list(selectedRoomId),
+      centerlinesApi.list(selectedRoomId),
+    ])
+
+    setProject((previous) => {
+      if (!previous) {
+        return previous
+      }
+      return {
+        ...previous,
+        rooms: rooms as typeof previous.rooms,
+      }
+    })
+
+    const room = rooms.find((entry) => entry.id === selectedRoomId)
+    setOpenings((room?.openings as unknown as Opening[]) ?? [])
+    setPlacements((room?.placements as unknown as Placement[]) ?? [])
+    setDimensions(nextDimensions)
+    setCenterlines(nextCenterlines)
+  }, [id, selectedRoomId])
+
+  const handleSelectDrawingGroup = useCallback((groupId: string | null) => {
+    setSelectedDrawingGroupId(groupId)
+
+    if (!groupId) {
+      return
+    }
+
+    const group = drawingGroups.find((entry) => entry.id === groupId)
+    if (!group) {
+      return
+    }
+
+    const placementMember = group.members_json.find(
+      (member) => member.entity_type === 'placement' && (!member.room_id || member.room_id === selectedRoomId),
+    )
+    const openingMember = group.members_json.find(
+      (member) => member.entity_type === 'opening' && (!member.room_id || member.room_id === selectedRoomId),
+    )
+
+    setSelectedPlacementId(placementMember?.entity_id ?? null)
+    setSelectedOpeningId(openingMember?.entity_id ?? null)
+  }, [drawingGroups, selectedRoomId])
+
+  const handleCreateDrawingGroup = useCallback((payload: {
+    name: string
+    kind: DrawingGroup['kind']
+    members_json: DrawingGroupMember[]
+  }) => {
+    if (!id) {
+      return
+    }
+
+    void drawingGroupsApi.create(id, payload)
+      .then((created) => {
+        setDrawingGroups((previous) => [created, ...previous])
+        setSelectedDrawingGroupId(created.id)
+      })
+      .catch((groupError: Error) => {
+        console.error('S90: Gruppe konnte nicht erstellt werden:', groupError)
+      })
+  }, [id])
+
+  const handleDeleteDrawingGroup = useCallback((groupId: string) => {
+    void drawingGroupsApi.remove(groupId)
+      .then(() => {
+        setDrawingGroups((previous) => previous.filter((group) => group.id !== groupId))
+        setSelectedDrawingGroupId((previous) => (previous === groupId ? null : previous))
+      })
+      .catch((groupError: Error) => {
+        console.error('S90: Gruppe konnte nicht gelöscht werden:', groupError)
+      })
+  }, [])
+
+  const handleApplyDrawingGroupTransform = useCallback((groupId: string, payload: {
+    translate?: { x_mm: number; y_mm: number }
+    rotation_deg?: number
+  }) => {
+    void drawingGroupsApi.applyTransform(groupId, payload)
+      .then(() => Promise.all([refreshSelectedRoomCollections(), reloadDrawingGroups()]))
+      .catch((groupError: Error) => {
+        console.error('S90: Gruppen-Transform fehlgeschlagen:', groupError)
+      })
+  }, [refreshSelectedRoomCollections, reloadDrawingGroups])
+
+  const handleSyncDrawingGroupConfig = useCallback((groupId: string, config: DrawingGroupConfigPatch) => {
+    void drawingGroupsApi.update(groupId, {
+      config_json: config as Record<string, unknown>,
+      sync_members: true,
+    })
+      .then(() => Promise.all([refreshSelectedRoomCollections(), reloadDrawingGroups()]))
+      .catch((groupError: Error) => {
+        console.error('S90: Gruppen-Lock/Visibility Sync fehlgeschlagen:', groupError)
+      })
+  }, [refreshSelectedRoomCollections, reloadDrawingGroups])
 
   const patchSelectedRoomWallSegment = useCallback((roomId: string, wallId: string, patch: Partial<WallSegmentFlags>) => {
     setProject((previous) => {
@@ -1770,6 +1958,8 @@ export function Editor() {
       centerlines={centerlines}
       selectedPlacementId={selectedPlacementId}
       onSelectPlacement={setSelectedPlacementId}
+      highlightedOpeningIds={highlightedOpeningIds}
+      highlightedPlacementIds={highlightedPlacementIds}
       canAddPlacement={selectedCatalogItem !== null}
       onAddPlacement={handleAddPlacement}
       acousticGrid={acousticGrid}
@@ -2183,6 +2373,14 @@ export function Editor() {
           onSetDimensionsLocked={handleSetDimensionsLocked}
           onSetSelectedPlacementLocked={handleSetSelectedPlacementLocked}
           onSetSelectedWallLocked={handleSetSelectedWallLocked}
+          drawingGroups={drawingGroups}
+          selectedDrawingGroupId={selectedDrawingGroupId}
+          currentSelectionMembers={currentSelectionMembers}
+          onSelectDrawingGroup={handleSelectDrawingGroup}
+          onCreateDrawingGroup={handleCreateDrawingGroup}
+          onDeleteDrawingGroup={handleDeleteDrawingGroup}
+          onApplyDrawingGroupTransform={handleApplyDrawingGroupTransform}
+          onSyncDrawingGroupConfig={handleSyncDrawingGroupConfig}
         />
       </div>
 
