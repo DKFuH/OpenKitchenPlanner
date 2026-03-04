@@ -1,5 +1,9 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { languagePacksApi } from '../api/languagePacks.js'
+import { hydrateLocaleMessages } from '../i18n/index.js'
 import { SUPPORTED_LOCALES } from '../i18n/resolveLocale.js'
+import styles from './LanguageSwitcher.module.css'
 
 const LOCALE_LABELS: Record<string, string> = {
   de: 'DE',
@@ -19,10 +23,30 @@ interface Props {
 export function LanguageSwitcher({ onChange }: Props) {
   const { i18n } = useTranslation()
   const current = i18n.language
+  const [packLocales, setPackLocales] = useState<string[]>([])
+
+  useEffect(() => {
+    void languagePacksApi.list({ enabled: true })
+      .then((items) => {
+        const locales = items
+          .map((item) => item.locale_code.trim().toLowerCase())
+          .filter((code) => code.length > 0)
+        setPackLocales([...new Set(locales)])
+      })
+      .catch(() => {
+        setPackLocales([])
+      })
+  }, [])
+
+  const availableLocales = useMemo(
+    () => [...new Set([...SUPPORTED_LOCALES, ...packLocales])].sort((left, right) => left.localeCompare(right)),
+    [packLocales],
+  )
 
   async function handleSwitch(code: string) {
     if (code === current) return
 
+    await hydrateLocaleMessages(code)
     await i18n.changeLanguage(code)
 
     try {
@@ -50,21 +74,13 @@ export function LanguageSwitcher({ onChange }: Props) {
   }
 
   return (
-    <div style={{ display: 'flex', gap: '4px' }}>
-      {SUPPORTED_LOCALES.map((code) => (
+    <div className={styles.switcher}>
+      {availableLocales.map((code) => (
         <button
           key={code}
           type="button"
-          aria-pressed={current === code}
           onClick={() => void handleSwitch(code)}
-          style={{
-            padding: '4px 10px',
-            borderRadius: '4px',
-            border: current === code ? '2px solid currentColor' : '1px solid #ccc',
-            fontWeight: current === code ? 700 : 400,
-            cursor: current === code ? 'default' : 'pointer',
-            background: 'transparent',
-          }}
+          className={`${styles.button} ${current === code ? styles.buttonActive : ''}`}
         >
           {LOCALE_LABELS[code] ?? code.toUpperCase()}
         </button>

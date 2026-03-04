@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-85-language-packs`
 **Gruppe:** B (startbar nach S84)
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** S84 (i18n-Core)
 
 ---
@@ -108,3 +108,19 @@ Funktionen:
 - Tenant-Overrides greifen ueber Core-Keys
 - neue Locales lassen sich ohne Codefork aktivieren
 - fehlerhafte Packs werden sauber validiert
+
+---
+
+## 7. Abschluss
+
+**Implementiert:**
+
+- Prisma-Modell `LanguagePack` inkl. Migration `20260304161710_sprint85_language_packs`
+- Backend-Service `languagePackResolver` mit Merge-Logik (system -> tenant)
+- API `GET/POST/PATCH/DELETE /language-packs`
+- Tenant-sichere Schreiboperationen (nur eigene tenant-Packs veraenderbar)
+- Frontend-API `planner-frontend/src/api/languagePacks.ts`
+- Verwaltungsseite `LanguagePacksPage` unter `/settings/language-packs`
+- i18n-Runtime-Hydration: Sprachpaket-Overrides werden beim Wechsel geladen und in i18next gemerged
+- Language Switcher erweitert um dynamische Locale-Codes aus aktiven Sprachpaketen
+- Teststatus: `planner-api` 763/763 gruen, `planner-frontend` 46/46 gruen, Frontend-Build gruen

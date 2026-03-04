@@ -14,7 +14,7 @@ Projektstatus per 2026-03-04.
 - Sprint 46: abgeschlossen
 - Sprints 47-51: abgeschlossen
 - Sprint 56: abgeschlossen
-- Sprints 57-84: abgeschlossen
+- Sprints 57-85: abgeschlossen
 
 Aktuell auf `main`:
 
@@ -24,6 +24,7 @@ Aktuell auf `main`:
 - Sprint 82: Treppen und vertikale Verbindungen (`stairs`)
 - Sprint 83: Mehr-Ebenen-Layout, Sektionen und Interop (`multilevel-docs`)
 - Sprint 84: Core-i18n & Locale Switcher (i18next, `resolveLocale`, `LanguageSwitcher`, `formatters.ts`)
+- Sprint 85: Language Packs & Uebersetzungsverwaltung (`language_packs`, Resolver, CRUD, Admin-Seite)
 
 ---
 
@@ -33,7 +34,8 @@ Aktuell auf `main`:
 - Sprint 81 und Sprint 82 sind abgeschlossen und auf `main`.
 - Phase 16 ist mit S83 abgeschlossen.
 - S84 (Core-i18n) ist abgeschlossen.
-- Naechster Fokus: S85 (Language Packs & vollstaendige Uebersetzungen).
+- S85 (Language Packs) ist abgeschlossen.
+- Naechster Fokus: S86 (Multilinguale Dokumente & Shares).
 
 ---
 

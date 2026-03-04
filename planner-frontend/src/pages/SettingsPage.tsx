@@ -34,6 +34,9 @@ export function SettingsPage() {
           <button type="button" className={styles.btnSecondary} onClick={() => navigate('/settings/layout-styles')}>
             {t('settings.layoutStyles')}
           </button>
+          <button type="button" className={styles.btnSecondary} onClick={() => navigate('/settings/language-packs')}>
+            {t('settings.languagePacks')}
+          </button>
         </div>
       </section>
 
