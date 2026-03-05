@@ -310,6 +310,10 @@
   position: relative;
 }
 
+.headerMenuWrapper {
+  position: relative;
+}
+
 .navigationWrapper {
   position: relative;
 }
@@ -387,6 +391,25 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+}
+
+.headerMenu {
+  min-width: 220px;
+}
+
+.toolboxItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--editor-text);
+  font-size: 0.85rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.toolboxItem:hover {
+  background: var(--editor-surface-alt);
 }
 
 .moreMenuItem {

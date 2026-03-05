@@ -343,6 +343,8 @@ export function Editor() {
   const [navigationSettings, setNavigationSettings] = useState<NavigationSettings>(defaultsForNavigationProfile('cad'))
   const [navigationPanelOpen, setNavigationPanelOpen] = useState(false)
   const [cameraPresetPanelOpen, setCameraPresetPanelOpen] = useState(false)
+  const [sectionMenuOpen, setSectionMenuOpen] = useState(false)
+  const [toolboxMenuOpen, setToolboxMenuOpen] = useState(false)
   const [cameraState, setCameraState] = useState<SyncedCameraState>({
     x_mm: 0,
     y_mm: 0,
@@ -368,6 +370,9 @@ export function Editor() {
   const [autoCompleteResult, setAutoCompleteResult] = useState<AutoCompleteResult | null>(null)
   const [isPreviewPopoutOpen, setIsPreviewPopoutOpen] = useState(false)
   const [showAreasPanel, setShowAreasPanel] = useState(false)
+  const [leftSidebarVisible, setLeftSidebarVisible] = useState(true)
+  const [rightSidebarVisible, setRightSidebarVisible] = useState(true)
+  const [statusBarVisible, setStatusBarVisible] = useState(true)
   const [selectedAlternativeId, setSelectedAlternativeId] = useState<string | null>(null)
   const [gltfExportLoading, setGltfExportLoading] = useState(false)
   const [safeEditMode, setSafeEditMode] = useState(false)
@@ -428,6 +433,8 @@ export function Editor() {
   const [daylightSaving, setDaylightSaving] = useState(false)
   const [sunPreviewLoading, setSunPreviewLoading] = useState(false)
   const moreMenuRef = useRef<HTMLDivElement | null>(null)
+  const sectionMenuRef = useRef<HTMLDivElement | null>(null)
+  const toolboxMenuRef = useRef<HTMLDivElement | null>(null)
   const navigationPanelRef = useRef<HTMLDivElement | null>(null)
   const cameraPresetPanelRef = useRef<HTMLDivElement | null>(null)
   const screenshotPanelRef = useRef<HTMLDivElement | null>(null)
@@ -1004,6 +1011,28 @@ export function Editor() {
     document.addEventListener('mousedown', handleOutsideClick)
     return () => document.removeEventListener('mousedown', handleOutsideClick)
   }, [moreMenuOpen])
+
+  useEffect(() => {
+    if (!sectionMenuOpen) return
+    function handleOutsideClick(e: MouseEvent) {
+      if (sectionMenuRef.current && !sectionMenuRef.current.contains(e.target as Node)) {
+        setSectionMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [sectionMenuOpen])
+
+  useEffect(() => {
+    if (!toolboxMenuOpen) return
+    function handleOutsideClick(e: MouseEvent) {
+      if (toolboxMenuRef.current && !toolboxMenuRef.current.contains(e.target as Node)) {
+        setToolboxMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick)
+    return () => document.removeEventListener('mousedown', handleOutsideClick)
+  }, [toolboxMenuOpen])
 
   useEffect(() => {
     if (!navigationPanelOpen) return
@@ -2803,6 +2832,24 @@ export function Editor() {
     <div className={styles.shell}>
       <header className={styles.topbar}>
         <button type="button" className={styles.backBtn} onClick={() => navigate('/')}>← Projekte</button>
+        <div className={styles.headerMenuWrapper} ref={sectionMenuRef}>
+          <button
+            type="button"
+            className={styles.btnSecondary}
+            onClick={() => setSectionMenuOpen((prev) => !prev)}
+          >
+            Bereiche
+          </button>
+          {sectionMenuOpen && (
+            <div className={`${styles.moreMenu} ${styles.headerMenu}`} role="menu">
+              <button type="button" className={styles.moreMenuItem} onClick={() => { setSectionMenuOpen(false); navigate('/') }}>Projektindex</button>
+              {id && <button type="button" className={styles.moreMenuItem} onClick={() => { setSectionMenuOpen(false); navigate(`/projects/${id}/presentation`) }}>Präsentation</button>}
+              {id && <button type="button" className={styles.moreMenuItem} onClick={() => { setSectionMenuOpen(false); navigate(`/projects/${id}/exports`) }}>Exporte</button>}
+              {id && <button type="button" className={styles.moreMenuItem} onClick={() => { setSectionMenuOpen(false); navigate(`/projects/${id}/specification-packages`) }}>Werkstattpakete</button>}
+              {id && <button type="button" className={styles.moreMenuItem} onClick={() => { setSectionMenuOpen(false); navigate(`/projects/${id}/quote-lines`) }}>Angebot</button>}
+            </div>
+          )}
+        </div>
         <span className={styles.projectName}>{project.name}</span>
         <div className={styles.topbarActions}>
           {lockStateLabel && (
@@ -2890,6 +2937,29 @@ export function Editor() {
                 settings={navigationSettings}
                 onChange={handleNavigationSettingsChange}
               />
+            )}
+          </div>
+          <div className={styles.headerMenuWrapper} ref={toolboxMenuRef}>
+            <button
+              type="button"
+              className={styles.btnSecondary}
+              onClick={() => setToolboxMenuOpen((prev) => !prev)}
+            >
+              Toolboxen
+            </button>
+            {toolboxMenuOpen && (
+              <div className={`${styles.moreMenu} ${styles.headerMenu}`} role="menu">
+                <label className={styles.toolboxItem}><input type="checkbox" checked={leftSidebarVisible} onChange={(event) => setLeftSidebarVisible(event.target.checked)} /> Links</label>
+                <label className={styles.toolboxItem}><input type="checkbox" checked={rightSidebarVisible} onChange={(event) => setRightSidebarVisible(event.target.checked)} /> Rechts</label>
+                <label className={styles.toolboxItem}><input type="checkbox" checked={statusBarVisible} onChange={(event) => setStatusBarVisible(event.target.checked)} /> Statusleiste</label>
+                <label className={styles.toolboxItem}><input type="checkbox" checked={showAreasPanel} onChange={(event) => setShowAreasPanel(event.target.checked)} /> Bereiche-Panel</label>
+                <label className={styles.toolboxItem}><input type="checkbox" checked={navigationPanelOpen} onChange={(event) => setNavigationPanelOpen(event.target.checked)} /> Navigation</label>
+                <label className={styles.toolboxItem}><input type="checkbox" checked={cameraPresetPanelOpen} onChange={(event) => setCameraPresetPanelOpen(event.target.checked)} /> Kamera</label>
+                <label className={styles.toolboxItem}><input type="checkbox" checked={screenshotPanelOpen} onChange={(event) => setScreenshotPanelOpen(event.target.checked)} /> Capture</label>
+                <label className={styles.toolboxItem}><input type="checkbox" checked={renderEnvironmentPanelOpen} onChange={(event) => setRenderEnvironmentPanelOpen(event.target.checked)} /> Render-Umgebung</label>
+                {daylightEnabled && <label className={styles.toolboxItem}><input type="checkbox" checked={daylightPanelOpen} onChange={(event) => setDaylightPanelOpen(event.target.checked)} /> Tageslicht</label>}
+                {materialsEnabled && <label className={styles.toolboxItem}><input type="checkbox" checked={materialPanelOpen} onChange={(event) => setMaterialPanelOpen(event.target.checked)} /> Materialien</label>}
+              </div>
             )}
           </div>
           <div className={styles.cameraPresetWrapper} ref={cameraPresetPanelRef}>
@@ -3247,7 +3317,7 @@ export function Editor() {
         {showAreasPanel && id && (
           <AreasPanel projectId={id} onOpenAlternative={setSelectedAlternativeId} />
         )}
-        <LeftSidebar
+        {leftSidebarVisible && <LeftSidebar
           levelsPanel={(
             <LevelsPanel
               levels={levels}
@@ -3290,7 +3360,7 @@ export function Editor() {
           selectedCatalogItem={selectedCatalogItem}
           onSelectCatalogItem={setSelectedCatalogItem}
           workflowStep={workflowStep}
-        />
+        />}
 
         <div className={styles.editorViewport} ref={captureRootRef}>
           {effectiveViewMode === '2d' && canvasPanel}
@@ -3320,7 +3390,7 @@ export function Editor() {
           )}
         </div>
 
-        <RightSidebar
+        {rightSidebarVisible && <RightSidebar
           projectId={id ?? ''}
           room={selectedRoom}
           levels={levels}
@@ -3388,10 +3458,10 @@ export function Editor() {
           onDeleteDrawingGroup={handleDeleteDrawingGroup}
           onApplyDrawingGroupTransform={handleApplyDrawingGroupTransform}
           onSyncDrawingGroupConfig={handleSyncDrawingGroupConfig}
-        />
+        />}
       </div>
 
-      <StatusBar project={project} selectedRoom={selectedRoom} />
+      {statusBarVisible && <StatusBar project={project} selectedRoom={selectedRoom} />}
 
       {isPreviewPopoutOpen && (
         <PopoutWindow
