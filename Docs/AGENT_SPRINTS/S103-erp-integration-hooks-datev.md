@@ -2,8 +2,35 @@
 
 **Branch:** `feature/sprint-103-erp-integration-hooks-datev`
 **Gruppe:** C
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** S99 (Workflow Events), S100 (Masterdaten), S102 (Reporting), S48 (ERP Connector Grundlagen)
+
+## Umsetzung (2026-03-05)
+
+- Integrations-Hook-API umgesetzt:
+	- `planner-api/src/routes/integrationHooks.ts`
+	- Endpunkte:
+		- `POST /integrations/endpoints`
+		- `GET /integrations/endpoints`
+		- `POST /integrations/endpoints/:id/test`
+		- `GET /integrations/outbox`
+		- `POST /integrations/outbox/:id/replay`
+		- `POST /integrations/inbound/:provider`
+		- `GET /integrations/deliveries/:id`
+- Persistenzmodell fuer Endpoint/Outbox/Delivery eingefuehrt:
+	- Prisma-Schema erweitert in `planner-api/prisma/schema.prisma`
+	- Migration erstellt: `planner-api/prisma/migrations/20260305110000_sprint103_integration_hooks/migration.sql`
+	- Neue Tabellen: `integration_endpoints`, `integration_mapping_profiles`, `integration_outbox_messages`, `integration_delivery_attempts`
+- Route in API-Bootstrap registriert:
+	- `planner-api/src/index.ts`
+- Tests geliefert:
+	- `planner-api/src/routes/integrationHooks.test.ts`
+
+Verifikation:
+
+- `npm run db:generate --workspace planner-api` -> erfolgreich
+- `npm run test --workspace planner-api -- src/routes/integrationHooks.test.ts` -> gruen (`6` Tests)
+- `npm run build --workspace planner-api` -> erfolgreich
 
 ## Ziel
 

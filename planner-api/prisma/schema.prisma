@@ -2506,3 +2506,89 @@ model MasterSyncConflict {
   @@index([tenant_id, entity_type, entity_id])
   @@map("master_sync_conflicts")
 }
+
+enum IntegrationDeliveryStatus {
+  pending
+  processing
+  delivered
+  failed
+  dead_letter
+}
+
+model IntegrationEndpoint {
+  id                   String                    @id @default(uuid())
+  tenant_id            String
+  name                 String                    @db.VarChar(160)
+  provider             String                    @db.VarChar(80)
+  endpoint_url         String
+  auth_mode            String                    @default("none") @db.VarChar(40)
+  auth_config          Json                      @default("{}")
+  mapping_profile_json Json                      @default("{}")
+  dry_run              Boolean                   @default(false)
+  is_active            Boolean                   @default(true)
+  created_at           DateTime                  @default(now())
+  updated_at           DateTime                  @updatedAt
+
+  mapping_profiles     IntegrationMappingProfile[]
+  outbox_messages      IntegrationOutboxMessage[]
+
+  @@index([tenant_id, provider, is_active])
+  @@map("integration_endpoints")
+}
+
+model IntegrationMappingProfile {
+  id            String              @id @default(uuid())
+  tenant_id     String
+  endpoint_id   String
+  name          String              @db.VarChar(120)
+  config_json   Json                @default("{}")
+  is_active     Boolean             @default(true)
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+
+  endpoint      IntegrationEndpoint @relation(fields: [endpoint_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, endpoint_id, is_active])
+  @@map("integration_mapping_profiles")
+}
+
+model IntegrationOutboxMessage {
+  id               String                    @id @default(uuid())
+  tenant_id        String
+  endpoint_id      String
+  event_type       String                    @db.VarChar(120)
+  payload_json     Json
+  idempotency_key  String                    @db.VarChar(190)
+  status           IntegrationDeliveryStatus @default(pending)
+  last_error       String?
+  next_retry_at    DateTime?
+  delivered_at     DateTime?
+  attempt_count    Int                       @default(0)
+  created_at       DateTime                  @default(now())
+  updated_at       DateTime                  @updatedAt
+
+  endpoint         IntegrationEndpoint       @relation(fields: [endpoint_id], references: [id], onDelete: Cascade)
+  attempts         IntegrationDeliveryAttempt[]
+
+  @@unique([tenant_id, idempotency_key])
+  @@index([tenant_id, status, created_at])
+  @@index([tenant_id, endpoint_id])
+  @@map("integration_outbox_messages")
+}
+
+model IntegrationDeliveryAttempt {
+  id                String                  @id @default(uuid())
+  outbox_message_id String
+  tenant_id         String
+  attempt_no        Int
+  http_status       Int?
+  error_code        String?
+  error_message     String?
+  response_json     Json?
+  created_at        DateTime                @default(now())
+
+  outbox_message    IntegrationOutboxMessage @relation(fields: [outbox_message_id], references: [id], onDelete: Cascade)
+
+  @@index([tenant_id, outbox_message_id, attempt_no])
+  @@map("integration_delivery_attempts")
+}
