@@ -94,6 +94,10 @@ describe('actionStateResolver', () => {
     }))
 
     expect(states.panelRenderEnvironment.enabled).toBe(false)
+    expect(states.navQuoteLines.enabled).toBe(false)
+    expect(states.navPanoramaTours.enabled).toBe(false)
+    expect(states.navSpecificationPackages.enabled).toBe(false)
+    expect(states.navViewerExports.enabled).toBe(false)
     expect(states.panelRenderEnvironment.reasonIfDisabled).toContain('Projekt')
   })
 
@@ -110,6 +114,10 @@ describe('actionStateResolver', () => {
     expect(states.panelDaylight.enabled).toBe(true)
     expect(states.panelMaterial.enabled).toBe(true)
     expect(states.presentationMode.enabled).toBe(true)
+    expect(states.navQuoteLines.enabled).toBe(true)
+    expect(states.navPanoramaTours.enabled).toBe(true)
+    expect(states.navSpecificationPackages.enabled).toBe(true)
+    expect(states.navViewerExports.enabled).toBe(true)
     expect(states.autoComplete.enabled).toBe(true)
     expect(states.previewPopout.enabled).toBe(true)
     expect(states.gltfExport.enabled).toBe(true)

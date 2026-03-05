@@ -3223,6 +3223,8 @@ export function Editor() {
                   type="button"
                   className={styles.moreMenuItem}
                   onClick={() => { setMoreMenuOpen(false); navigate(`/projects/${id}/quote-lines`) }}
+                  disabled={!actionStates.navQuoteLines.enabled}
+                  title={actionStates.navQuoteLines.reasonIfDisabled}
                 >
                   Angebotspositionen
                 </button>
@@ -3231,6 +3233,8 @@ export function Editor() {
                   type="button"
                   className={styles.moreMenuItem}
                   onClick={() => { setMoreMenuOpen(false); navigate(`/projects/${id}/panorama-tours`) }}
+                  disabled={!actionStates.navPanoramaTours.enabled}
+                  title={actionStates.navPanoramaTours.reasonIfDisabled}
                 >
                   Panorama-Touren
                 </button>
@@ -3285,6 +3289,8 @@ export function Editor() {
                   type="button"
                   className={styles.moreMenuItem}
                   onClick={() => { setMoreMenuOpen(false); navigate(`/projects/${id}/specification-packages`) }}
+                  disabled={!actionStates.navSpecificationPackages.enabled}
+                  title={actionStates.navSpecificationPackages.reasonIfDisabled}
                 >
                   Werkstattpakete
                 </button>
@@ -3293,6 +3299,8 @@ export function Editor() {
                   type="button"
                   className={styles.moreMenuItem}
                   onClick={() => { setMoreMenuOpen(false); navigate(`/projects/${id}/exports`) }}
+                  disabled={!actionStates.navViewerExports.enabled}
+                  title={actionStates.navViewerExports.reasonIfDisabled}
                 >
                   Viewer-Exports
                 </button>

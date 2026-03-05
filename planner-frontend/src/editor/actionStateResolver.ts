@@ -32,6 +32,10 @@ export interface EditorActionStates {
   panelDaylight: ResolvedActionState
   panelMaterial: ResolvedActionState
   presentationMode: ResolvedActionState
+  navQuoteLines: ResolvedActionState
+  navPanoramaTours: ResolvedActionState
+  navSpecificationPackages: ResolvedActionState
+  navViewerExports: ResolvedActionState
   autoComplete: ResolvedActionState
   previewPopout: ResolvedActionState
   gltfExport: ResolvedActionState
@@ -102,6 +106,10 @@ export function resolveEditorActionStates(context: EditorActionContext): EditorA
   const presentationMode = state(context.presentationEnabled && context.hasProjectId, !context.presentationEnabled
     ? 'Praesentationsmodus nicht aktiv'
     : 'Projekt ist noch nicht geladen')
+  const navQuoteLines = state(context.hasProjectId, 'Projekt ist noch nicht geladen')
+  const navPanoramaTours = state(context.hasProjectId, 'Projekt ist noch nicht geladen')
+  const navSpecificationPackages = state(context.hasProjectId, 'Projekt ist noch nicht geladen')
+  const navViewerExports = state(context.hasProjectId, 'Projekt ist noch nicht geladen')
 
   const autoComplete = state(
     context.hasSelectedRoom && !context.autoCompleteLoading,
@@ -140,6 +148,10 @@ export function resolveEditorActionStates(context: EditorActionContext): EditorA
     panelDaylight,
     panelMaterial,
     presentationMode,
+    navQuoteLines,
+    navPanoramaTours,
+    navSpecificationPackages,
+    navViewerExports,
     autoComplete,
     previewPopout,
     gltfExport,
