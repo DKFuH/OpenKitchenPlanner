@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-109-ui-workflow-full-overhaul`
 **Gruppe:** C
-**Status:** `planned`
+**Status:** `in_progress`
 **Abhaengigkeiten:** S56, S84-S86, S87, S99, S100-S108
 
 ## Ziel
@@ -243,3 +243,32 @@ Phasenempfehlung:
 3. Backend-Feature-Coverage
 4. Plugin/MCP Integration
 5. Hardening + E2E
+
+---
+
+## 12. Fortschritt (Phase 1)
+
+Erledigt:
+
+- Fluent-Theme-Basis eingefuehrt (`fluentTokens.ts`, `fluentTheme.ts`)
+- `main.tsx` mit globalem `FluentProvider` verdrahtet
+- Globalen `AppShell` und `AppHeader` auf Fluent-2-Komponenten migriert
+- Zentrale Basis fuer Workflow/Mode/Action-Matrix gebuendelt in:
+  - `planner-frontend/src/editor/appShellState.ts`
+- Unit-Tests fuer die neue zentrale Basis ergaenzt:
+  - `planner-frontend/src/editor/appShellState.test.ts`
+
+Mitvalidiert:
+
+- `npm run --workspace planner-frontend build` erfolgreich
+- Vitest-Suites gruen:
+  - `src/editor/appShellState.test.ts`
+  - `src/editor/actionStateResolver.test.ts`
+  - `src/editor/workflowStateStore.test.ts`
+  - `src/editor/editorModeStore.test.ts`
+
+Offen (naechste Phase):
+
+- Editor/CAD-Toolbox Migration auf die neue Header-/Workflow-Architektur
+- Integrationsschicht (`featureRegistry`, Backend-Capability-Mapping, Error-Normalizer)
+- Plugin-/MCP-Slots in Header/Sidebar

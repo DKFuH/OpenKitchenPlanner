@@ -17,6 +17,46 @@ export const en: Messages = {
     catalog: 'Catalog',
     dashboard: 'Dashboard',
   },
+  shell: {
+    brandName: 'OKP',
+    brandTagline: 'Unified planning and delivery',
+    navigationAriaLabel: 'Main navigation',
+    navigation: {
+      projects: 'Projects',
+      catalog: 'Catalog',
+      documents: 'Documents',
+      contacts: 'Contacts',
+      reports: 'Reports',
+      settings: 'Settings',
+      editor: 'Editor',
+      presentation: 'Presentation',
+      exports: 'Exports',
+      panoramaTours: 'Panorama tours',
+      quoteLines: 'Quote lines',
+      specificationPackages: 'Specification packages',
+    },
+    workflow: {
+      steps: {
+        walls: 'Walls',
+        openings: 'Openings',
+        furniture: 'Furniture',
+      },
+    },
+    mode: {
+      label: 'Mode',
+    },
+    badges: {
+      projectBound: 'Project scoped',
+      globalContext: 'Global',
+    },
+    actions: {
+      previousStep: 'Back',
+      nextStep: 'Next',
+      previousStepDisabled: 'Already at the first workflow step',
+      nextStepDisabled: 'Already at the last workflow step',
+      disabledFallback: 'This action is currently unavailable',
+    },
+  },
   settings: {
     title: 'Settings',
     subtitle: 'Manage company profile and enabled plugins.',

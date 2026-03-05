@@ -1,7 +1,7 @@
 # S109 Fluent 2 UI Foundation
 
 **Bezug:** Sprint 109  
-**Status:** `planned`  
+**Status:** `in_progress`  
 **Quelle:** `https://fluent2.microsoft.design/`
 
 ## Ziel
@@ -110,4 +110,22 @@ i18n:
 - a11y smoke-check bestanden (keyboard + focus + aria labels)
 - Tests fuer Action-State vorhanden
 - keine regressiven Layout-Bruche in Desktop und Mobile
+
+## 9. Umsetzungsstand Phase 1
+
+Abgeschlossen in dieser Iteration:
+
+- `planner-frontend/src/theme/fluentTokens.ts` angelegt (Token-Gruppen color/spacing/radius/typography/elevation)
+- `planner-frontend/src/theme/fluentTheme.ts` angelegt (zentrale Fluent-Theme-Mappings)
+- `planner-frontend/src/main.tsx` auf `FluentProvider` umgestellt
+- `planner-frontend/src/components/layout/AppShell.tsx` auf Fluent-basiertes Shell-Layout migriert
+- `planner-frontend/src/components/layout/AppHeader.tsx` als globalen Fluent-Header mit Action-Gating und Workflow-Anzeige migriert
+- Neue Shell-Labels/Navigation i18n-faehig gemacht:
+  - `planner-frontend/src/i18n/de.ts`
+  - `planner-frontend/src/i18n/en.ts`
+
+Validierung:
+
+- Frontend-Build erfolgreich (`npm run --workspace planner-frontend build`)
+- Editor-State-Testpaket erfolgreich (`appShellState`, `actionStateResolver`, `workflowStateStore`, `editorModeStore`)
 

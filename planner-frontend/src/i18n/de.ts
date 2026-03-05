@@ -15,6 +15,46 @@ export const de = {
     catalog: 'Katalog',
     dashboard: 'Dashboard',
   },
+  shell: {
+    brandName: 'OKP',
+    brandTagline: 'Einheitliche Planung und Ausfuehrung',
+    navigationAriaLabel: 'Hauptnavigation',
+    navigation: {
+      projects: 'Projekte',
+      catalog: 'Katalog',
+      documents: 'Dokumente',
+      contacts: 'Kontakte',
+      reports: 'Reports',
+      settings: 'Einstellungen',
+      editor: 'Editor',
+      presentation: 'Praesentation',
+      exports: 'Exporte',
+      panoramaTours: 'Panorama-Touren',
+      quoteLines: 'Angebotspositionen',
+      specificationPackages: 'Leistungspakete',
+    },
+    workflow: {
+      steps: {
+        walls: 'Waende',
+        openings: 'Oeffnungen',
+        furniture: 'Moebel',
+      },
+    },
+    mode: {
+      label: 'Modus',
+    },
+    badges: {
+      projectBound: 'Projektgebunden',
+      globalContext: 'Global',
+    },
+    actions: {
+      previousStep: 'Zurueck',
+      nextStep: 'Weiter',
+      previousStepDisabled: 'Bereits im ersten Workflow-Schritt',
+      nextStepDisabled: 'Bereits im letzten Workflow-Schritt',
+      disabledFallback: 'Diese Aktion ist aktuell nicht verfuegbar',
+    },
+  },
   settings: {
     title: 'Einstellungen',
     subtitle: 'Verwalte Firmenprofil und aktivierte Plugins.',
