@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   resolveEditorActionStates,
   resolvePolygonShortcutStates,
+  resolveViewModeShortcut,
   type EditorActionContext,
 } from './actionStateResolver.js'
 
@@ -115,6 +116,29 @@ describe('actionStateResolver', () => {
     expect(states.markAllDelivered.enabled).toBe(true)
     expect(states.captureScreenshot.enabled).toBe(true)
     expect(states.capture360.enabled).toBe(true)
+  })
+
+  it('maps numeric shortcuts to expected view modes', () => {
+    const states = resolveEditorActionStates(buildActionContext())
+
+    expect(resolveViewModeShortcut('1', states)).toBe('2d')
+    expect(resolveViewModeShortcut('2', states)).toBe('split')
+    expect(resolveViewModeShortcut('3', states)).toBe('3d')
+    expect(resolveViewModeShortcut('4', states)).toBe('elevation')
+    expect(resolveViewModeShortcut('5', states)).toBe('section')
+  })
+
+  it('falls back or blocks shortcuts when target modes are disabled', () => {
+    const states = resolveEditorActionStates(buildActionContext({
+      compactLayout: true,
+      hasSelectedRoom: false,
+      hasSelectedSectionLine: false,
+    }))
+
+    expect(resolveViewModeShortcut('2', states)).toBe('2d')
+    expect(resolveViewModeShortcut('4', states)).toBe(null)
+    expect(resolveViewModeShortcut('5', states)).toBe(null)
+    expect(resolveViewModeShortcut('9', states)).toBe(null)
   })
 
   it('disables delete shortcut in safe-edit mode', () => {

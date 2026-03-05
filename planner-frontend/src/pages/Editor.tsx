@@ -40,7 +40,7 @@ import { visibilityApi, type AutoDollhousePatch, type AutoDollhouseSettings } fr
 import { verticalConnectionsApi, type VerticalConnection, type VerticalConnectionKind } from '../api/verticalConnections.js'
 import { usePolygonEditor, edgeLengthMm, type EditorState } from '../editor/usePolygonEditor.js'
 import { useEditorModeStore } from '../editor/editorModeStore.js'
-import { resolveEditorActionStates } from '../editor/actionStateResolver.js'
+import { resolveEditorActionStates, resolveViewModeShortcut } from '../editor/actionStateResolver.js'
 import { getEditorModeForWorkflowStep, useWorkflowStateStore } from '../editor/workflowStateStore.js'
 import { CanvasArea } from '../components/editor/CanvasArea.js'
 import { PopoutWindow } from '../components/editor/PopoutWindow.js'
@@ -1158,6 +1158,24 @@ export function Editor() {
   }, [])
 
   useEffect(() => {
+    const shortcutActionStates = resolveEditorActionStates({
+      hasProjectId: Boolean(id),
+      compactLayout,
+      hasSelectedRoom: Boolean(selectedRoomId),
+      hasSelectedSectionLine: Boolean(selectedSectionLineId),
+      hasSelectedAlternative: Boolean(selectedAlternativeId),
+      presentationEnabled,
+      daylightEnabled,
+      hasProjectEnvironment: Boolean(projectEnvironment),
+      materialsEnabled,
+      autoCompleteLoading,
+      previewPopoutOpen: isPreviewPopoutOpen,
+      gltfExportLoading,
+      bulkDeliveredLoading,
+      screenshotBusy,
+      export360Busy,
+    })
+
     function handleViewModeShortcuts(event: globalThis.KeyboardEvent) {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) {
         return
@@ -1166,31 +1184,34 @@ export function Editor() {
         return
       }
 
-      if (event.key === '1') {
-        event.preventDefault()
-        setViewMode('2d')
+      const nextMode = resolveViewModeShortcut(event.key, shortcutActionStates)
+      if (!nextMode) {
+        return
       }
-      if (event.key === '2') {
-        event.preventDefault()
-        setViewMode(compactLayout ? '2d' : 'split')
-      }
-      if (event.key === '3') {
-        event.preventDefault()
-        setViewMode('3d')
-      }
-      if (event.key === '4') {
-        event.preventDefault()
-        setViewMode('elevation')
-      }
-      if (event.key === '5') {
-        event.preventDefault()
-        setViewMode('section')
-      }
+
+      event.preventDefault()
+      setViewMode(nextMode)
     }
 
     window.addEventListener('keydown', handleViewModeShortcuts)
     return () => window.removeEventListener('keydown', handleViewModeShortcuts)
-  }, [compactLayout])
+  }, [
+    autoCompleteLoading,
+    bulkDeliveredLoading,
+    compactLayout,
+    daylightEnabled,
+    export360Busy,
+    gltfExportLoading,
+    id,
+    isPreviewPopoutOpen,
+    materialsEnabled,
+    presentationEnabled,
+    projectEnvironment,
+    screenshotBusy,
+    selectedAlternativeId,
+    selectedRoomId,
+    selectedSectionLineId,
+  ])
 
   useEffect(() => {
     setCameraState((prev) => ({

@@ -40,6 +40,20 @@ export interface EditorActionStates {
   capture360: ResolvedActionState
 }
 
+export type ViewModeShortcutTarget = '2d' | 'split' | '3d' | 'elevation' | 'section'
+
+export function resolveViewModeShortcut(
+  key: string,
+  actionStates: Pick<EditorActionStates, 'viewSplit' | 'viewElevation' | 'viewSection'>,
+): ViewModeShortcutTarget | null {
+  if (key === '1') return '2d'
+  if (key === '2') return actionStates.viewSplit.enabled ? 'split' : '2d'
+  if (key === '3') return '3d'
+  if (key === '4') return actionStates.viewElevation.enabled ? 'elevation' : null
+  if (key === '5') return actionStates.viewSection.enabled ? 'section' : null
+  return null
+}
+
 export interface PolygonShortcutContext {
   safeEditMode: boolean
   selectedVertexIndex: number | null
