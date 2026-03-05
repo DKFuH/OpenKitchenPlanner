@@ -101,39 +101,31 @@ Ziel: fehlende Basic-Editorfunktionen in OKP strukturiert ergaenzen.
 - `npm run -w planner-frontend test -- src/editor/actionStateResolver.test.ts`
 - `npm run -w planner-frontend build`
 
-## Konkrete Implementierungsvorschlaege (Backlog)
+## Zerlegung in Zwischensprints (S108a-S108f)
 
-### P1: Snap-Engine und Interaktion
+Die offene SH3D-Abarbeitung ist in folgende Zwischensprints zerlegt:
 
-1. Snap-Engine 2.0 finalisieren (Grid -> Angle -> Vertex/Edge -> Length als klare Pipeline).
-2. Temporaere Modifier weiter ausbauen (kontextsensitive Schwellwerte, konsistente Hinweise in UI).
-3. Praeferenzmodell persistieren (`grid_visible`, `grid_size_mm`, `magnetism_enabled`, `angle_step_deg`, `length_snap_step_mm`).
+1. `S108a` - Snap und Modifier Hardening
+Datei: `Docs/AGENT_SPRINTS/S108a-sh3d-snap-modifier-hardening.md`
+2. `S108b` - Mode, Action und Insert-Orchestrierung
+Datei: `Docs/AGENT_SPRINTS/S108b-sh3d-mode-action-insert-orchestrierung.md`
+3. `S108c` - Preferences Persistenz
+Datei: `Docs/AGENT_SPRINTS/S108c-sh3d-preferences-persistenz.md`
+4. `S108d` - Wall-Topologie Robustheit
+Datei: `Docs/AGENT_SPRINTS/S108d-sh3d-wall-topologie-robustheit.md`
+5. `S108e` - Room-Validation und Auto-Fix
+Datei: `Docs/AGENT_SPRINTS/S108e-sh3d-room-validation-autofix.md`
+6. `S108f` - Dimension Assist und Multi-View-Objekte
+Datei: `Docs/AGENT_SPRINTS/S108f-sh3d-dimension-assist-und-multiview.md`
 
-### P1: Mode/Action/Insert-Orchestrierung
+## Priorisierte Reihenfolge
 
-1. Einheitlichen `editorModeStore` etablieren (`selection | pan | wallCreate | roomCreate | polylineCreate | dimCreate | labelCreate`).
-2. Harte Regel: nach Insert/Drop/Paste/Import immer auf `selection` zurueck.
-3. Konsolidierte Insert/Paste/Drop-Pipeline mit konsistenter Selection- und Undo-Logik.
-4. Zentrale Actions-Matrix fuer Header/Menu/Shortcuts (`visible`, `enabled`, `reasonIfDisabled`).
-
-### P2: Geometrie-Robustheit
-
-1. Wall-Bearbeitung robust machen (split/join/reverse/move mit Nachbarbindung und Oeffnungs-Rebind).
-2. Raumgeometrie-Validierung plus optionaler Auto-Fix (Selbstueberschneidung, Doppelpunkte, Nullkanten, Orientierung).
-
-### P2/P3: Bemaßung und Multi-View
-
-1. Kontextsensitive Bemaßungsvorschlaege (Wandparallel, Oeffnungsabstaende, Live-Massfeedback).
-2. Fenster/Tueren als echte Entities mit synchroner Draufsicht/3D/Wandansicht.
-
-## Empfohlene Reihenfolge
-
-1. Snap/Modifier abschliessen
-2. Mode-/Action-Orchestrierung und Insert-Pipeline vereinheitlichen
-3. Preferences-Persistenz
-4. Wall-Topologie robust machen
-5. Room-Validation + Auto-Fix
-6. Dimension-Assist und Multi-View-Objekte
+1. `S108a`
+2. `S108b`
+3. `S108c`
+4. `S108d`
+5. `S108e`
+6. `S108f`
 
 ## Risiko / Aufwand
 
