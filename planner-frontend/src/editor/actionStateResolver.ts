@@ -1,5 +1,6 @@
 export interface ResolvedActionState {
   enabled: boolean
+  visible?: boolean
   reasonIfDisabled?: string
 }
 
@@ -73,8 +74,12 @@ export interface PolygonShortcutStates {
   clearSelection: ResolvedActionState
 }
 
-function state(enabled: boolean, reasonIfDisabled?: string): ResolvedActionState {
-  return enabled ? { enabled: true } : { enabled: false, reasonIfDisabled }
+function state(enabled: boolean, reasonIfDisabled?: string, visible = true): ResolvedActionState {
+  if (!visible) {
+    return { enabled: false, visible: false, reasonIfDisabled }
+  }
+
+  return enabled ? { enabled: true, visible: true } : { enabled: false, visible: true, reasonIfDisabled }
 }
 
 export function resolveEditorActionStates(context: EditorActionContext): EditorActionStates {
@@ -98,16 +103,22 @@ export function resolveEditorActionStates(context: EditorActionContext): EditorA
     !context.daylightEnabled
       ? 'Tageslicht-Plugin nicht aktiv'
       : 'Tageslichtdaten werden geladen',
+    context.daylightEnabled,
   )
   const panelMaterial = state(
     context.materialsEnabled && context.hasSelectedRoom,
     !context.materialsEnabled
       ? 'Material-Plugin nicht aktiv'
       : 'Bitte zuerst einen Raum auswaehlen',
+    context.materialsEnabled,
   )
-  const presentationMode = state(context.presentationEnabled && context.hasProjectId, !context.presentationEnabled
-    ? 'Praesentationsmodus nicht aktiv'
-    : projectRequiredReason)
+  const presentationMode = state(
+    context.presentationEnabled && context.hasProjectId,
+    !context.presentationEnabled
+      ? 'Praesentationsmodus nicht aktiv'
+      : projectRequiredReason,
+    context.presentationEnabled,
+  )
   const navQuoteLines = state(context.hasProjectId, projectRequiredReason)
   const navPanoramaTours = state(context.hasProjectId, projectRequiredReason)
   const navSpecificationPackages = state(context.hasProjectId, projectRequiredReason)

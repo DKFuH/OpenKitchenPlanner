@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer } from 'react'
 import type { Point2D, Vertex } from '@shared/types'
 import { validatePolygon } from '@shared/geometry/validatePolygon'
 import { buildAllowedAngles, getMagnetizedLength, snapPoint, type SnapSegment } from './snapUtils.js'
+import { loadEditorSettings, saveEditorSettings } from './editorPreferences.js'
 
 // ─── Typen ───────────────────────────────────────────────────────────────────
 
@@ -145,37 +146,6 @@ const DEFAULT_SETTINGS: EditorSettings = {
   minEdgeLengthMm: 100,
 }
 
-const SETTINGS_STORAGE_KEY = 'yakds.polygonEditor.settings.v1'
-
-function readStoredSettings(): Partial<EditorSettings> {
-  if (typeof window === 'undefined') {
-    return {}
-  }
-
-  try {
-    const raw = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
-    if (!raw) {
-      return {}
-    }
-
-    const parsed = JSON.parse(raw) as Partial<EditorSettings>
-    const settings: Partial<EditorSettings> = {}
-
-    if (typeof parsed.gridSizeMm === 'number' && Number.isFinite(parsed.gridSizeMm) && parsed.gridSizeMm >= 0) settings.gridSizeMm = Math.round(parsed.gridSizeMm)
-    if (typeof parsed.angleSnap === 'boolean') settings.angleSnap = parsed.angleSnap
-    if (typeof parsed.angleStepDeg === 'number' && Number.isFinite(parsed.angleStepDeg) && parsed.angleStepDeg > 0) settings.angleStepDeg = Math.round(parsed.angleStepDeg)
-    if (typeof parsed.magnetismEnabled === 'boolean') settings.magnetismEnabled = parsed.magnetismEnabled
-    if (typeof parsed.axisMagnetismEnabled === 'boolean') settings.axisMagnetismEnabled = parsed.axisMagnetismEnabled
-    if (typeof parsed.magnetismToleranceMm === 'number' && Number.isFinite(parsed.magnetismToleranceMm) && parsed.magnetismToleranceMm >= 0) settings.magnetismToleranceMm = Math.round(parsed.magnetismToleranceMm)
-    if (typeof parsed.lengthSnapStepMm === 'number' && Number.isFinite(parsed.lengthSnapStepMm) && parsed.lengthSnapStepMm >= 0) settings.lengthSnapStepMm = Math.round(parsed.lengthSnapStepMm)
-    if (typeof parsed.minEdgeLengthMm === 'number' && Number.isFinite(parsed.minEdgeLengthMm) && parsed.minEdgeLengthMm >= 0) settings.minEdgeLengthMm = Math.round(parsed.minEdgeLengthMm)
-
-    return settings
-  } catch {
-    return {}
-  }
-}
-
 function initialState(settingsOverride: Partial<EditorSettings> = {}): EditorState {
   return {
     tool: 'draw',
@@ -212,6 +182,8 @@ function reducer(state: EditorState, action: Action): EditorState {
         axisMagnetismEnabled,
         magnetismSegments: buildMagnetismSegments(state.vertices, state.closed),
         magnetismToleranceMm,
+        lengthMagnetismEnabled: !action.disableMagnetism,
+        lengthSnapStepMm: state.settings.lengthSnapStepMm,
       })
       const newVertex = buildVertex(snapped, state.vertices.length)
       const vertices = [...state.vertices, newVertex]
@@ -348,7 +320,7 @@ export function usePolygonEditor(initialVertices?: Vertex[]) {
     reducer,
     undefined,
     () => {
-      const s = initialState(readStoredSettings())
+      const s = initialState(loadEditorSettings())
       if (initialVertices && initialVertices.length >= 3) {
         return reducer(s, { type: 'LOAD_VERTICES', vertices: initialVertices })
       }
@@ -357,15 +329,7 @@ export function usePolygonEditor(initialVertices?: Vertex[]) {
   )
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
-
-    try {
-      window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(state.settings))
-    } catch {
-      // Ignore write errors (private mode / blocked storage).
-    }
+    saveEditorSettings(state.settings)
   }, [state.settings])
 
   const addVertex = useCallback((point: Point2D, options?: SnapOverrideOptions) =>

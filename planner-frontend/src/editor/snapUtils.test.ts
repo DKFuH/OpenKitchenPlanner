@@ -7,6 +7,7 @@ import {
   snapPoint,
   snapToAngle,
   snapToGrid,
+  snapToMagnetizedLength,
   snapToNearestPoint,
   snapToNearestSegmentProjection,
 } from './snapUtils';
@@ -126,6 +127,52 @@ describe('snapUtils', () => {
 
     expect(snapped).toEqual({ x_mm: 1010, y_mm: 800 });
   });
+
+  it('keeps exact point candidate when axis is further away', () => {
+    const snapped = snapPoint(
+      { x_mm: 1000, y_mm: 1000 },
+      null,
+      1,
+      false,
+      {
+        magnetismEnabled: true,
+        magnetismCandidates: [{ x_mm: 1000, y_mm: 1000 }],
+        axisMagnetismEnabled: true,
+        magnetismSegments: [{ start: { x_mm: 900, y_mm: 1020 }, end: { x_mm: 1100, y_mm: 1020 } }],
+        magnetismToleranceMm: 30,
+      },
+    )
+
+    expect(snapped).toEqual({ x_mm: 1000, y_mm: 1000 })
+  })
+
+  it('applies length magnetism as the final pipeline stage', () => {
+    const snapped = snapPoint(
+      { x_mm: 990, y_mm: 5 },
+      { x_mm: 0, y_mm: 0 },
+      1,
+      false,
+      {
+        magnetismEnabled: true,
+        magnetismCandidates: [{ x_mm: 1000, y_mm: 0 }],
+        magnetismToleranceMm: 20,
+        lengthMagnetismEnabled: true,
+        lengthSnapStepMm: 200,
+      },
+    )
+
+    expect(Math.round(Math.hypot(snapped.x_mm, snapped.y_mm))).toBe(1000)
+  })
+
+  it('snaps point-to-origin distance to configured step', () => {
+    const snapped = snapToMagnetizedLength(
+      { x_mm: 990, y_mm: 5 },
+      { x_mm: 0, y_mm: 0 },
+      200,
+    )
+
+    expect(Math.round(Math.hypot(snapped.x_mm, snapped.y_mm))).toBe(1000)
+  })
 
   it('magnetizes explicit lengths to configured step', () => {
     expect(getMagnetizedLength(1241, 50)).toBe(1250);

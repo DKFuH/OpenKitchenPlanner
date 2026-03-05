@@ -67,6 +67,7 @@ describe('actionStateResolver', () => {
     }))
 
     expect(states.panelDaylight.enabled).toBe(false)
+    expect(states.panelDaylight.visible).toBe(false)
     expect(states.panelDaylight.reasonIfDisabled).toContain('Plugin')
   })
 
@@ -85,7 +86,18 @@ describe('actionStateResolver', () => {
     }))
 
     expect(states.presentationMode.enabled).toBe(false)
+    expect(states.presentationMode.visible).toBe(false)
     expect(states.presentationMode.reasonIfDisabled).toContain('Praesentationsmodus')
+  })
+
+  it('hides material panel action when material plugin is inactive', () => {
+    const states = resolveEditorActionStates(buildActionContext({
+      materialsEnabled: false,
+    }))
+
+    expect(states.panelMaterial.enabled).toBe(false)
+    expect(states.panelMaterial.visible).toBe(false)
+    expect(states.panelMaterial.reasonIfDisabled).toContain('Plugin')
   })
 
   it('disables render-environment panel action without project id', () => {
@@ -130,6 +142,9 @@ describe('actionStateResolver', () => {
     expect(states.markAllDelivered.enabled).toBe(true)
     expect(states.captureScreenshot.enabled).toBe(true)
     expect(states.capture360.enabled).toBe(true)
+    expect(states.presentationMode.visible).toBe(true)
+    expect(states.panelDaylight.visible).toBe(true)
+    expect(states.panelMaterial.visible).toBe(true)
   })
 
   it('maps numeric shortcuts to expected view modes', () => {

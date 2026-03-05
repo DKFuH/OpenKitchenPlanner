@@ -2,7 +2,7 @@
 
 **Branch:** `feature/s108c-sh3d-preferences-persistenz`
 **Gruppe:** C
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** S108a, S108b
 
 ## Ziel
@@ -31,3 +31,16 @@ Nicht in Scope:
 - Preferences sind nach Reload stabil wiederhergestellt
 - Keine Regression bei bestehenden Editor-Defaults
 - Tests und Build sind gruen
+
+## Umsetzung (2026-03-05)
+
+- Neue Persistenz-Utility eingefuehrt:
+	- `planner-frontend/src/editor/editorPreferences.ts`
+	- zentrale `loadEditorSettings`/`saveEditorSettings` API
+- Migration unterstuetzt:
+	- legacy key `yakds.polygonEditor.settings` wird auf `yakds.polygonEditor.settings.v1` ueberfuehrt
+- Integration in `planner-frontend/src/editor/usePolygonEditor.ts`:
+	- Laden im Initial-State
+	- Speichern bei Settings-Aenderung
+- Testabdeckung fuer Save/Load/Migration:
+	- `planner-frontend/src/editor/editorPreferences.test.ts`

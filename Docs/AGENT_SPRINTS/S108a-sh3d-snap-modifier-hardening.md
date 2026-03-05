@@ -2,7 +2,7 @@
 
 **Branch:** `feature/s108a-sh3d-snap-modifier-hardening`
 **Gruppe:** C
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** bestehender PolygonEditor-Flow, `snapUtils`, `usePolygonEditor`
 
 ## Ziel
@@ -32,3 +32,17 @@ Nicht in Scope:
 - Deterministische Snap-Ergebnisse bei identischen Eingaben
 - Modifier verhalten sich in Draw und Drag konsistent
 - Editor-Tests und Build sind gruen
+
+## Umsetzung (2026-03-05)
+
+- Snap-Pipeline in `planner-frontend/src/editor/snapUtils.ts` auf feste Reihenfolge gehoben:
+	- `Grid -> Angle -> Vertex/Edge -> Length`
+- Konfliktaufloesung zwischen Punkt- und Achsenfang vereinheitlicht:
+	- deterministische Prioritaet, keine instabile Ueberschreibung exakter Kandidaten
+- Laengen-Snap als finaler Pipeline-Schritt eingefuehrt (`snapToMagnetizedLength`)
+- Modifier-Hardening in `planner-frontend/src/editor/PolygonEditor.tsx`:
+	- `Shift` (Ortho), `Alt` (Magnet aus), `Ctrl` (Basis-Fangtoleranz)
+	- konsistent in Draw- und Drag-Pfaden
+- Testabdeckung erweitert:
+	- `planner-frontend/src/editor/snapUtils.test.ts`
+	- `planner-frontend/src/editor/usePolygonEditor.test.js`

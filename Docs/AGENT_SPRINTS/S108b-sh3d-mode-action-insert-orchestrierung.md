@@ -2,7 +2,7 @@
 
 **Branch:** `feature/s108b-sh3d-mode-action-insert-orchestrierung`
 **Gruppe:** C
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** `editorModeStore`, `workflowStateStore`, `actionStateResolver`
 
 ## Ziel
@@ -32,3 +32,14 @@ Nicht in Scope:
 - Keine widerspruechlichen Enable/Disable-Zustaende zwischen UI und Shortcuts
 - Insert-nahe Flows enden konsistent im Selection-Modus
 - Editor-Tests und Build sind gruen
+
+## Umsetzung (2026-03-05)
+
+- `actionStateResolver` erweitert:
+	- `ResolvedActionState` unterstuetzt jetzt `visible` neben `enabled` und `reasonIfDisabled`
+	- Sichtbarkeitsregeln fuer `presentation`, `daylight`, `materials` zentralisiert
+- `planner-frontend/src/pages/Editor.tsx` auf resolver-gesteuerte Sichtbarkeit umgestellt:
+	- Toolbox- und Mehr-Menue-Aktionen nutzen `actionStates.*.visible`
+	- reduzierte verstreute Plugin-Checks in den betroffenen Menuepfaden
+- Shortcut-/Action-Gates bleiben zentral in Resolver/Shortcut-State und laufen konsistent mit
+- Tests erweitert in `planner-frontend/src/editor/actionStateResolver.test.ts`

@@ -160,6 +160,34 @@ export function getMagnetizedLength(lengthMm: number, stepMm: number): number {
   return Math.round(lengthMm / stepMm) * stepMm;
 }
 
+export function snapToMagnetizedLength(
+  point: Point2D,
+  origin: Point2D,
+  stepMm: number,
+): Point2D {
+  if (!Number.isFinite(stepMm) || stepMm <= 0) {
+    return { ...point }
+  }
+
+  const dx = point.x_mm - origin.x_mm
+  const dy = point.y_mm - origin.y_mm
+  const currentLength = Math.hypot(dx, dy)
+  if (!Number.isFinite(currentLength) || currentLength <= 0) {
+    return { ...point }
+  }
+
+  const magnetizedLength = getMagnetizedLength(currentLength, stepMm)
+  if (!Number.isFinite(magnetizedLength) || magnetizedLength <= 0) {
+    return { ...point }
+  }
+
+  const scale = magnetizedLength / currentLength
+  return {
+    x_mm: origin.x_mm + dx * scale,
+    y_mm: origin.y_mm + dy * scale,
+  }
+}
+
 export function snapToNearestPoint(
   point: Point2D,
   candidates: Point2D[],
@@ -206,6 +234,45 @@ export interface SnapPointOptions {
   axisMagnetismEnabled?: boolean;
   magnetismSegments?: SnapSegment[];
   magnetismToleranceMm?: number;
+  lengthMagnetismEnabled?: boolean;
+  lengthSnapStepMm?: number;
+  magnetismPriority?: 'point' | 'axis';
+}
+
+function squaredDistance(a: Point2D, b: Point2D): number {
+  const dx = a.x_mm - b.x_mm
+  const dy = a.y_mm - b.y_mm
+  return dx * dx + dy * dy
+}
+
+function resolveMagnetismCandidate(
+  basePoint: Point2D,
+  pointCandidate: Point2D,
+  axisCandidate: Point2D,
+  pointMatched: boolean,
+  axisMatched: boolean,
+  priority: 'point' | 'axis',
+): Point2D {
+  const pointDistanceSq = squaredDistance(pointCandidate, basePoint)
+  const axisDistanceSq = squaredDistance(axisCandidate, basePoint)
+
+  if (!pointMatched && !axisMatched) {
+    return { ...basePoint }
+  }
+
+  if (pointMatched && !axisMatched) {
+    return pointCandidate
+  }
+
+  if (!pointMatched && axisMatched) {
+    return axisCandidate
+  }
+
+  if (pointDistanceSq === axisDistanceSq) {
+    return priority === 'axis' ? axisCandidate : pointCandidate
+  }
+
+  return pointDistanceSq < axisDistanceSq ? pointCandidate : axisCandidate
 }
 
 export function snapPoint(
@@ -215,6 +282,7 @@ export function snapPoint(
   angleSnap: boolean,
   options: SnapPointOptions = {}
 ): Point2D {
+  // SH3D-like deterministic pipeline: Grid -> Angle -> Vertex/Edge -> Length.
   const gridSnapped = snapToGrid(point, gridSizeMm);
   const allowedAngles = options.allowedAnglesDeg ?? [0, 45, 90, 135, 180, 225, 270, 315];
 
@@ -239,17 +307,33 @@ export function snapPoint(
     )
     : angleSnapped;
 
-  const pointDx = pointMagnetized.x_mm - angleSnapped.x_mm;
-  const pointDy = pointMagnetized.y_mm - angleSnapped.y_mm;
-  const pointDistanceSq = pointDx * pointDx + pointDy * pointDy;
+  const pointMatched = options.magnetismEnabled
+    ? (squaredDistance(pointMagnetized, angleSnapped) > 0
+      || (options.magnetismCandidates ?? []).some((candidate) =>
+        candidate.x_mm === angleSnapped.x_mm && candidate.y_mm === angleSnapped.y_mm,
+      ))
+    : false
 
-  const axisDx = axisMagnetized.x_mm - angleSnapped.x_mm;
-  const axisDy = axisMagnetized.y_mm - angleSnapped.y_mm;
-  const axisDistanceSq = axisDx * axisDx + axisDy * axisDy;
+  const axisMatched = options.axisMagnetismEnabled
+    ? (squaredDistance(axisMagnetized, angleSnapped) > 0)
+    : false
 
-  if (axisDistanceSq > 0 && (pointDistanceSq === 0 || axisDistanceSq < pointDistanceSq)) {
-    return axisMagnetized;
-  }
+  const magnetized = resolveMagnetismCandidate(
+    angleSnapped,
+    pointMagnetized,
+    axisMagnetized,
+    pointMatched,
+    axisMatched,
+    options.magnetismPriority ?? 'point',
+  )
 
-  return pointMagnetized;
+  const lengthMagnetized = options.lengthMagnetismEnabled && origin !== null
+    ? snapToMagnetizedLength(
+      magnetized,
+      origin,
+      options.lengthSnapStepMm ?? 0,
+    )
+    : magnetized
+
+  return lengthMagnetized
 }

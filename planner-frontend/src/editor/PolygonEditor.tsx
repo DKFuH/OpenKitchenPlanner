@@ -229,6 +229,7 @@ export function PolygonEditor({
   const [referenceImageElement, setReferenceImageElement] = useState<HTMLImageElement | null>(null)
   const [isOrthoModifierDown, setIsOrthoModifierDown] = useState(false)
   const [isMagnetismBypassDown, setIsMagnetismBypassDown] = useState(false)
+  const [isBaseToleranceModifierDown, setIsBaseToleranceModifierDown] = useState(false)
   const [snapToleranceMode, setSnapToleranceMode] = useState<'auto' | 'base'>('auto')
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 })
 
@@ -247,7 +248,8 @@ export function PolygonEditor({
 
   const magnetismEnabled = state.settings.magnetismEnabled || state.settings.axisMagnetismEnabled
   const baseMagnetismToleranceMm = state.settings.magnetismToleranceMm
-  const selectedMagnetismToleranceMm = snapToleranceMode === 'base'
+  const useBaseMagnetismTolerance = snapToleranceMode === 'base' || isBaseToleranceModifierDown
+  const selectedMagnetismToleranceMm = useBaseMagnetismTolerance
     ? baseMagnetismToleranceMm
     : dynamicMagnetismToleranceMm
   const isMagnetismIndicatorWarn = !magnetismEnabled || isMagnetismBypassDown || selectedMagnetismToleranceMm <= 0
@@ -258,7 +260,7 @@ export function PolygonEditor({
     && (toleranceRatio >= 1.35 || toleranceRatio <= 0.75)
   const effectiveMagnetismLabel = isMagnetismIndicatorWarn
     ? 'aus'
-    : snapToleranceMode === 'base'
+    : useBaseMagnetismTolerance
       ? `${selectedMagnetismToleranceMm} mm (Basis)`
       : `${selectedMagnetismToleranceMm} mm`
   const effectiveMagnetismTooltip = (() => {
@@ -274,12 +276,12 @@ export function PolygonEditor({
       return 'Fangtoleranz: aus'
     }
 
-    if (snapToleranceMode === 'base') {
+    if (useBaseMagnetismTolerance) {
       if (Number.isFinite(baseMagnetismToleranceMm) && baseMagnetismToleranceMm > 0) {
-        return `Fangtoleranz: Basis-Modus aktiv (${baseMagnetismToleranceMm} mm). Klick wechselt auf Auto.`
+        return `Fangtoleranz: Basis-Modus aktiv (${baseMagnetismToleranceMm} mm). Klick wechselt auf Auto. Ctrl haelt den Basis-Modus temporaer.`
       }
 
-      return 'Fangtoleranz: Basis-Modus aktiv. Klick wechselt auf Auto.'
+      return 'Fangtoleranz: Basis-Modus aktiv. Klick wechselt auf Auto. Ctrl haelt den Basis-Modus temporaer.'
     }
 
     if (Number.isFinite(baseMagnetismToleranceMm) && baseMagnetismToleranceMm > 0) {
@@ -288,6 +290,19 @@ export function PolygonEditor({
 
     return `Fangtoleranz (Effektiv): ${selectedMagnetismToleranceMm} mm. Klick wechselt auf Basis.`
   })()
+
+  function resolvePointerModifiers(evt?: { shiftKey?: boolean; altKey?: boolean; ctrlKey?: boolean } | null) {
+    return {
+      ortho: isOrthoModifierDown || Boolean(evt?.shiftKey),
+      magnetismBypass: isMagnetismBypassDown || Boolean(evt?.altKey),
+      forceBaseTolerance: isBaseToleranceModifierDown || Boolean(evt?.ctrlKey),
+    }
+  }
+
+  function resolveActiveMagnetismToleranceMm(evt?: { ctrlKey?: boolean } | null): number {
+    const forceBaseTolerance = isBaseToleranceModifierDown || Boolean(evt?.ctrlKey)
+    return forceBaseTolerance ? baseMagnetismToleranceMm : dynamicMagnetismToleranceMm
+  }
   const zoomPercent = Math.max(1, Math.round(viewport.zoom * 100))
   const zoomLabel = `${zoomPercent}%`
   const magnetismIndicatorClassName = `${styles.settingMeta} ${
@@ -318,6 +333,9 @@ export function PolygonEditor({
       if (event.key === 'Alt') {
         setIsMagnetismBypassDown(true)
       }
+      if (event.key === 'Control') {
+        setIsBaseToleranceModifierDown(true)
+      }
     }
 
     const onKeyUp = (event: KeyboardEvent) => {
@@ -327,11 +345,15 @@ export function PolygonEditor({
       if (event.key === 'Alt') {
         setIsMagnetismBypassDown(false)
       }
+      if (event.key === 'Control') {
+        setIsBaseToleranceModifierDown(false)
+      }
     }
 
     const onBlur = () => {
       setIsOrthoModifierDown(false)
       setIsMagnetismBypassDown(false)
+      setIsBaseToleranceModifierDown(false)
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -392,18 +414,20 @@ export function PolygonEditor({
     if (state.tool !== 'draw') return
     if (safeEditMode) return
 
+    const modifiers = resolvePointerModifiers(_e.evt)
+
     let point = { x_mm: canvasToWorld(pos.x), y_mm: canvasToWorld(pos.y) }
     const origin = state.vertices.at(-1)
-    if (isOrthoModifierDown && origin) {
+    if (modifiers.ortho && origin) {
       point = constrainWithShiftModifier(point, { x_mm: origin.x_mm, y_mm: origin.y_mm })
     }
 
     // Child shapes (vertices, edges) set e.cancelBubble = true so they never reach here
     onAddVertex(point, {
-      disableMagnetism: isMagnetismBypassDown,
-      magnetismToleranceMmOverride: selectedMagnetismToleranceMm,
+      disableMagnetism: modifiers.magnetismBypass,
+      magnetismToleranceMmOverride: resolveActiveMagnetismToleranceMm(_e.evt),
     })
-  }, [resolveLogicalPointer, safeEditMode, state.tool, state.referenceImage, state.vertices, isOrthoModifierDown, isMagnetismBypassDown, selectedMagnetismToleranceMm, constrainWithShiftModifier, onAddVertex, onReferenceImageUpdate, onRepositionVisitor])
+  }, [resolveLogicalPointer, safeEditMode, state.tool, state.referenceImage, state.vertices, isOrthoModifierDown, isMagnetismBypassDown, isBaseToleranceModifierDown, baseMagnetismToleranceMm, dynamicMagnetismToleranceMm, constrainWithShiftModifier, onAddVertex, onReferenceImageUpdate, onRepositionVisitor])
 
   const handleStageDblClick = useCallback(() => {
     if (safeEditMode) return
@@ -703,6 +727,7 @@ export function PolygonEditor({
         <ToolBtn active={state.tool === 'select'} onClick={() => onSetTool('select')}>Auswählen</ToolBtn>
         {isOrthoModifierDown && <span className={styles.modifierBadge}>ORTHO</span>}
         {isMagnetismBypassDown && <span className={styles.modifierBadge}>MAG OFF</span>}
+        {isBaseToleranceModifierDown && <span className={styles.modifierBadge}>BASE TOL</span>}
         <label className={styles.settingToggle} title="Punktfang ein/aus">
           <input
             type="checkbox"
@@ -955,6 +980,7 @@ export function PolygonEditor({
                         e.target.y(my)
                         return
                       }
+                      const modifiers = resolvePointerModifiers(e.evt)
                       const dx = canvasToWorld(e.target.x() - mx)
                       const dy = canvasToWorld(e.target.y() - my)
                       const iV = i
@@ -962,12 +988,12 @@ export function PolygonEditor({
                       const vI = state.vertices[iV]
                       const vNext = state.vertices[iNext]
                       onMoveVertex(iV, { x_mm: vI.x_mm + dx, y_mm: vI.y_mm + dy }, {
-                        disableMagnetism: isMagnetismBypassDown,
-                        magnetismToleranceMmOverride: selectedMagnetismToleranceMm,
+                        disableMagnetism: modifiers.magnetismBypass,
+                        magnetismToleranceMmOverride: resolveActiveMagnetismToleranceMm(e.evt),
                       })
                       onMoveVertex(iNext, { x_mm: vNext.x_mm + dx, y_mm: vNext.y_mm + dy }, {
-                        disableMagnetism: isMagnetismBypassDown,
-                        magnetismToleranceMmOverride: selectedMagnetismToleranceMm,
+                        disableMagnetism: modifiers.magnetismBypass,
+                        magnetismToleranceMmOverride: resolveActiveMagnetismToleranceMm(e.evt),
                       })
                       e.target.x(mx)
                       e.target.y(my)
@@ -1336,14 +1362,15 @@ export function PolygonEditor({
                       x_mm: canvasToWorld(e.target.x()),
                       y_mm: canvasToWorld(e.target.y()),
                     }
-                    const nextPoint = isOrthoModifierDown
+                    const modifiers = resolvePointerModifiers(e.evt)
+                    const nextPoint = modifiers.ortho
                       ? constrainWithShiftModifier(rawPoint, { x_mm: state.vertices[i].x_mm, y_mm: state.vertices[i].y_mm })
                       : rawPoint
 
                     setDragLabel(null)
                     onMoveVertex(i, nextPoint, {
-                      disableMagnetism: isMagnetismBypassDown,
-                      magnetismToleranceMmOverride: selectedMagnetismToleranceMm,
+                      disableMagnetism: modifiers.magnetismBypass,
+                      magnetismToleranceMmOverride: resolveActiveMagnetismToleranceMm(e.evt),
                     })
                   }}
                   onDragMove={(e) => {
@@ -1355,7 +1382,8 @@ export function PolygonEditor({
 
                     const rawX = e.target.x()
                     const rawY = e.target.y()
-                    const constrainedCanvas = isOrthoModifierDown
+                    const modifiers = resolvePointerModifiers(e.evt)
+                    const constrainedCanvas = modifiers.ortho
                       ? (() => {
                         const constrained = constrainWithShiftModifier(
                           { x_mm: canvasToWorld(rawX), y_mm: canvasToWorld(rawY) },
@@ -1421,7 +1449,7 @@ export function PolygonEditor({
           <span>Klick: Punkt setzen · Doppelklick oder erster Punkt: Polygon schließen</span>
         )}
         {state.tool === 'select' && (
-          <span>Ziehen: Punkt/Wand verschieben · Doppelklick: löschen · Shift=Align (H/V + Nachbarwand-Winkel) · Alt=Magnet aus · D=Zeichnen · S=Auswählen · Esc=Abwählen · Mausrad=Zoom · Fangtoleranz passt sich Zoom an</span>
+          <span>Ziehen: Punkt/Wand verschieben · Doppelklick: löschen · Shift=Align (H/V + Nachbarwand-Winkel) · Alt=Magnet aus · Ctrl=Basis-Fangtoleranz · D=Zeichnen · S=Auswählen · Esc=Abwählen · Mausrad=Zoom · Fangtoleranz passt sich Zoom an</span>
         )}
         {safeEditMode && (
           <span>Safe-Edit aktiv: Geometrieänderungen sind gesperrt.</span>

@@ -3013,8 +3013,8 @@ export function Editor() {
                 <label className={styles.toolboxItem}><input type="checkbox" checked={cameraPresetPanelOpen} onChange={(event) => setCameraPresetPanelOpen(event.target.checked)} disabled={!actionStates.panelCamera.enabled} title={actionStates.panelCamera.reasonIfDisabled} /> Kamera</label>
                 <label className={styles.toolboxItem}><input type="checkbox" checked={screenshotPanelOpen} onChange={(event) => setScreenshotPanelOpen(event.target.checked)} disabled={!actionStates.panelCapture.enabled} title={actionStates.panelCapture.reasonIfDisabled} /> Capture</label>
                 <label className={styles.toolboxItem}><input type="checkbox" checked={renderEnvironmentPanelOpen} onChange={(event) => setRenderEnvironmentPanelOpen(event.target.checked)} disabled={!actionStates.panelRenderEnvironment.enabled} title={actionStates.panelRenderEnvironment.reasonIfDisabled} /> Render-Umgebung</label>
-                {daylightEnabled && <label className={styles.toolboxItem}><input type="checkbox" checked={daylightPanelOpen} onChange={(event) => setDaylightPanelOpen(event.target.checked)} disabled={!actionStates.panelDaylight.enabled} title={actionStates.panelDaylight.reasonIfDisabled} /> Tageslicht</label>}
-                {materialsEnabled && <label className={styles.toolboxItem}><input type="checkbox" checked={materialPanelOpen} onChange={(event) => setMaterialPanelOpen(event.target.checked)} disabled={!actionStates.panelMaterial.enabled} title={actionStates.panelMaterial.reasonIfDisabled} /> Materialien</label>}
+                {actionStates.panelDaylight.visible !== false && <label className={styles.toolboxItem}><input type="checkbox" checked={daylightPanelOpen} onChange={(event) => setDaylightPanelOpen(event.target.checked)} disabled={!actionStates.panelDaylight.enabled} title={actionStates.panelDaylight.reasonIfDisabled} /> Tageslicht</label>}
+                {actionStates.panelMaterial.visible !== false && <label className={styles.toolboxItem}><input type="checkbox" checked={materialPanelOpen} onChange={(event) => setMaterialPanelOpen(event.target.checked)} disabled={!actionStates.panelMaterial.enabled} title={actionStates.panelMaterial.reasonIfDisabled} /> Materialien</label>}
               </div>
             )}
           </div>
@@ -3211,7 +3211,7 @@ export function Editor() {
                 >
                   Panorama-Touren
                 </button>
-                {presentationEnabled && (
+                {actionStates.presentationMode.visible !== false && (
                   <button
                     role="menuitem"
                     type="button"
@@ -3223,7 +3223,7 @@ export function Editor() {
                     Präsentationsmodus
                   </button>
                 )}
-                {daylightEnabled && (
+                {actionStates.panelDaylight.visible !== false && (
                   <button
                     role="menuitem"
                     type="button"
@@ -3245,7 +3245,7 @@ export function Editor() {
                 >
                   {renderEnvironmentPanelOpen ? 'Render-Umgebung schließen' : 'Render-Umgebung'}
                 </button>
-                {materialsEnabled && (
+                {actionStates.panelMaterial.visible !== false && (
                   <button
                     role="menuitem"
                     type="button"
