@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { getRuntimeTenantId, tenantScopedHeaders } from './runtimeContext.js'
+import { DEFAULT_TENANT_ID, getRuntimeTenantId, tenantScopedHeaders } from './runtimeContext.js'
 
 afterEach(() => {
   Reflect.deleteProperty(globalThis, 'window')
@@ -36,7 +36,7 @@ describe('runtimeContext', () => {
     expect(getRuntimeTenantId()).toBe('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')
   })
 
-  it('throws when tenant context is missing or invalid', () => {
+  it('falls back to default tenant when context is missing or invalid', () => {
     Object.defineProperty(globalThis, 'window', {
       configurable: true,
       value: {
@@ -51,7 +51,7 @@ describe('runtimeContext', () => {
       },
     })
 
-    expect(() => getRuntimeTenantId()).toThrow('Tenant context missing or invalid')
+    expect(getRuntimeTenantId()).toBe(DEFAULT_TENANT_ID)
   })
 
   it('builds scoped headers with runtime tenant id', () => {
@@ -69,5 +69,19 @@ describe('runtimeContext', () => {
       'X-Custom': '1',
       'X-Tenant-Id': 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
     })
+  })
+
+  it('falls back to tenant id from localStorage', () => {
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        localStorage: {
+          getItem: () => 'dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+        },
+        location: { search: '' },
+      },
+    })
+
+    expect(getRuntimeTenantId()).toBe('dddddddd-dddd-4ddd-8ddd-dddddddddddd')
   })
 })

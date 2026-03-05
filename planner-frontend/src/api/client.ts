@@ -1,10 +1,12 @@
+import { tenantScopedHeaders } from './runtimeContext.js'
 const BASE_URL = '/api/v1'
 
 type ApiError = { error: string; message: string }
 
 async function request<T>(path: string, options?: RequestInit, extraHeaders?: Record<string, string>): Promise<T> {
+  const withTenant = tenantScopedHeaders()
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...extraHeaders, ...options?.headers },
+    headers: { 'Content-Type': 'application/json', ...withTenant, ...extraHeaders, ...options?.headers },
     ...options,
   })
 
