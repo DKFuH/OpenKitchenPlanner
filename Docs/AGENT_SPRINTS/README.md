@@ -6,8 +6,8 @@ Stand: 2026-03-05
 
 ## Status
 
-- Sprints `S47` bis `S100`: `done`
-- Sprints `S101` bis `S103`: `planned`
+- Sprints `S47` bis `S101`: `done`
+- Sprints `S102` bis `S103`: `planned`
 - Projektname in den Spezifikationen: `OKP`
 
 ---
@@ -70,7 +70,7 @@ Stand: 2026-03-05
 | 98 | `S98-stabilisierungsphase.md` | done |
 | 99 | `S99-workflow-engine-bpmn-light.md` | done |
 | 100 | `S100-masterdata-registry-sync.md` | done |
-| 101 | `S101-mobile-status-client.md` | planned |
+| 101 | `S101-mobile-status-client.md` | done |
 | 102 | `S102-process-reporting-dashboards.md` | planned |
 | 103 | `S103-erp-integration-hooks-datev.md` | planned |
 

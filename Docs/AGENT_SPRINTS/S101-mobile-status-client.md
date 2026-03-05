@@ -2,8 +2,34 @@
 
 **Branch:** `feature/sprint-101-mobile-status-client`
 **Gruppe:** B
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** S99 (Workflow Runtime), S100 (Masterdaten Sync), S79 (Offline/PWA Grundlagen)
+
+## Umsetzung (2026-03-05)
+
+- Mobile API-Routen fuer Status und Aktionen umgesetzt:
+	- `planner-api/src/routes/mobile.ts`
+	- Endpunkte:
+		- `GET /mobile/me/dashboard`
+		- `GET /mobile/orders/:id/status`
+		- `GET /mobile/orders/:id/timeline`
+		- `POST /mobile/orders/:id/actions/confirm-step`
+		- `POST /mobile/orders/:id/actions/report-issue`
+		- `GET /mobile/notifications`
+- Route in API-Bootstrap registriert:
+	- `planner-api/src/index.ts`
+- Kernlogik:
+	- tenant- und user-gescopte Dashboard-Daten
+	- mobile Status-/Timeline-Readmodels auf `ProductionOrder` + `ProductionOrderEvent`
+	- mobile Aktionspfade inkl. Transition-Guard und Issue-Logging
+	- Notification-Listing ueber `NotificationEvent`
+- Tests geliefert:
+	- `planner-api/src/routes/mobile.test.ts`
+
+Verifikation:
+
+- `npm run test --workspace planner-api -- src/routes/mobile.test.ts` -> gruen (`6` Tests)
+- `npm run build --workspace planner-api` -> erfolgreich
 
 ## Ziel
 
