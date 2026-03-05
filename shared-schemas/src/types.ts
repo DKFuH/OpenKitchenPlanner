@@ -503,6 +503,14 @@ export interface SectionLine {
   sheet_visibility?: 'all' | 'sheet_only' | 'hidden';
   show_marker?: boolean;
   marker_style?: 'arrow' | 'triangle' | 'none';
+  view_config?: {
+    scale?: number;
+    offset_x_mm?: number;
+    offset_y_mm?: number;
+    show_measurements?: boolean;
+    show_openings?: boolean;
+    show_placements?: boolean;
+  };
 }
 
 export interface Comment {

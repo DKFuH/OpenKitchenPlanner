@@ -75,6 +75,20 @@ describe('plannerViewSettings', () => {
     })
   })
 
+  it('keeps elevation mode when persisted', () => {
+    const storage = new MemoryStorage()
+    storage.setItem('yakds:planner-view:p-7', JSON.stringify({ mode: 'elevation' }))
+
+    expect(loadPlannerViewSettings('p-7', storage)?.mode).toBe('elevation')
+  })
+
+  it('keeps section mode when persisted', () => {
+    const storage = new MemoryStorage()
+    storage.setItem('yakds:planner-view:p-8', JSON.stringify({ mode: 'section' }))
+
+    expect(loadPlannerViewSettings('p-8', storage)?.mode).toBe('section')
+  })
+
   it('normalizes invalid mode to 2d', () => {
     const storage = new MemoryStorage()
     storage.setItem('yakds:planner-view:p-4', JSON.stringify({ mode: 'viewer3d' }))

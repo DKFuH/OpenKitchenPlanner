@@ -15,7 +15,16 @@ import {
   type DrawingGroupConfigPatch,
   type DrawingGroupMember,
 } from '../api/drawingGroups.js'
-import { annotationsApi, roomsApi, type ReferenceImagePayload, type RoomBoundaryPayload, type RoomPayload } from '../api/rooms.js'
+import {
+  annotationsApi,
+  roomsApi,
+  type ProjectElevationEntry,
+  type ReferenceImagePayload,
+  type RoomBoundaryPayload,
+  type RoomPayload,
+  type SectionViewConfig,
+  type SectionViewResponse,
+} from '../api/rooms.js'
 import { areasApi } from '../api/areas.js'
 import { openingsApi, type Opening } from '../api/openings.js'
 import { validateApi, type ValidateResponse } from '../api/validate.js'
@@ -346,6 +355,15 @@ export function Editor() {
   const [verticalConnections, setVerticalConnections] = useState<VerticalConnection[]>([])
   const [sectionLines, setSectionLines] = useState<SectionLine[]>([])
   const [selectedSectionLineId, setSelectedSectionLineId] = useState<string | null>(null)
+  const [projectElevations, setProjectElevations] = useState<ProjectElevationEntry[]>([])
+  const [selectedElevationWallIndex, setSelectedElevationWallIndex] = useState<number>(0)
+  const [elevationSvg, setElevationSvg] = useState<string>('')
+  const [elevationLoading, setElevationLoading] = useState(false)
+  const [sectionView, setSectionView] = useState<SectionViewResponse | null>(null)
+  const [sectionViewLoading, setSectionViewLoading] = useState(false)
+  const [sectionViewError, setSectionViewError] = useState<string | null>(null)
+  const [sectionViewConfigDraft, setSectionViewConfigDraft] = useState<SectionViewConfig | null>(null)
+  const [sectionViewSaving, setSectionViewSaving] = useState(false)
   const [projectEnvironment, setProjectEnvironment] = useState<ProjectEnvironment | null>(null)
   const [sunPreview, setSunPreview] = useState<SunPreview | null>(null)
   const [daylightSaving, setDaylightSaving] = useState(false)
@@ -489,7 +507,7 @@ export function Editor() {
     }
 
     let active = true
-    annotationsApi.listSectionLines(selectedRoomId)
+    annotationsApi.listSections(selectedRoomId)
       .then((items) => {
         if (!active) return
         setSectionLines(items)
@@ -852,6 +870,14 @@ export function Editor() {
       if (event.key === '3') {
         event.preventDefault()
         setViewMode('3d')
+      }
+      if (event.key === '4') {
+        event.preventDefault()
+        setViewMode('elevation')
+      }
+      if (event.key === '5') {
+        event.preventDefault()
+        setViewMode('section')
       }
     }
 
@@ -1232,7 +1258,7 @@ export function Editor() {
       requestPayload.to_level_id = to
     }
 
-    const created = await annotationsApi.createSectionLine(selectedRoomId, requestPayload as Omit<SectionLine, 'id' | 'room_id'>)
+    const created = await annotationsApi.createSection(selectedRoomId, requestPayload as Omit<SectionLine, 'id' | 'room_id'>)
     setSectionLines((previous) => [...previous, created])
     setSelectedSectionLineId(created.id)
   }, [activeLevelId, levels, project, selectedRoomId])
@@ -1277,9 +1303,33 @@ export function Editor() {
       requestPatch.to_level_id = to
     }
 
-    const updated = await annotationsApi.updateSectionLine(selectedRoomId, sectionId, requestPatch as Partial<Omit<SectionLine, 'id' | 'room_id'>>)
+    const updated = await annotationsApi.updateSection(selectedRoomId, sectionId, requestPatch as Partial<Omit<SectionLine, 'id' | 'room_id'>>)
     setSectionLines((previous) => previous.map((entry) => (entry.id === updated.id ? updated : entry)))
   }, [activeLevelId, levels, selectedRoomId])
+
+  const handleSaveSectionViewConfig = useCallback(async () => {
+    if (!selectedRoomId || !selectedSectionLineId || !sectionViewConfigDraft) {
+      return
+    }
+
+    setSectionViewSaving(true)
+    try {
+      const updated = await annotationsApi.updateSection(selectedRoomId, selectedSectionLineId, {
+        view_config: sectionViewConfigDraft,
+      } as Partial<Omit<SectionLine, 'id' | 'room_id'>>)
+
+      setSectionLines((previous) => previous.map((entry) => (entry.id === updated.id ? updated : entry)))
+      setSectionView((previous) => (previous
+        ? {
+            ...previous,
+            section: updated,
+            view_config: sectionViewConfigDraft,
+          }
+        : previous))
+    } finally {
+      setSectionViewSaving(false)
+    }
+  }, [selectedRoomId, selectedSectionLineId, sectionViewConfigDraft])
 
   const handleDeleteSectionLine = useCallback(async (sectionId: string) => {
     if (!selectedRoomId) {
@@ -1624,6 +1674,28 @@ export function Editor() {
     return project.rooms.filter((room) => room.level_id === activeLevelId)
   }, [project, activeLevelId])
 
+  useEffect(() => {
+    if (!id) {
+      setProjectElevations([])
+      return
+    }
+
+    let active = true
+    roomsApi.listElevations(id)
+      .then((payload) => {
+        if (!active) return
+        setProjectElevations(payload.elevations)
+      })
+      .catch(() => {
+        if (!active) return
+        setProjectElevations([])
+      })
+
+    return () => {
+      active = false
+    }
+  }, [id])
+
   const verticalConnectionsForSelectedRoom = useMemo(() => {
     if (!selectedRoomId) {
       return []
@@ -1639,6 +1711,85 @@ export function Editor() {
     : null
 
   const effectiveViewMode: PlannerViewMode = compactLayout && viewMode === 'split' ? '2d' : viewMode
+  const elevationsForSelectedRoom = useMemo(
+    () => projectElevations.filter((entry) => entry.room_id === selectedRoomId),
+    [projectElevations, selectedRoomId],
+  )
+
+  useEffect(() => {
+    if (elevationsForSelectedRoom.length === 0) {
+      setSelectedElevationWallIndex(0)
+      return
+    }
+
+    setSelectedElevationWallIndex((previous) => {
+      if (elevationsForSelectedRoom.some((entry) => entry.wall_index === previous)) {
+        return previous
+      }
+      return elevationsForSelectedRoom[0].wall_index
+    })
+  }, [elevationsForSelectedRoom])
+
+  useEffect(() => {
+    if (effectiveViewMode !== 'elevation' || !selectedRoomId) {
+      setElevationSvg('')
+      setElevationLoading(false)
+      return
+    }
+
+    let active = true
+    setElevationLoading(true)
+    dimensionsApi.getElevation(selectedRoomId, selectedElevationWallIndex)
+      .then((svg) => {
+        if (!active) return
+        setElevationSvg(svg)
+      })
+      .catch(() => {
+        if (!active) return
+        setElevationSvg('')
+      })
+      .finally(() => {
+        if (!active) return
+        setElevationLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [effectiveViewMode, selectedRoomId, selectedElevationWallIndex])
+
+  useEffect(() => {
+    if (effectiveViewMode !== 'section' || !selectedRoomId || !selectedSectionLineId) {
+      setSectionView(null)
+      setSectionViewError(null)
+      setSectionViewLoading(false)
+      setSectionViewConfigDraft(null)
+      return
+    }
+
+    let active = true
+    setSectionViewLoading(true)
+    setSectionViewError(null)
+    annotationsApi.getSectionView(selectedRoomId, selectedSectionLineId)
+      .then((payload) => {
+        if (!active) return
+        setSectionView(payload)
+        setSectionViewConfigDraft(payload.view_config)
+      })
+      .catch((loadError) => {
+        if (!active) return
+        setSectionView(null)
+        setSectionViewError(loadError instanceof Error ? loadError.message : 'Section-View konnte nicht geladen werden')
+      })
+      .finally(() => {
+        if (!active) return
+        setSectionViewLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [effectiveViewMode, selectedRoomId, selectedSectionLineId])
 
   useEffect(() => {
     if (!selectedRoom) {
@@ -2035,6 +2186,173 @@ export function Editor() {
     />
   )
 
+  const elevationPanel = (
+    <section className={styles.projectionPanel}>
+      <div className={styles.projectionHeader}>
+        <h3 className={styles.projectionTitle}>Elevation View</h3>
+        <label className={styles.projectionField}>
+          Wand
+          <select
+            value={selectedElevationWallIndex}
+            onChange={(event) => setSelectedElevationWallIndex(Number(event.target.value))}
+            disabled={elevationsForSelectedRoom.length === 0}
+          >
+            {elevationsForSelectedRoom.map((entry) => (
+              <option key={entry.wall_id} value={entry.wall_index}>
+                {entry.room_name} · Wand {entry.wall_index + 1} ({Math.round(entry.wall_length_mm)} mm)
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {!selectedRoomId && <p className={styles.projectionHint}>Bitte zuerst einen Raum auswählen.</p>}
+      {selectedRoomId && elevationsForSelectedRoom.length === 0 && (
+        <p className={styles.projectionHint}>Keine Wanddaten für Elevation verfügbar.</p>
+      )}
+      {selectedRoomId && elevationLoading && <p className={styles.projectionHint}>Elevation wird geladen…</p>}
+      {selectedRoomId && !elevationLoading && elevationSvg.length > 0 && (
+        <div className={styles.svgViewport} dangerouslySetInnerHTML={{ __html: elevationSvg }} />
+      )}
+    </section>
+  )
+
+  const sectionProjectionPanel = (
+    <section className={styles.projectionPanel}>
+      <div className={styles.projectionHeader}>
+        <h3 className={styles.projectionTitle}>Section View</h3>
+        <button
+          type="button"
+          className={styles.btnSecondary}
+          onClick={() => {
+            void handleSaveSectionViewConfig()
+          }}
+          disabled={!sectionViewConfigDraft || sectionViewSaving || !selectedSectionLineId}
+        >
+          {sectionViewSaving ? 'Speichere…' : 'Ansicht speichern'}
+        </button>
+      </div>
+
+      {!selectedSectionLineId && <p className={styles.projectionHint}>Bitte eine Sektion auswählen.</p>}
+      {selectedSectionLineId && sectionViewLoading && <p className={styles.projectionHint}>Section-Projektion wird geladen…</p>}
+      {sectionViewError && <p className={styles.projectionError}>{sectionViewError}</p>}
+
+      {sectionView && sectionViewConfigDraft && (
+        <>
+          <div className={styles.projectionConfigGrid}>
+            <label className={styles.projectionField}>
+              Scale
+              <input
+                type="number"
+                step={0.05}
+                min={0.25}
+                max={4}
+                value={sectionViewConfigDraft.scale}
+                onChange={(event) => setSectionViewConfigDraft((previous) => (previous
+                  ? { ...previous, scale: Number(event.target.value) }
+                  : previous))}
+              />
+            </label>
+            <label className={styles.projectionField}>
+              Offset X (mm)
+              <input
+                type="number"
+                value={sectionViewConfigDraft.offset_x_mm}
+                onChange={(event) => setSectionViewConfigDraft((previous) => (previous
+                  ? { ...previous, offset_x_mm: Number(event.target.value) }
+                  : previous))}
+              />
+            </label>
+            <label className={styles.projectionField}>
+              Offset Y (mm)
+              <input
+                type="number"
+                value={sectionViewConfigDraft.offset_y_mm}
+                onChange={(event) => setSectionViewConfigDraft((previous) => (previous
+                  ? { ...previous, offset_y_mm: Number(event.target.value) }
+                  : previous))}
+              />
+            </label>
+          </div>
+
+          <div className={styles.projectionToggles}>
+            <label>
+              <input
+                type="checkbox"
+                checked={sectionViewConfigDraft.show_measurements}
+                onChange={(event) => setSectionViewConfigDraft((previous) => (previous
+                  ? { ...previous, show_measurements: event.target.checked }
+                  : previous))}
+              />
+              Maße
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={sectionViewConfigDraft.show_openings}
+                onChange={(event) => setSectionViewConfigDraft((previous) => (previous
+                  ? { ...previous, show_openings: event.target.checked }
+                  : previous))}
+              />
+              Öffnungen
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={sectionViewConfigDraft.show_placements}
+                onChange={(event) => setSectionViewConfigDraft((previous) => (previous
+                  ? { ...previous, show_placements: event.target.checked }
+                  : previous))}
+              />
+              Placements
+            </label>
+          </div>
+
+          <div className={styles.projectionMeta}>
+            <span>Länge: {Math.round(sectionView.bounds.length_mm)} mm</span>
+            <span>Höhe: {Math.round(sectionView.bounds.height_mm)} mm</span>
+            <span>Snaps: {sectionView.snap_points.length}</span>
+          </div>
+
+          <div className={styles.projectionColumns}>
+            <div>
+              <h4>Öffnungen</h4>
+              <ul className={styles.projectionList}>
+                {sectionView.openings.map((entry) => (
+                  <li key={entry.id}>
+                    <button type="button" onClick={() => setSelectedOpeningId(entry.id)}>
+                      {entry.id.slice(0, 8)} · {Math.round(entry.width_mm)}x{Math.round(entry.height_mm)}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4>Placements</h4>
+              <ul className={styles.projectionList}>
+                {sectionView.placements.map((entry) => (
+                  <li key={entry.id}>
+                    <button type="button" onClick={() => setSelectedPlacementId(entry.id)}>
+                      {entry.id.slice(0, 8)} · {Math.round(entry.width_mm)}x{Math.round(entry.height_mm)}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4>Bemaßung</h4>
+              <ul className={styles.projectionList}>
+                {sectionView.dimensions.map((entry) => (
+                  <li key={entry.id}>{entry.label ?? `${entry.type} (${entry.projected_points.length} pts)`}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </>
+      )}
+    </section>
+  )
+
   if (loading) return <div className={styles.center}>Lade Projekt…</div>
   if (error) return <div className={styles.center}>{error}</div>
   if (!project) return null
@@ -2078,6 +2396,24 @@ export function Editor() {
               onClick={() => setViewMode('3d')}
             >
               3D
+            </button>
+            <button
+              type="button"
+              className={`${styles.modeBtn} ${viewMode === 'elevation' ? styles.modeBtnActive : ''}`}
+              onClick={() => setViewMode('elevation')}
+              disabled={!selectedRoomId}
+              title={!selectedRoomId ? 'Raum für Elevation auswählen' : 'Elevation bearbeiten'}
+            >
+              ELV
+            </button>
+            <button
+              type="button"
+              className={`${styles.modeBtn} ${viewMode === 'section' ? styles.modeBtnActive : ''}`}
+              onClick={() => setViewMode('section')}
+              disabled={!selectedRoomId || !selectedSectionLineId}
+              title={!selectedSectionLineId ? 'Sektion auswählen' : 'Section bearbeiten'}
+            >
+              SEC
             </button>
           </div>
           <label className={styles.visitorToggle}>
@@ -2360,6 +2696,10 @@ export function Editor() {
           {effectiveViewMode === '2d' && canvasPanel}
 
           {effectiveViewMode === '3d' && previewPanel}
+
+          {effectiveViewMode === 'elevation' && elevationPanel}
+
+          {effectiveViewMode === 'section' && sectionProjectionPanel}
 
           {effectiveViewMode === 'split' && (
             <div className={styles.splitLayout} ref={splitContainerRef}>

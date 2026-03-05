@@ -55,6 +55,64 @@ export interface MeasurementImportResponse {
   imported_segments: number
 }
 
+export interface SectionViewConfig {
+  scale: number
+  offset_x_mm: number
+  offset_y_mm: number
+  show_measurements: boolean
+  show_openings: boolean
+  show_placements: boolean
+}
+
+export interface ProjectElevationEntry {
+  room_id: string
+  room_name: string
+  wall_id: string
+  wall_index: number
+  wall_length_mm: number
+  room_height_mm: number
+  preview_url: string
+}
+
+export interface ProjectElevationsResponse {
+  project_id: string
+  total: number
+  elevations: ProjectElevationEntry[]
+}
+
+export interface SectionViewElement {
+  id: string
+  wall_id: string
+  x0_mm: number
+  x1_mm: number
+  y0_mm: number
+  y1_mm: number
+  width_mm: number
+  height_mm: number
+}
+
+export interface SectionViewDimension {
+  id: string
+  type: string
+  label: string | null
+  projected_points: Array<{ x_mm: number; y_mm: number }>
+}
+
+export interface SectionViewResponse {
+  room_id: string
+  section_id: string
+  section: SectionLine
+  bounds: {
+    length_mm: number
+    height_mm: number
+  }
+  view_config: SectionViewConfig
+  openings: SectionViewElement[]
+  placements: SectionViewElement[]
+  dimensions: SectionViewDimension[]
+  snap_points: Array<{ x_mm: number; y_mm: number; source: 'opening' | 'placement' | 'dimension' }>
+}
+
 export const roomsApi = {
   list: (projectId: string) =>
     api.get<RoomPayload[]>(`/projects/${projectId}/rooms`),
@@ -100,6 +158,9 @@ export const roomsApi = {
 
   measurementImport: (id: string, payload: MeasurementImportPayload) =>
     api.post<MeasurementImportResponse>(`/rooms/${id}/measurement-import`, payload),
+
+  listElevations: (projectId: string) =>
+    api.get<ProjectElevationsResponse>(`/projects/${projectId}/elevations`),
 }
 
 // Wall operations
@@ -164,11 +225,23 @@ export const annotationsApi = {
   listSectionLines: (roomId: string) =>
     api.get<SectionLine[]>(`/rooms/${roomId}/section-lines`),
 
+  listSections: (roomId: string) =>
+    api.get<SectionLine[]>(`/rooms/${roomId}/sections`),
+
   createSectionLine: (roomId: string, line: Omit<SectionLine, 'id' | 'room_id'>) =>
     api.post<SectionLine>(`/rooms/${roomId}/section-lines`, line),
 
+  createSection: (roomId: string, line: Omit<SectionLine, 'id' | 'room_id'>) =>
+    api.post<SectionLine>(`/rooms/${roomId}/sections`, line),
+
   updateSectionLine: (roomId: string, lineId: string, patch: Partial<Omit<SectionLine, 'id' | 'room_id'>>) =>
     api.patch<SectionLine>(`/rooms/${roomId}/section-lines/${lineId}`, patch),
+
+  updateSection: (roomId: string, lineId: string, patch: Partial<Omit<SectionLine, 'id' | 'room_id'>>) =>
+    api.patch<SectionLine>(`/rooms/${roomId}/sections/${lineId}`, patch),
+
+  getSectionView: (roomId: string, sectionId: string) =>
+    api.get<SectionViewResponse>(`/rooms/${roomId}/sections/${sectionId}/view`),
 
   deleteSectionLine: (roomId: string, lineId: string) =>
     api.delete(`/rooms/${roomId}/section-lines/${lineId}`),
