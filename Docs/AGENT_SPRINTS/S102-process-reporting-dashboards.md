@@ -2,8 +2,30 @@
 
 **Branch:** `feature/sprint-102-process-reporting-dashboards`
 **Gruppe:** B
-**Status:** `planned`
+**Status:** `done`
 **Abhaengigkeiten:** S99 (Workflow Events), S100 (Masterdaten), S49 (Analytics Reports)
+
+## Umsetzung (2026-03-05)
+
+- Neue Process-Reporting-Route umgesetzt:
+	- `planner-api/src/routes/processReporting.ts`
+	- Endpunkte:
+		- `GET /reports/process/kpis`
+		- `GET /reports/process/bottlenecks`
+		- `GET /reports/process/timeline/:entityId`
+		- `GET /dashboards/process/overview`
+		- `POST /reports/process/export`
+- KPI-/Bottleneck-/Export-Logik als Service gekapselt:
+	- `planner-api/src/services/processReportingService.ts`
+- Route in API-Bootstrap registriert:
+	- `planner-api/src/index.ts`
+- Tests geliefert:
+	- `planner-api/src/routes/processReporting.test.ts`
+
+Verifikation:
+
+- `npm run test --workspace planner-api -- src/routes/processReporting.test.ts` -> gruen (`6` Tests)
+- `npm run build --workspace planner-api` -> erfolgreich
 
 ## Ziel
 

@@ -79,6 +79,7 @@ import { drawingGroupsRoutes } from './routes/drawingGroups.js'
 import { workflowRoutes } from './routes/workflows.js'
 import { masterdataRoutes } from './routes/masterdata.js'
 import { mobileRoutes } from './routes/mobile.js'
+import { processReportingRoutes } from './routes/processReporting.js'
 // OFML OCD/OEX
 import { ofmlImportRoutes } from './routes/orders.js'
 
@@ -163,6 +164,7 @@ await app.register(drawingGroupsRoutes, { prefix: '/api/v1' })
 await app.register(workflowRoutes, { prefix: '/api/v1' })
 await app.register(masterdataRoutes, { prefix: '/api/v1' })
 await app.register(mobileRoutes, { prefix: '/api/v1' })
+await app.register(processReportingRoutes, { prefix: '/api/v1' })
 await app.register(ofmlImportRoutes, { prefix: '/api/v1' })
 
 // Branche-Plugins bootstrappen und einhängen
