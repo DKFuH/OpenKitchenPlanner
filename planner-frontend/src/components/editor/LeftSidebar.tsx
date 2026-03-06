@@ -362,6 +362,7 @@ export function LeftSidebar({
                     <button
                       type="button"
                       className={styles.pluginSlotButton}
+                      data-testid={`sidebar-plugin-slot-${entry.pluginId ?? entry.id}`}
                       disabled={!entry.enabled}
                       title={entry.reasonIfDisabled}
                       onClick={() => {
@@ -387,6 +388,7 @@ export function LeftSidebar({
                 projectId={projectId}
                 onNavigate={onNavigateToPath}
                 variant='panel'
+                testIdPrefix='sidebar'
               />
             </div>
           )}

@@ -247,7 +247,7 @@ export function AppHeader({ shellState, editorBridgeState = null }: AppHeaderPro
           {backendEntries.length > 0 && (
             <Menu>
               <MenuTrigger disableButtonEnhancement>
-                <Button appearance='subtle'>{t('shell.backend.menu')}</Button>
+                <Button appearance='subtle' data-testid='header-backend-menu-trigger'>{t('shell.backend.menu')}</Button>
               </MenuTrigger>
               <MenuPopover>
                 <MenuList>
@@ -256,6 +256,7 @@ export function AppHeader({ shellState, editorBridgeState = null }: AppHeaderPro
                       key={entry.id}
                       disabled={!entry.enabled}
                       title={entry.reasonIfDisabled}
+                      data-testid={`header-backend-feature-${entry.id}`}
                       onClick={() => {
                         if (!entry.enabled) return
                         navigate(entry.targetPath)
@@ -272,7 +273,7 @@ export function AppHeader({ shellState, editorBridgeState = null }: AppHeaderPro
           {pluginSlotEntries.length > 0 && (
             <Menu>
               <MenuTrigger disableButtonEnhancement>
-                <Button appearance='subtle'>{t('shell.plugins.menu')}</Button>
+                <Button appearance='subtle' data-testid='header-plugins-menu-trigger'>{t('shell.plugins.menu')}</Button>
               </MenuTrigger>
               <MenuPopover>
                 <MenuList>
@@ -281,6 +282,7 @@ export function AppHeader({ shellState, editorBridgeState = null }: AppHeaderPro
                       key={entry.id}
                       disabled={!entry.enabled}
                       title={entry.reasonIfDisabled}
+                      data-testid={`header-plugin-slot-${entry.pluginId ?? entry.id}`}
                       onClick={() => {
                         if (!entry.enabled) return
                         navigate(entry.path)
@@ -294,7 +296,7 @@ export function AppHeader({ shellState, editorBridgeState = null }: AppHeaderPro
             </Menu>
           )}
 
-          <McpQuickActions projectId={shellState.projectId} onNavigate={navigate} />
+          <McpQuickActions projectId={shellState.projectId} onNavigate={navigate} testIdPrefix='header' />
           <LanguageSwitcher />
         </div>
       </div>

@@ -16,6 +16,7 @@ interface McpQuickActionsProps {
   projectId: string | null
   onNavigate: (path: string) => void
   variant?: 'menu' | 'panel'
+  testIdPrefix?: string
 }
 
 const useStyles = makeStyles({
@@ -29,6 +30,7 @@ export function McpQuickActions({
   projectId,
   onNavigate,
   variant = 'menu',
+  testIdPrefix = 'mcp',
 }: McpQuickActionsProps) {
   const styles = useStyles()
   const { t } = useTranslation()
@@ -72,6 +74,7 @@ export function McpQuickActions({
               appearance='subtle'
               disabled={!action.enabled}
               title={action.reasonIfDisabled}
+              data-testid={`${testIdPrefix}-${variant}-action-${action.id}`}
               onClick={() => {
                 void runAction(action.id)
               }}
@@ -87,7 +90,7 @@ export function McpQuickActions({
   return (
     <Menu>
       <MenuTrigger disableButtonEnhancement>
-        <Button appearance='subtle'>{t('shell.mcp.menu')}</Button>
+        <Button appearance='subtle' data-testid={`${testIdPrefix}-${variant}-trigger`}>{t('shell.mcp.menu')}</Button>
       </MenuTrigger>
       <MenuPopover>
         <MenuList>
@@ -99,6 +102,7 @@ export function McpQuickActions({
                 key={action.id}
                 disabled={!action.enabled}
                 title={action.reasonIfDisabled}
+                data-testid={`${testIdPrefix}-${variant}-action-${action.id}`}
                 onClick={() => {
                   void runAction(action.id)
                 }}

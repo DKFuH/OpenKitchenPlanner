@@ -22,17 +22,19 @@ export function S109ShellHarnessPage() {
   const appShellBridge = useAppShellEditorBridge()
   const [lastSidebarPath, setLastSidebarPath] = useState<string | null>(null)
 
-  const projectId = id ?? 's109-e2e'
+  const projectId = id ?? null
+  const hasProjectContext = Boolean(projectId)
+  const editorFallbackProjectId = id ?? 's109-e2e'
 
   const actionStates = useMemo(() => resolveEditorActionStates({
-    hasProjectId: true,
+    hasProjectId: hasProjectContext,
     compactLayout: false,
-    hasSelectedRoom: true,
-    hasSelectedSectionLine: true,
-    hasSelectedAlternative: true,
+    hasSelectedRoom: hasProjectContext,
+    hasSelectedSectionLine: hasProjectContext,
+    hasSelectedAlternative: hasProjectContext,
     presentationEnabled: true,
     daylightEnabled: true,
-    hasProjectEnvironment: true,
+    hasProjectEnvironment: hasProjectContext,
     materialsEnabled: true,
     autoCompleteLoading: false,
     previewPopoutOpen: false,
@@ -40,7 +42,7 @@ export function S109ShellHarnessPage() {
     bulkDeliveredLoading: false,
     screenshotBusy: false,
     export360Busy: false,
-  }), [])
+  }), [hasProjectContext])
 
   const sidebarSlots = useMemo(() => resolvePluginSlotEntries({
     slot: 'sidebar',
@@ -78,7 +80,7 @@ export function S109ShellHarnessPage() {
     <main className={styles.page} data-testid='s109-shell-harness'>
       <section className={styles.infoPanel}>
         <h1>S109 Header/Sidebar Smoke Harness</h1>
-        <p data-testid='harness-project-id'>Project: {projectId}</p>
+        <p data-testid='harness-project-id'>Project: {projectId ?? 'global-context'}</p>
         <p data-testid='harness-last-sidebar-path'>
           Sidebar target: {lastSidebarPath ?? '-'}
         </p>
@@ -93,7 +95,7 @@ export function S109ShellHarnessPage() {
           <button
             type='button'
             data-testid='harness-open-editor'
-            onClick={() => navigate(`/projects/${projectId}`)}
+            onClick={() => navigate(`/projects/${editorFallbackProjectId}`)}
           >
             Open Real Editor Route
           </button>

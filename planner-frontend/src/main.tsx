@@ -153,6 +153,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/settings/plugins" element={<PluginsSettingsPage />} />
               <Route path="/settings/layout-styles" element={<LayoutStylesPage />} />
               <Route path="/__e2e/capture-dialog" element={<CaptureDialogHarnessPage />} />
+              <Route path="/__e2e/s109-shell" element={<S109ShellHarnessPage />} />
               <Route path="/projects/:id/__e2e/s109-shell" element={<S109ShellHarnessPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

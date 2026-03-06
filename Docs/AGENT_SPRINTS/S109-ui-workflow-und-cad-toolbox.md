@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-109-ui-workflow-full-overhaul`
 **Gruppe:** C
-**Status:** `phase_4_completed`
+**Status:** `phase_5_in_progress`
 **Abhaengigkeiten:** S56, S84-S86, S87, S99, S100-S108
 
 ## Ziel
@@ -304,3 +304,23 @@ Mitvalidiert:
 
 - `npm run test -- src/integration/backendCapabilityMap.test.ts src/plugins/pluginSlotRegistry.test.ts src/mcp/mcpActionBridge.test.ts` gruen
 - `npm run build` (workspace `planner-frontend`) gruen
+
+## 14. Fortschritt (Phase 5 Kickoff)
+
+Erledigt (Hardening + breitere E2E-Abdeckung):
+
+- Stabile `data-testid` Hooks fuer Header-/Sidebar-Menues und MCP-Actions eingefuehrt:
+  - `planner-frontend/src/components/layout/AppHeader.tsx`
+  - `planner-frontend/src/components/editor/LeftSidebar.tsx`
+  - `planner-frontend/src/components/mcp/McpQuickActions.tsx`
+- S109-Harness auf Projektkontext + Global-Kontext erweitert:
+  - `planner-frontend/src/pages/S109ShellHarnessPage.tsx`
+  - Route: `/__e2e/s109-shell` und `/projects/:id/__e2e/s109-shell`
+- Smoke-E2E von 1 auf 2 Flows erweitert:
+  - Projektgebundener Positiv-Flow (Header Backend/Plugins/MCP + Sidebar-Slots)
+  - Globaler Hardening-Flow (disabled states + reason checks fuer projektgebundene Actions)
+  - Datei: `planner-frontend/e2e/s109-shell-smoke.spec.ts`
+
+Betriebs-Hardening Playwright:
+
+- `planner-frontend/playwright.config.ts` nutzt `--force` im Webserver-Start, um Vite Optimize-Dep Drift im Workspace stabil zu umgehen.
