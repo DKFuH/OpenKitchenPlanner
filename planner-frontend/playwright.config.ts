@@ -16,7 +16,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run dev --workspace planner-frontend -- --host 127.0.0.1 --port 4173',
+    command: 'npm run dev --workspace planner-frontend -- --host 127.0.0.1 --port 4173 --force',
     url: 'http://127.0.0.1:4173',
     cwd: workspaceRoot,
     reuseExistingServer: true,

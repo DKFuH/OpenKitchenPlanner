@@ -31,6 +31,7 @@ import { ExportsPage } from './pages/ExportsPage.js'
 import { CutlistPage } from './pages/CutlistPage'
 import { NestingPage } from './pages/NestingPage'
 import { CaptureDialogHarnessPage } from './pages/CaptureDialogHarnessPage.js'
+import { S109ShellHarnessPage } from './pages/S109ShellHarnessPage.js'
 import { AppShell } from './components/layout/AppShell.js'
 import { getTenantPlugins } from './api/tenantSettings.js'
 import { bootstrapOfflinePwa } from './pwa/offlineBootstrap.js'
@@ -152,6 +153,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/settings/plugins" element={<PluginsSettingsPage />} />
               <Route path="/settings/layout-styles" element={<LayoutStylesPage />} />
               <Route path="/__e2e/capture-dialog" element={<CaptureDialogHarnessPage />} />
+              <Route path="/projects/:id/__e2e/s109-shell" element={<S109ShellHarnessPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

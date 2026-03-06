@@ -22,14 +22,17 @@ import {
   type AssetCategory,
   type AssetLibraryItem,
 } from '../../plugins/assetLibrary/index.js'
+import type { PluginSlotEntry } from '../../plugins/pluginUiContract.js'
 import { AssetBrowser } from '../catalog/AssetBrowser.js'
 import { AssetImportDialog } from '../catalog/AssetImportDialog.js'
+import { McpQuickActions } from '../mcp/McpQuickActions.js'
 import styles from './LeftSidebar.module.css'
 
 interface Props {
   levelsPanel?: ReactNode
   stairsPanel?: ReactNode
   sectionsPanel?: ReactNode
+  projectId: string | null
   rooms: Room[]
   selectedRoomId: string | null
   onSelectRoom: (id: string) => void
@@ -37,6 +40,8 @@ interface Props {
   selectedCatalogItem: UnifiedCatalogItem | null
   onSelectCatalogItem: (item: UnifiedCatalogItem | null) => void
   workflowStep: 'walls' | 'openings' | 'furniture'
+  pluginSlotEntries?: PluginSlotEntry[]
+  onNavigateToPath?: (path: string) => void
 }
 
 const TYPE_OPTIONS: Array<{ value: '' | CatalogItemType; label: string }> = [
@@ -59,7 +64,21 @@ const ASSET_CATEGORY_VALUES: AssetCategory[] = ['base', 'wall', 'appliance', 'de
 
 const ASSET_SORT_VALUES: AssetLibrarySort[] = ['updated', 'name', 'favorites']
 
-export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, selectedRoomId, onSelectRoom, onAddRoom, selectedCatalogItem, onSelectCatalogItem, workflowStep }: Props) {
+export function LeftSidebar({
+  levelsPanel,
+  stairsPanel,
+  sectionsPanel,
+  projectId,
+  rooms,
+  selectedRoomId,
+  onSelectRoom,
+  onAddRoom,
+  selectedCatalogItem,
+  onSelectCatalogItem,
+  workflowStep,
+  pluginSlotEntries = [],
+  onNavigateToPath,
+}: Props) {
   const [addingRoom, setAddingRoom] = useState(false)
   const [newRoomName, setNewRoomName] = useState('')
   const [catalogMode, setCatalogMode] = useState<'standard' | 'manufacturer' | 'assets'>('standard')
@@ -331,6 +350,48 @@ export function LeftSidebar({ levelsPanel, stairsPanel, sectionsPanel, rooms, se
       {levelsPanel}
       {stairsPanel}
       {sectionsPanel}
+
+      {(pluginSlotEntries.length > 0 || onNavigateToPath) && (
+        <div className={styles.section}>
+          {pluginSlotEntries.length > 0 && (
+            <>
+              <h3 className={styles.sectionTitle}>Plugin-Slots</h3>
+              <ul className={styles.pluginSlotList}>
+                {pluginSlotEntries.map((entry) => (
+                  <li key={entry.id}>
+                    <button
+                      type="button"
+                      className={styles.pluginSlotButton}
+                      disabled={!entry.enabled}
+                      title={entry.reasonIfDisabled}
+                      onClick={() => {
+                        if (!entry.enabled || !onNavigateToPath) {
+                          return
+                        }
+
+                        onNavigateToPath(entry.path)
+                      }}
+                    >
+                      {entry.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {onNavigateToPath && (
+            <div className={styles.mcpPanel}>
+              <h3 className={styles.sectionTitle}>MCP</h3>
+              <McpQuickActions
+                projectId={projectId}
+                onNavigate={onNavigateToPath}
+                variant='panel'
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>Räume</h3>

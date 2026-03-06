@@ -38,6 +38,43 @@
 
 .item:hover { background: var(--surface-muted); }
 
+.pluginSlotList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pluginSlotButton {
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-default);
+  color: var(--text-primary);
+  font-size: 0.76rem;
+  padding: 0.35rem 0.45rem;
+  cursor: pointer;
+}
+
+.pluginSlotButton:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.pluginSlotButton:not(:disabled):hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.mcpPanel {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
 .active {
   background: var(--primary-light);
   color: var(--primary-color);

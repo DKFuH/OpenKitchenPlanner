@@ -3,6 +3,11 @@ import {
   Body1Strong,
   Button,
   Caption1,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
   Tab,
   TabList,
   Tooltip,
@@ -14,7 +19,11 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { ResolvedActionState } from '../../editor/actionStateResolver.js'
 import type { AppShellState } from '../../editor/appShellState.js'
+import { resolveBackendFeatureCoverage } from '../../integration/backendCapabilityMap.js'
+import { resolvePluginSlotEntries } from '../../plugins/pluginSlotRegistry.js'
 import { LanguageSwitcher } from '../LanguageSwitcher.js'
+import { McpQuickActions } from '../mcp/McpQuickActions.js'
+import type { AppShellEditorBridgeState } from './AppShellEditorBridge.js'
 
 interface HeaderNavItem {
   key: string
@@ -25,6 +34,7 @@ interface HeaderNavItem {
 
 interface AppHeaderProps {
   shellState: AppShellState
+  editorBridgeState?: AppShellEditorBridgeState | null
 }
 
 const useStyles = makeStyles({
@@ -95,11 +105,12 @@ function getActionDisabledReason(actionState: ResolvedActionState | undefined, f
   return actionState.reasonIfDisabled ?? fallback
 }
 
-export function AppHeader({ shellState }: AppHeaderProps) {
+export function AppHeader({ shellState, editorBridgeState = null }: AppHeaderProps) {
   const styles = useStyles()
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
+  const tenantPlugins = editorBridgeState?.tenantPlugins ?? null
 
   const navItems = useMemo<HeaderNavItem[]>(() => {
     const baseItems: HeaderNavItem[] = [
@@ -160,6 +171,27 @@ export function AppHeader({ shellState }: AppHeaderProps) {
   const selectedPath = useMemo(() => resolveSelectedPath(location.pathname, navItems), [location.pathname, navItems])
   const itemByPath = useMemo(() => new Map(navItems.map((item) => [item.path, item])), [navItems])
 
+  const backendEntries = useMemo(
+    () => resolveBackendFeatureCoverage({
+      projectId: shellState.projectId,
+      actionStates: shellState.actionStates,
+    }),
+    [shellState.actionStates, shellState.projectId],
+  )
+
+  const pluginSlotEntries = useMemo(() => {
+    if (!tenantPlugins) {
+      return []
+    }
+
+    return resolvePluginSlotEntries({
+      slot: 'header',
+      projectId: shellState.projectId,
+      availablePlugins: tenantPlugins.available,
+      enabledPluginIds: tenantPlugins.enabled,
+    })
+  }, [shellState.projectId, tenantPlugins])
+
   const previousDisabledReason = shellState.canGoPrevious
     ? undefined
     : t('shell.actions.previousStepDisabled')
@@ -211,6 +243,58 @@ export function AppHeader({ shellState }: AppHeaderProps) {
               </Button>
             </span>
           </Tooltip>
+
+          {backendEntries.length > 0 && (
+            <Menu>
+              <MenuTrigger disableButtonEnhancement>
+                <Button appearance='subtle'>{t('shell.backend.menu')}</Button>
+              </MenuTrigger>
+              <MenuPopover>
+                <MenuList>
+                  {backendEntries.map((entry) => (
+                    <MenuItem
+                      key={entry.id}
+                      disabled={!entry.enabled}
+                      title={entry.reasonIfDisabled}
+                      onClick={() => {
+                        if (!entry.enabled) return
+                        navigate(entry.targetPath)
+                      }}
+                    >
+                      {t(entry.labelKey)}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </MenuPopover>
+            </Menu>
+          )}
+
+          {pluginSlotEntries.length > 0 && (
+            <Menu>
+              <MenuTrigger disableButtonEnhancement>
+                <Button appearance='subtle'>{t('shell.plugins.menu')}</Button>
+              </MenuTrigger>
+              <MenuPopover>
+                <MenuList>
+                  {pluginSlotEntries.map((entry) => (
+                    <MenuItem
+                      key={entry.id}
+                      disabled={!entry.enabled}
+                      title={entry.reasonIfDisabled}
+                      onClick={() => {
+                        if (!entry.enabled) return
+                        navigate(entry.path)
+                      }}
+                    >
+                      {entry.label}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </MenuPopover>
+            </Menu>
+          )}
+
+          <McpQuickActions projectId={shellState.projectId} onNavigate={navigate} />
           <LanguageSwitcher />
         </div>
       </div>

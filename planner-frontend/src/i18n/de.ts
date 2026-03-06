@@ -33,6 +33,29 @@ export const de = {
       quoteLines: 'Angebotspositionen',
       specificationPackages: 'Leistungspakete',
     },
+    backend: {
+      menu: 'Backend-Features',
+      quoteLines: 'Angebotspositionen',
+      panoramaTours: 'Panorama-Touren',
+      specificationPackages: 'Leistungspakete',
+      viewerExports: 'Viewer-Exporte',
+      presentationMode: 'Praesentation',
+      cameraPanel: 'Kamera-Panel',
+      capturePanel: 'Capture-Panel',
+      renderEnvironmentPanel: 'Render-Umgebung',
+      daylightPanel: 'Tageslicht-Panel',
+      materialPanel: 'Material-Panel',
+    },
+    plugins: {
+      menu: 'Plugins',
+    },
+    mcp: {
+      menu: 'MCP',
+      openHub: 'MCP-Hub oeffnen',
+      openProjectContext: 'Projektkontext im MCP-Hub',
+      copyValidationPrompt: 'Validierungs-Prompt kopieren',
+      copied: 'Kopiert',
+    },
     workflow: {
       steps: {
         walls: 'Waende',

@@ -30,7 +30,12 @@ import { openingsApi, type Opening } from '../api/openings.js'
 import { validateApi, type ValidateResponse } from '../api/validate.js'
 import { autoCompletionApi, type AutoCompleteResult } from '../api/autoCompletion.js'
 import { acousticsApi, type AcousticGridMeta, type GeoJsonGrid } from '../api/acoustics.js'
-import { getTenantPlugins, getTenantSettings, updateTenantSettings } from '../api/tenantSettings.js'
+import {
+  getTenantPlugins,
+  getTenantSettings,
+  updateTenantSettings,
+  type TenantPluginsResponse,
+} from '../api/tenantSettings.js'
 import { projectEnvironmentApi } from '../api/projectEnvironment.js'
 import { renderEnvironmentApi } from '../api/renderEnvironment.js'
 import { mediaCaptureApi } from '../api/mediaCapture.js'
@@ -69,6 +74,7 @@ import { StatusBar } from '../components/editor/StatusBar.js'
 import { AreasPanel } from '../components/editor/AreasPanel.js'
 import { LayoutSheetTabs } from '../components/editor/LayoutSheetTabs.js'
 import { useAppShellEditorBridge } from '../components/layout/AppShellEditorBridge.js'
+import { resolvePluginSlotEntries } from '../plugins/pluginSlotRegistry.js'
 import type { ProjectEnvironment, SunPreview } from '../plugins/daylight/index.js'
 import styles from './Editor.module.css'
 import {
@@ -410,6 +416,7 @@ export function Editor() {
   const [moreMenuOpen, setMoreMenuOpen] = useState(false)
   const [shortcutFeedback, setShortcutFeedback] = useState<string | null>(null)
   const [presentationEnabled, setPresentationEnabled] = useState(false)
+  const [tenantPlugins, setTenantPlugins] = useState<TenantPluginsResponse | null>(null)
   const [daylightEnabled, setDaylightEnabled] = useState(false)
   const [daylightPanelOpen, setDaylightPanelOpen] = useState(false)
   const [renderEnvironmentPanelOpen, setRenderEnvironmentPanelOpen] = useState(false)
@@ -554,6 +561,7 @@ export function Editor() {
     getTenantPlugins()
       .then((result) => {
         if (!active) return
+        setTenantPlugins(result)
         setPresentationEnabled(result.enabled.includes('presentation'))
         setDaylightEnabled(result.enabled.includes('daylight'))
         setMaterialsEnabled(result.enabled.includes('materials'))
@@ -562,6 +570,7 @@ export function Editor() {
       })
       .catch(() => {
         if (!active) return
+        setTenantPlugins(null)
         setPresentationEnabled(false)
         setDaylightEnabled(false)
         setMaterialsEnabled(false)
@@ -1206,6 +1215,19 @@ export function Editor() {
 
   const actionStates = useMemo(() => resolveEditorActionStates(actionContext), [actionContext])
 
+  const sidebarPluginSlots = useMemo(() => {
+    if (!tenantPlugins) {
+      return []
+    }
+
+    return resolvePluginSlotEntries({
+      slot: 'sidebar',
+      projectId: id ?? null,
+      availablePlugins: tenantPlugins.available,
+      enabledPluginIds: tenantPlugins.enabled,
+    })
+  }, [id, tenantPlugins])
+
   useEffect(() => {
     if (!shortcutFeedback) {
       return
@@ -1266,11 +1288,13 @@ export function Editor() {
       goToNextStep: workflow.goToNextStep,
       goToPreviousStep: workflow.goToPreviousStep,
       actionStates,
+      tenantPlugins,
     })
   }, [
     actionStates,
     appShellBridge,
     editorMode.modeLabel,
+    tenantPlugins,
     workflow.canGoNext,
     workflow.canGoPrevious,
     workflow.goToNextStep,
@@ -3622,6 +3646,9 @@ export function Editor() {
           selectedCatalogItem={selectedCatalogItem}
           onSelectCatalogItem={setSelectedCatalogItem}
           workflowStep={workflow.step}
+          projectId={id ?? null}
+          pluginSlotEntries={sidebarPluginSlots}
+          onNavigateToPath={navigate}
         />}
 
         <div className={styles.editorViewport} ref={captureRootRef}>

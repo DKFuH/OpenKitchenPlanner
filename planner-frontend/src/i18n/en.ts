@@ -35,6 +35,29 @@ export const en: Messages = {
       quoteLines: 'Quote lines',
       specificationPackages: 'Specification packages',
     },
+    backend: {
+      menu: 'Backend features',
+      quoteLines: 'Quote lines',
+      panoramaTours: 'Panorama tours',
+      specificationPackages: 'Specification packages',
+      viewerExports: 'Viewer exports',
+      presentationMode: 'Presentation',
+      cameraPanel: 'Camera panel',
+      capturePanel: 'Capture panel',
+      renderEnvironmentPanel: 'Render environment',
+      daylightPanel: 'Daylight panel',
+      materialPanel: 'Material panel',
+    },
+    plugins: {
+      menu: 'Plugins',
+    },
+    mcp: {
+      menu: 'MCP',
+      openHub: 'Open MCP hub',
+      openProjectContext: 'Open project context in MCP hub',
+      copyValidationPrompt: 'Copy validation prompt',
+      copied: 'Copied',
+    },
     workflow: {
       steps: {
         walls: 'Walls',

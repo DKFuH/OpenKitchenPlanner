@@ -58,9 +58,12 @@ export function AppShell() {
   }, [editorBridgeState, shellState])
 
   return (
-    <AppShellEditorBridgeProvider setEditorBridgeState={setEditorBridgeState}>
+    <AppShellEditorBridgeProvider
+      editorBridgeState={editorBridgeState}
+      setEditorBridgeState={setEditorBridgeState}
+    >
       <div className={styles.root}>
-        <AppHeader shellState={mergedShellState} />
+        <AppHeader shellState={mergedShellState} editorBridgeState={editorBridgeState} />
         <main className={styles.content}>
           <Outlet />
         </main>

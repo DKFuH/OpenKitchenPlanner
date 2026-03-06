@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-109-ui-workflow-full-overhaul`
 **Gruppe:** C
-**Status:** `in_progress`
+**Status:** `phase_4_completed`
 **Abhaengigkeiten:** S56, S84-S86, S87, S99, S100-S108
 
 ## Ziel
@@ -272,3 +272,35 @@ Offen (naechste Phase):
 - Editor/CAD-Toolbox Migration auf die neue Header-/Workflow-Architektur
 - Integrationsschicht (`featureRegistry`, Backend-Capability-Mapping, Error-Normalizer)
 - Plugin-/MCP-Slots in Header/Sidebar
+
+## 13. Fortschritt (Phase 2-4)
+
+Erledigt:
+
+- Editor mit `AppShell`/`AppHeader` live verdrahtet (Bridge-State fuer Workflow, Mode, Action-Matrix)
+- CAD-Toolbox als Fluent-basierte Gruppenstruktur aktiv integriert
+- Action-Matrix live in Menues, Tabs und Shortcut-Feedback mit Disabled-Reasons
+- Backend-Feature-Coverage als Header-Menue verdrahtet:
+  - `planner-frontend/src/integration/backendCapabilityMap.ts`
+  - `planner-frontend/src/components/layout/AppHeader.tsx`
+- Plugin-/MCP-Slots in Header und Sidebar integriert:
+  - `planner-frontend/src/plugins/pluginUiContract.ts`
+  - `planner-frontend/src/plugins/pluginSlotRegistry.ts`
+  - `planner-frontend/src/mcp/mcpActionBridge.ts`
+  - `planner-frontend/src/components/mcp/McpQuickActions.tsx`
+  - `planner-frontend/src/components/editor/LeftSidebar.tsx`
+
+Zusatztests (neu):
+
+- Unit:
+  - `planner-frontend/src/integration/backendCapabilityMap.test.ts`
+  - `planner-frontend/src/plugins/pluginSlotRegistry.test.ts`
+  - `planner-frontend/src/mcp/mcpActionBridge.test.ts`
+- E2E-Smoke (Header-Menues + Sidebar-Slots in einem Flow):
+  - `planner-frontend/e2e/s109-shell-smoke.spec.ts`
+  - Harness-Route: `/projects/:id/__e2e/s109-shell`
+
+Mitvalidiert:
+
+- `npm run test -- src/integration/backendCapabilityMap.test.ts src/plugins/pluginSlotRegistry.test.ts src/mcp/mcpActionBridge.test.ts` gruen
+- `npm run build` (workspace `planner-frontend`) gruen
