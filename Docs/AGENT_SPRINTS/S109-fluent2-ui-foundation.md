@@ -1,7 +1,7 @@
 # S109 Fluent 2 UI Foundation
 
 **Bezug:** Sprint 109  
-**Status:** `in_progress`  
+**Status:** `done`  
 **Quelle:** `https://fluent2.microsoft.design/`
 
 ## Ziel
@@ -11,6 +11,13 @@ Verbindliche UI-Basis fuer S109, damit alle Bereiche einheitlich umgesetzt werde
 - konsistente Komponentenwahl
 - klare Token-Regeln
 - vorhersehbare UX in allen Workflows
+
+## Umsetzungsstand (2026-03-06)
+
+- Fluent-Theme-Basis in `planner-frontend/src/theme/fluentTokens.ts` und `planner-frontend/src/theme/fluentTheme.ts` umgesetzt.
+- App auf `FluentProvider` umgestellt (`planner-frontend/src/main.tsx`).
+- Globaler AppShell/Header mit Fluent-Komponenten verdrahtet.
+- Action-Matrix + Mode-State als Shell-Grundlage integriert.
 
 ## 1. Grundregeln
 
@@ -128,4 +135,3 @@ Validierung:
 
 - Frontend-Build erfolgreich (`npm run --workspace planner-frontend build`)
 - Editor-State-Testpaket erfolgreich (`appShellState`, `actionStateResolver`, `workflowStateStore`, `editorModeStore`)
-

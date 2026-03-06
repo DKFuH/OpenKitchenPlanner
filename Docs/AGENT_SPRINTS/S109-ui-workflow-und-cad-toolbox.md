@@ -82,7 +82,7 @@ CAD-Toolbox Gruppen:
 
 - `Zeichnen`: Wall, Room, Polyline, Dimension, Label
 - `Bearbeiten`: Select, Move, Split, Join, Reverse
-- `Snap/Ausrichtung`: Grid, Magnetismus, Winkel, Längenraster
+- `Snap/Ausrichtung`: Grid, Magnetismus, Winkel, Laengenraster
 - `Objekte`: Fenster, Tueren, Moebel, Bibliothek
 
 ---
@@ -305,7 +305,7 @@ Mitvalidiert:
 - `npm run test -- src/integration/backendCapabilityMap.test.ts src/plugins/pluginSlotRegistry.test.ts src/mcp/mcpActionBridge.test.ts` gruen
 - `npm run build` (workspace `planner-frontend`) gruen
 
-## 14. Fortschritt (Phase 5 Kickoff)
+## 14. Fortschritt (Phase 5 Abschluss)
 
 Erledigt (Hardening + breitere E2E-Abdeckung):
 
@@ -324,3 +324,27 @@ Erledigt (Hardening + breitere E2E-Abdeckung):
 Betriebs-Hardening Playwright:
 
 - `planner-frontend/playwright.config.ts` nutzt `--force` im Webserver-Start, um Vite Optimize-Dep Drift im Workspace stabil zu umgehen.
+- `reuseExistingServer: false` gesetzt fuer deterministische Testlaeufe.
+
+Abschluss-Erweiterungen:
+
+- Backend-Error-E2E hinzugefuegt:
+  - `planner-frontend/e2e/s109-shell-error-cases.spec.ts`
+  - Faelle: tenant/user/project missing sowie `401`/`403`.
+- Cross-Page-Shell-Smoke hinzugefuegt:
+  - `planner-frontend/e2e/s109-shell-cross-page.spec.ts`
+  - Flow: Start/Projects -> Editor -> Presentation inklusive Header-State-Pruefungen.
+- i18n-Switch-E2E (DE/EN) hinzugefuegt:
+  - `planner-frontend/e2e/s109-shell-i18n.spec.ts`
+  - Menues + disabled reasons in beiden Sprachen.
+- Resolver auf reason-key-basierten i18n-Output gehaertet:
+  - `backendCapabilityMap.ts`
+  - `pluginSlotRegistry.ts`
+  - `mcpActionBridge.ts`
+
+Mitvalidiert:
+
+- Unit-Tests: `6/6` gruen (Resolver-Suites).
+- E2E-Matrix: `9/9` gruen (4 Specs).
+- Frontend-Build: gruen (nur bekannte Chunk-Size-Warnung).
+
