@@ -9,7 +9,7 @@ Stand: 2026-03-05
 - Sprints `S47` bis `S107`: `done`
 - Sprint `S108`: `done`
 - Zwischensprints `S108a` bis `S108f` (SH3D): `planned`
-- Sprint `S109`: `planned`
+- Sprint `S109`: `done`
 - S109 Foundation: `S109-fluent2-ui-foundation.md` vorhanden
 - Projektname in den Spezifikationen: `OKP`
 
@@ -87,4 +87,4 @@ Stand: 2026-03-05
 | 108d | `S108d-sh3d-wall-topologie-robustheit.md` | planned |
 | 108e | `S108e-sh3d-room-validation-autofix.md` | planned |
 | 108f | `S108f-sh3d-dimension-assist-und-multiview.md` | planned |
-| 109 | `S109-ui-workflow-und-cad-toolbox.md` | planned |
+| 109 | `S109-ui-workflow-und-cad-toolbox.md` | done |

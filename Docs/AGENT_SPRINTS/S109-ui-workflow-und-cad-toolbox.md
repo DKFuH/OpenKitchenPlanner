@@ -2,7 +2,7 @@
 
 **Branch:** `feature/sprint-109-ui-workflow-full-overhaul`
 **Gruppe:** C
-**Status:** `phase_5_in_progress`
+**Status:** `done`
 **Abhaengigkeiten:** S56, S84-S86, S87, S99, S100-S108
 
 ## Ziel
