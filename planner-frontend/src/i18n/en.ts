@@ -47,6 +47,22 @@ export const en: Messages = {
       renderEnvironmentPanel: 'Render environment',
       daylightPanel: 'Daylight panel',
       materialPanel: 'Material panel',
+      // Kanban commands
+      newProject: 'New project',
+      openInEditor: 'Open in editor',
+      archiveProject: 'Archive',
+      deleteProject: 'Delete',
+      statusLead: 'Lead',
+      statusPlanning: 'Planning',
+      statusQuoted: 'Quoted',
+      statusContract: 'Contract',
+      statusProduction: 'Production',
+      statusInstalled: 'Installed',
+      duplicateProject: 'Duplicate',
+      customerData: 'Customer data',
+      companySettings: 'Company settings',
+      help: 'Help',
+      about: 'About OKP',
     },
     plugins: {
       menu: 'Plugins',
@@ -153,6 +169,11 @@ export const en: Messages = {
       render: 'Render',
       daten: 'Data',
       plugins: 'Plugins',
+      // Kanban area
+      projekt: 'Project',
+      aendern: 'Edit',
+      einstellungen: 'Settings',
+      hilfe: 'Help',
     },
     contextTabs: {
       wandtools: 'Wall tools',
@@ -184,6 +205,14 @@ export const en: Messages = {
       tenantPlugins: 'Tenant plugins',
       mcpActions: 'MCP actions',
       material: 'Material',
+      // Kanban groups
+      newProject: 'New',
+      projectActions: 'Project',
+      manage: 'Manage',
+      status: 'Status',
+      projectChange: 'Project',
+      system: 'System',
+      info: 'Info',
     },
     commands: {
       new: 'New',
@@ -244,6 +273,7 @@ export const en: Messages = {
     reasons: {
       alreadyFirstStep: 'Already at the first workflow step',
       alreadyLastStep: 'Already at the last workflow step',
+      noProjectSelected: 'Please select a project first',
     },
   },
 }

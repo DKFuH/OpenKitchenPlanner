@@ -45,6 +45,22 @@ export const de = {
       renderEnvironmentPanel: 'Render-Umgebung',
       daylightPanel: 'Tageslicht-Panel',
       materialPanel: 'Material-Panel',
+      // Kanban-Befehle
+      newProject: 'Neues Projekt',
+      openInEditor: 'Im Editor öffnen',
+      archiveProject: 'Archivieren',
+      deleteProject: 'Löschen',
+      statusLead: 'Lead',
+      statusPlanning: 'Planung',
+      statusQuoted: 'Angebot',
+      statusContract: 'Auftrag',
+      statusProduction: 'Produktion',
+      statusInstalled: 'Montage',
+      duplicateProject: 'Duplizieren',
+      customerData: 'Kundendaten',
+      companySettings: 'Firmeneinstellungen',
+      help: 'Hilfe',
+      about: 'Über OKP',
     },
     plugins: {
       menu: 'Plugins',
@@ -151,6 +167,11 @@ export const de = {
       render: 'Render',
       daten: 'Daten',
       plugins: 'Plugins',
+      // Kanban-Bereich
+      projekt: 'Projekt',
+      aendern: 'Ändern',
+      einstellungen: 'Einstellungen',
+      hilfe: 'Hilfe',
     },
     contextTabs: {
       wandtools: 'Wandtools',
@@ -182,6 +203,14 @@ export const de = {
       tenantPlugins: 'Tenant-Plugins',
       mcpActions: 'MCP-Aktionen',
       material: 'Material',
+      // Kanban-Gruppen
+      newProject: 'Neu',
+      projectActions: 'Projekt',
+      manage: 'Verwalten',
+      status: 'Status',
+      projectChange: 'Projekt',
+      system: 'System',
+      info: 'Info',
     },
     commands: {
       new: 'Neu',
@@ -242,6 +271,7 @@ export const de = {
     reasons: {
       alreadyFirstStep: 'Bereits im ersten Workflow-Schritt',
       alreadyLastStep: 'Bereits im letzten Workflow-Schritt',
+      noProjectSelected: 'Bitte zuerst ein Projekt auswählen',
     },
   },
 }

@@ -1,5 +1,5 @@
 import { Body1Strong, Caption1, makeStyles, tokens } from '@fluentui/react-components'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { resolveBackendFeatureCoverage } from '../../integration/backendCapabilityMap.js'
@@ -68,7 +68,13 @@ export function RibbonShell({ shellState, editorBridgeState = null }: RibbonShel
 
   const tenantPlugins = editorBridgeState?.tenantPlugins ?? null
 
-  const [activeTabId, setActiveTabId] = useState<RibbonTabId>('start')
+  const defaultTab: RibbonTabId = shellState.area === 'kanban' ? 'projekt' : 'start'
+  const [activeTabId, setActiveTabId] = useState<RibbonTabId>(defaultTab)
+
+  // Reset to default tab when area changes
+  useEffect(() => {
+    setActiveTabId(shellState.area === 'kanban' ? 'projekt' : 'start')
+  }, [shellState.area])
   const [activeContextTabId, setActiveContextTabId] = useState<RibbonContextTabId | null>(null)
 
   const backendEntries = useMemo(
@@ -106,6 +112,7 @@ export function RibbonShell({ shellState, editorBridgeState = null }: RibbonShel
         availablePlugins,
         mcpActions,
         enabledPluginIds,
+        area: shellState.area,
         activeTabId,
       }),
     [

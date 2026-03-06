@@ -37,6 +37,7 @@ function buildRibbonInput(overrides: Partial<RibbonStateInput> = {}): RibbonStat
     availablePlugins: [],
     mcpActions: [],
     enabledPluginIds: [],
+    area: 'editor',
     activeTabId: 'start',
     ...overrides,
   }

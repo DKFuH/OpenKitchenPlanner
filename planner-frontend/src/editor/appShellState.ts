@@ -23,6 +23,16 @@ export function projectIdFromPathname(pathname: string): string | null {
   return match?.[1] ?? null
 }
 
+export type AppArea = 'kanban' | 'editor' | 'project-detail' | 'settings' | 'app'
+
+export function areaFromPathname(pathname: string): AppArea {
+  if (pathname === '/') return 'kanban'
+  if (/^\/projects\/[^/]+$/.test(pathname)) return 'editor'
+  if (/^\/projects\//.test(pathname)) return 'project-detail'
+  if (/^\/settings/.test(pathname)) return 'settings'
+  return 'app'
+}
+
 function readCompactLayoutState(breakpoint: number): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
     return false
@@ -102,6 +112,7 @@ function useCompactLayout(breakpoint = 960): boolean {
 
 export interface AppShellState {
   projectId: string | null
+  area: AppArea
   compactLayout: boolean
   mode: EditorMode
   modeLabel: string
@@ -128,6 +139,7 @@ export function useAppShellState({
   initialDrawMode = 'wallCreate',
 }: UseAppShellStateOptions): AppShellState {
   const projectId = useMemo(() => projectIdFromPathname(pathname), [pathname])
+  const area = useMemo(() => areaFromPathname(pathname), [pathname])
   const compactLayout = useCompactLayout()
 
   const workflowStore = useWorkflowStateStore({
@@ -162,6 +174,7 @@ export function useAppShellState({
   return useMemo(
     () => ({
       projectId,
+      area,
       compactLayout,
       mode: modeStore.mode,
       modeLabel: modeStore.modeLabel,

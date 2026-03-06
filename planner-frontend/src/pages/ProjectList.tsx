@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Badge,
   Body1,
@@ -255,6 +255,16 @@ export function ProjectList() {
     if (!value) return 'unbekannt'
     return new Date(value).toLocaleString(locale)
   }
+
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Auto-open create dialog when ?new=1 is in the URL (e.g. triggered from ribbon)
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setCreateOpen(true)
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   const [projects, setProjects] = useState<Project[]>([])
   const [ganttProjects, setGanttProjects] = useState<GanttProject[]>([])

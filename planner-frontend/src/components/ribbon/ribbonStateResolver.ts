@@ -1,3 +1,4 @@
+import type { AppArea } from '../../editor/appShellState.js'
 import type { EditorActionStates, ResolvedActionState } from '../../editor/actionStateResolver.js'
 import type { EditorMode } from '../../editor/editorModeStore.js'
 import type { WorkflowStep } from '../../editor/workflowStateStore.js'
@@ -19,6 +20,11 @@ export type RibbonTabId =
   | 'render'
   | 'daten'
   | 'plugins'
+  // Kanban area tabs
+  | 'projekt'
+  | 'aendern'
+  | 'einstellungen'
+  | 'hilfe'
 
 export type RibbonContextTabId =
   | 'wandtools'
@@ -86,6 +92,7 @@ export interface RibbonStateInput {
   availablePlugins: TenantPluginInfo[]
   mcpActions: McpQuickAction[]
   enabledPluginIds: string[]
+  area: AppArea
   /** The currently active primary tab (controlled externally) */
   activeTabId: RibbonTabId
 }
@@ -521,6 +528,92 @@ function buildQuickAccess(
   ]
 }
 
+
+// ---------------------------------------------------------------------------
+// Kanban Tab Builders
+// ---------------------------------------------------------------------------
+
+function buildKanbanProjektTab(projectId: string | null): RibbonTab {
+  const noSel = { enabled: false, visible: true, reasonIfDisabled: 'ribbon.reasons.noProjectSelected' }
+  const editorPath = projectId ? '/projects/' + projectId : null
+
+  const newGroup = group('kb-new', 'ribbon.groups.newProject', [
+    enabledCmd('cmd-kb-new-project', 'ribbon.commands.newProject', { targetPath: '/?new=1' }),
+  ])
+
+  const projectGroup = group('kb-project', 'ribbon.groups.projectActions', [
+    cmd(
+      'cmd-kb-open-editor',
+      'ribbon.commands.openInEditor',
+      editorPath ? { enabled: true, visible: true } : noSel,
+      { targetPath: editorPath ?? '/' },
+    ),
+    enabledCmd('cmd-kb-documents', 'ribbon.commands.documents', { targetPath: '/documents' }),
+  ])
+
+  const manageGroup = group('kb-manage', 'ribbon.groups.manage', [
+    cmd('cmd-kb-archive', 'ribbon.commands.archiveProject', noSel),
+    cmd('cmd-kb-delete', 'ribbon.commands.deleteProject', noSel),
+  ])
+
+  return {
+    id: 'projekt',
+    labelKey: 'ribbon.tabs.projekt',
+    groups: [newGroup, projectGroup, manageGroup].filter((g) => g.commands.length > 0),
+  }
+}
+
+function buildKanbanAendernTab(): RibbonTab {
+  const noSel = { enabled: false, visible: true, reasonIfDisabled: 'ribbon.reasons.noProjectSelected' }
+
+  const statusGroup = group('kb-status', 'ribbon.groups.status', [
+    cmd('cmd-kb-status-lead', 'ribbon.commands.statusLead', noSel),
+    cmd('cmd-kb-status-planning', 'ribbon.commands.statusPlanning', noSel),
+    cmd('cmd-kb-status-quoted', 'ribbon.commands.statusQuoted', noSel),
+    cmd('cmd-kb-status-contract', 'ribbon.commands.statusContract', noSel),
+    cmd('cmd-kb-status-production', 'ribbon.commands.statusProduction', noSel),
+    cmd('cmd-kb-status-installed', 'ribbon.commands.statusInstalled', noSel),
+  ])
+
+  const projectGroup = group('kb-change', 'ribbon.groups.projectChange', [
+    cmd('cmd-kb-duplicate', 'ribbon.commands.duplicateProject', noSel),
+    enabledCmd('cmd-kb-customer-data', 'ribbon.commands.customerData', { targetPath: '/contacts' }),
+  ])
+
+  return {
+    id: 'aendern',
+    labelKey: 'ribbon.tabs.aendern',
+    groups: [statusGroup, projectGroup].filter((g) => g.commands.length > 0),
+  }
+}
+
+function buildEinstellungenTab(): RibbonTab {
+  const systemGroup = group('kb-system', 'ribbon.groups.system', [
+    enabledCmd('cmd-kb-settings', 'ribbon.commands.save', { targetPath: '/settings' }),
+    enabledCmd('cmd-kb-plugins', 'ribbon.commands.pluginSettings', { targetPath: '/settings/plugins' }),
+    enabledCmd('cmd-kb-company', 'ribbon.commands.companySettings', { targetPath: '/settings/company' }),
+  ])
+
+  return {
+    id: 'einstellungen',
+    labelKey: 'ribbon.tabs.einstellungen',
+    groups: [systemGroup],
+  }
+}
+
+function buildHilfeTab(): RibbonTab {
+  const infoGroup = group('kb-info', 'ribbon.groups.info', [
+    enabledCmd('cmd-kb-help', 'ribbon.commands.help'),
+    enabledCmd('cmd-kb-about', 'ribbon.commands.about'),
+  ])
+
+  return {
+    id: 'hilfe',
+    labelKey: 'ribbon.tabs.hilfe',
+    groups: [infoGroup],
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main resolver
 // ---------------------------------------------------------------------------
@@ -535,9 +628,29 @@ export function resolveRibbonState(input: RibbonStateInput): RibbonState {
     availablePlugins,
     mcpActions,
     enabledPluginIds,
+    area,
     activeTabId,
   } = input
 
+  // Kanban area: project management tabs
+  if (area === 'kanban') {
+    return {
+      primaryTabs: [
+        buildKanbanProjektTab(projectId),
+        buildKanbanAendernTab(),
+        buildEinstellungenTab(),
+        buildHilfeTab(),
+      ],
+      contextTabs: [],
+      activeTabId,
+      activeContextTabId: null,
+      quickAccess: [
+        enabledCmd('qa-kb-new-project', 'ribbon.commands.newProject', { targetPath: '/?new=1' }),
+      ],
+    }
+  }
+
+  // Editor and other areas: CAD tabs
   const primaryTabs: RibbonTab[] = [
     buildDateiTab(projectId, actionStates),
     buildStartTab(actionStates, workflowStep),
@@ -550,7 +663,6 @@ export function resolveRibbonState(input: RibbonStateInput): RibbonState {
   ]
 
   const contextTabs = buildContextTabs(workflowStep, editorMode, actionStates, projectId)
-
   const activeContextTab = contextTabs.find((tab) => tab.active) ?? null
 
   return {
