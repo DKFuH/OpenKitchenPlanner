@@ -1,4 +1,4 @@
-import { Button, Tooltip, makeStyles, tokens } from '@fluentui/react-components'
+import { Button, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, Tooltip, makeStyles, tokens } from '@fluentui/react-components'
 import { useTranslation } from 'react-i18next'
 import type { RibbonCommand as RibbonCommandType } from './ribbonStateResolver.js'
 
@@ -31,6 +31,36 @@ export function RibbonCommand({ command, onExecute, compact = false }: RibbonCom
 
   const label = t(command.labelKey)
   const disabledReason = !command.enabled && command.reasonKey ? t(command.reasonKey) : undefined
+
+  // Dropdown menu button (e.g. MCP actions)
+  if (command.subCommands && command.subCommands.length > 0) {
+    return (
+      <Menu>
+        <MenuTrigger disableButtonEnhancement>
+          <Button
+            appearance='subtle'
+            className={compact ? styles.compactButton : styles.button}
+            data-testid={`ribbon-cmd-${command.id}`}
+          >
+            {label}
+          </Button>
+        </MenuTrigger>
+        <MenuPopover>
+          <MenuList>
+            {command.subCommands.map((sub) => (
+              <MenuItem
+                key={sub.id}
+                disabled={!sub.enabled}
+                onClick={() => { if (sub.enabled) onExecute(sub) }}
+              >
+                {t(sub.labelKey)}
+              </MenuItem>
+            ))}
+          </MenuList>
+        </MenuPopover>
+      </Menu>
+    )
+  }
 
   const button = (
     <Button

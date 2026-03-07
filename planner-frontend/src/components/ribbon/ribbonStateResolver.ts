@@ -54,6 +54,8 @@ export interface RibbonCommand {
   kanbanAction?: string
   /** For editor view/panel actions: "view:2d", "panel:camera", etc. */
   editorAction?: string
+  /** Nested commands rendered as a dropdown menu */
+  subCommands?: RibbonCommand[]
 }
 
 export interface RibbonGroup {
@@ -420,9 +422,19 @@ function buildPluginsTab(
     clipboardText: action.prompt,
   }))
 
-  const mcpGroup = group('plugins-mcp', 'ribbon.groups.mcpActions', [
-    ...mcpCommands,
-  ])
+  const mcpMenuButton: RibbonCommand | null = mcpCommands.length > 0
+    ? {
+        id: 'mcp-menu',
+        labelKey: 'ribbon.groups.mcpActions',
+        enabled: true,
+        visible: true,
+        subCommands: mcpCommands,
+      }
+    : null
+
+  const mcpGroup = group('plugins-mcp', 'ribbon.groups.mcpActions',
+    mcpMenuButton ? [mcpMenuButton] : [],
+  )
 
   return {
     id: 'plugins',
@@ -614,8 +626,8 @@ function buildEinstellungenTab(): RibbonTab {
 
 function buildHilfeTab(): RibbonTab {
   const infoGroup = group('kb-info', 'ribbon.groups.info', [
-    enabledCmd('cmd-kb-help', 'ribbon.commands.help'),
-    enabledCmd('cmd-kb-about', 'ribbon.commands.about'),
+    enabledCmd('cmd-kb-help', 'ribbon.commands.help', { targetPath: '/settings/mcp' }),
+    enabledCmd('cmd-kb-about', 'ribbon.commands.about', { targetPath: '/settings' }),
   ])
 
   return {
