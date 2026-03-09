@@ -817,6 +817,7 @@ export function Editor() {
         setMaterialsEnabled(result.enabled.includes('materials'))
         setStairsEnabled(result.enabled.includes('stairs'))
         setMultilevelDocsEnabled(result.enabled.includes('multilevel-docs'))
+        setAcousticEnabled(result.enabled.includes('raumakustik'))
       })
       .catch(() => {
         if (!active) return
@@ -826,6 +827,7 @@ export function Editor() {
         setMaterialsEnabled(false)
         setStairsEnabled(false)
         setMultilevelDocsEnabled(false)
+        setAcousticEnabled(false)
       })
 
     return () => {

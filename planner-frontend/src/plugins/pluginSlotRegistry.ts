@@ -8,6 +8,7 @@ const PROJECT_SCOPED_PLUGIN_IDS = new Set([
   'materials',
   'stairs',
   'multilevel-docs',
+  'raumakustik',
   'feng-shui',
 ])
 
@@ -27,6 +28,10 @@ function resolvePluginPath(pluginId: string, projectId: string | null): string |
       return projectId ? `/projects/${projectId}` : null
     case 'multilevel-docs':
       return projectId ? `/projects/${projectId}?panel=areas` : null
+    case 'raumakustik':
+      return projectId ? '/projects/' + projectId + '?panel=acoustics' : null
+    case 'survey-import':
+      return '/site-surveys'
     case 'feng-shui':
       return projectId ? `/projects/${projectId}/feng-shui` : null
     case 'asset-library':

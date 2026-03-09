@@ -131,6 +131,16 @@ const PLUGIN_META: Record<string, PluginMeta> = {
     description: 'Feng Shui Analyse mit Bagua-Zonen, Befunden und Optimierungshinweisen.',
     category: 'Analyse',
   },
+  'raumakustik': {
+    emoji: '🔊',
+    description: 'Raumakustik-Analyse mit Nachhallzeit, Absorption und Optimierungshinweisen.',
+    category: 'Analyse',
+  },
+  'survey-import': {
+    emoji: '📏',
+    description: 'Aufmaß-Import aus Laserscanner-Daten und Bestandsplänen.',
+    category: 'Architektur',
+  },
 }
 
 const CATEGORY_ORDER: PluginMeta['category'][] = [
