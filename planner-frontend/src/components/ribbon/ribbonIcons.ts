@@ -5,6 +5,8 @@
 import type { FluentIcon } from '@fluentui/react-icons'
 import {
   AddRegular,
+  ArrowUploadRegular,
+  BuildingRegular,
   AppsRegular,
   ArchiveRegular,
   ArrowMaximizeRegular,
@@ -73,6 +75,12 @@ export const RIBBON_ICONS: Record<string, FluentIcon> = {
   'cmd-insert-label': DocumentRegular,
   'cmd-insert-dim': RulerRegular,
   'cmd-asset-library': GridRegular,
+  'cmd-insert-stairs': BuildingRegular,
+  'cmd-insert-roof-slope': BuildingRegular,
+  'cmd-import-file': ArrowUploadRegular,
+  'cmd-import-dxf': ArrowUploadRegular,
+  'cmd-import-ifc': ArrowUploadRegular,
+  'cmd-import-sketchup': ArrowUploadRegular,
 
   // CAD tab
   'cmd-wall': PentagonRegular,

@@ -249,10 +249,29 @@ function buildEinfuegenTab(_projectId: string | null): RibbonTab {
     }),
   ])
 
+  const architekturGroup = group('einfuegen-architektur', 'ribbon.groups.architektur', [
+    { id: 'cmd-insert-stairs', labelKey: 'ribbon.commands.insertStairs', enabled: true, visible: true, editorAction: 'panel:stairs' },
+    { id: 'cmd-insert-roof-slope', labelKey: 'ribbon.commands.insertRoofSlope', enabled: true, visible: true, editorAction: 'panel:sections' },
+  ])
+
+  const importGroup = group('einfuegen-import', 'ribbon.groups.import', [
+    {
+      id: 'cmd-import-file',
+      labelKey: 'ribbon.commands.importFile',
+      enabled: true,
+      visible: true,
+      subCommands: [
+        { id: 'cmd-import-dxf', labelKey: 'ribbon.commands.importDxf', enabled: true, visible: true, editorAction: 'cmd:importDxf' },
+        { id: 'cmd-import-ifc', labelKey: 'ribbon.commands.importIfc', enabled: true, visible: true, editorAction: 'cmd:importIfc' },
+        { id: 'cmd-import-sketchup', labelKey: 'ribbon.commands.importSketchup', enabled: true, visible: true, editorAction: 'cmd:importSketchup' },
+      ],
+    },
+  ])
+
   return {
     id: 'einfuegen',
     labelKey: 'ribbon.tabs.einfuegen',
-    groups: [elementeGroup, annotationGroup, assetsGroup].filter((g) => g.commands.length > 0),
+    groups: [elementeGroup, annotationGroup, assetsGroup, architekturGroup, importGroup].filter((g) => g.commands.length > 0),
   }
 }
 

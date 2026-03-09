@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Vertex, Point2D } from '@shared/types'
 import type { Opening } from '../../api/openings.js'
 import type { Placement } from '../../api/placements.js'
@@ -283,6 +283,7 @@ interface Props {
     rotation_deg?: number
   }) => void
   onSyncDrawingGroupConfig: (groupId: string, config: DrawingGroupConfigPatch) => void
+  catalogPanel?: ReactNode
 }
 
 export function RightSidebar({
@@ -347,6 +348,7 @@ export function RightSidebar({
   onDeleteDrawingGroup,
   onApplyDrawingGroupTransform,
   onSyncDrawingGroupConfig,
+  catalogPanel,
 }: Props) {
   const styles = useStyles()
   const activeLevel = levels.find((level) => level.id === activeLevelId) ?? null
@@ -428,6 +430,7 @@ export function RightSidebar({
 
   return (
     <aside className={styles.sidebar}>
+      {catalogPanel}
       <VisibilityPanel
         activeLevelName={activeLevel?.name ?? null}
         activeLevelVisible={activeLevel ? activeLevel.visible : null}

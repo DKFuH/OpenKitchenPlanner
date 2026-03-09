@@ -64,6 +64,7 @@ import { DaylightPanel } from '../components/editor/DaylightPanel.js'
 import { RenderEnvironmentPanel } from '../components/editor/RenderEnvironmentPanel.js'
 import { MaterialPanel } from '../components/editor/MaterialPanel.js'
 import { LeftSidebar } from '../components/editor/LeftSidebar.js'
+import { CatalogSidePanel } from '../components/editor/CatalogSidePanel.js'
 import { CadToolbox } from '../components/editor/CadToolbox.js'
 import { LevelsPanel } from '../components/editor/LevelsPanel.js'
 import { StairsPanel } from '../components/editor/StairsPanel.js'
@@ -424,7 +425,9 @@ export function Editor() {
   const [materialsEnabled, setMaterialsEnabled] = useState(false)
   const [materialPanelOpen, setMaterialPanelOpen] = useState(false)
   const [stairsEnabled, setStairsEnabled] = useState(false)
+  const [stairsPanelOpen, setStairsPanelOpen] = useState(false)
   const [multilevelDocsEnabled, setMultilevelDocsEnabled] = useState(false)
+  const [sectionsPanelOpen, setSectionsPanelOpen] = useState(false)
   const [verticalConnections, setVerticalConnections] = useState<VerticalConnection[]>([])
   const [sectionLines, setSectionLines] = useState<SectionLine[]>([])
   const [selectedSectionLineId, setSelectedSectionLineId] = useState<string | null>(null)
@@ -1357,6 +1360,8 @@ export function Editor() {
         else if (panel === 'material') setMaterialPanelOpen((prev) => !prev)
         else if (panel === 'leftSidebar') setLeftSidebarVisible((prev) => !prev)
         else if (panel === 'rightSidebar') setRightSidebarVisible((prev) => !prev)
+        else if (panel === 'stairs') setStairsPanelOpen((prev) => !prev)
+        else if (panel === 'sections') setSectionsPanelOpen((prev) => !prev)
       },
       onEditorCommand: (cmd) => {
         if (cmd === 'cmd:screenshot') void handleCaptureScreenshot()
@@ -3158,6 +3163,38 @@ export function Editor() {
         </div>
       )}
 
+
+      {stairsPanelOpen && (
+        <div className={styles.navigationDock}>
+          <StairsPanel
+            enabled={stairsEnabled}
+            levels={levels}
+            connections={verticalConnections}
+            activeLevelId={activeLevelId}
+            selectedRoomId={selectedRoomId}
+            onCreate={handleCreateVerticalConnection}
+            onUpdate={handleUpdateVerticalConnection}
+            onDelete={handleDeleteVerticalConnection}
+          />
+        </div>
+      )}
+
+      {sectionsPanelOpen && (
+        <div className={styles.navigationDock}>
+          <SectionPanel
+            enabled={multilevelDocsEnabled}
+            hasSelectedRoom={Boolean(selectedRoomId)}
+            activeLevelId={activeLevelId}
+            levels={levels}
+            sections={sectionLines}
+            selectedSectionId={selectedSectionLineId}
+            onSelect={setSelectedSectionLineId}
+            onCreate={handleCreateSectionLine}
+            onUpdate={handleUpdateSectionLine}
+            onDelete={handleDeleteSectionLine}
+          />
+        </div>
+      )}
       {navigationPanelOpen && (
         <div className={styles.navigationDock}>
           <NavigationSettingsPanel
@@ -3221,39 +3258,10 @@ export function Editor() {
               onCreateLevel={handleCreateLevel}
             />
           )}
-          stairsPanel={(
-            <StairsPanel
-              enabled={stairsEnabled}
-              levels={levels}
-              connections={verticalConnections}
-              activeLevelId={activeLevelId}
-              selectedRoomId={selectedRoomId}
-              onCreate={handleCreateVerticalConnection}
-              onUpdate={handleUpdateVerticalConnection}
-              onDelete={handleDeleteVerticalConnection}
-            />
-          )}
-          sectionsPanel={(
-            <SectionPanel
-              enabled={multilevelDocsEnabled}
-              hasSelectedRoom={Boolean(selectedRoomId)}
-              activeLevelId={activeLevelId}
-              levels={levels}
-              sections={sectionLines}
-              selectedSectionId={selectedSectionLineId}
-              onSelect={setSelectedSectionLineId}
-              onCreate={handleCreateSectionLine}
-              onUpdate={handleUpdateSectionLine}
-              onDelete={handleDeleteSectionLine}
-            />
-          )}
           rooms={roomsOnActiveLevel}
           selectedRoomId={selectedRoomId}
           onSelectRoom={setSelectedRoomId}
           onAddRoom={handleAddRoom}
-          selectedCatalogItem={selectedCatalogItem}
-          onSelectCatalogItem={setSelectedCatalogItem}
-          workflowStep={workflow.step}
           projectId={id ?? null}
           pluginSlotEntries={sidebarPluginSlots}
           onNavigateToPath={navigate}
@@ -3371,6 +3379,7 @@ export function Editor() {
           onDeleteDrawingGroup={handleDeleteDrawingGroup}
           onApplyDrawingGroupTransform={handleApplyDrawingGroupTransform}
           onSyncDrawingGroupConfig={handleSyncDrawingGroupConfig}
+          catalogPanel={<CatalogSidePanel projectId={id ?? null} selectedCatalogItem={selectedCatalogItem} onSelectCatalogItem={setSelectedCatalogItem} workflowStep={workflow.step} />}
         />}
       </div>
 

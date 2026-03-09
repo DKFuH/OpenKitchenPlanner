@@ -119,11 +119,6 @@ export function S109ShellHarnessPage() {
           onAddRoom={() => {
             // no-op in harness mode
           }}
-          selectedCatalogItem={null}
-          onSelectCatalogItem={() => {
-            // no-op in harness mode
-          }}
-          workflowStep='walls'
           pluginSlotEntries={sidebarSlots}
           onNavigateToPath={(path) => {
             setLastSidebarPath(path)
