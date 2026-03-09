@@ -6,7 +6,158 @@ import {
   type CatalogItemType,
 } from '../../api/catalog.js'
 import { useLocale } from '../../hooks/useLocale.js'
-import styles from './CatalogBrowser.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.75rem',
+    boxShadow: tokens.shadow8,
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.95rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  filters: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 180px',
+    gap: '0.5rem',
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  searchInput: {
+    width: '100%',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.85rem',
+    padding: '0.45rem 0.55rem',
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  typeSelect: {
+    width: '100%',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.85rem',
+    padding: '0.45rem 0.55rem',
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  content: {
+    display: 'grid',
+    gridTemplateColumns: '1.2fr 1fr',
+    gap: '0.75rem',
+    minHeight: '280px',
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  listWrap: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: '0.6rem',
+    background: tokens.colorNeutralBackground2,
+  },
+  details: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: '0.6rem',
+    background: tokens.colorNeutralBackground2,
+  },
+  list: {
+    listStyle: 'none',
+    padding: '0',
+    margin: '0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem',
+    maxHeight: '340px',
+    overflow: 'auto',
+  },
+  itemBtn: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '0.2rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.5rem',
+    textAlign: 'left',
+    cursor: 'pointer',
+  },
+  itemBtnActive: {
+    boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+  },
+  itemName: {
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.86rem',
+    fontWeight: '600',
+  },
+  itemMeta: {
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.78rem',
+  },
+  itemPrice: {
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.8rem',
+  },
+  detailTitle: {
+    margin: '0 0 0.5rem 0',
+    fontSize: '0.85rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  detailGrid: {
+    margin: '0',
+    display: 'grid',
+    gridTemplateColumns: 'minmax(120px, auto) 1fr',
+    gap: '0.3rem 0.5rem',
+    fontSize: '0.8rem',
+    '& dt': {
+      color: tokens.colorNeutralForeground3,
+      fontWeight: '600',
+    },
+    '& dd': {
+      margin: '0',
+      color: tokens.colorNeutralForeground1,
+      wordBreak: 'break-word',
+    },
+  },
+  muted: {
+    margin: '0',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.82rem',
+  },
+  error: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.82rem',
+  },
+})
 
 interface Props {
   initialType?: CatalogItemType | ''
@@ -34,7 +185,10 @@ function formatPrice(value: number, locale: string): string {
   }).format(value)
 }
 
-export function CatalogBrowser({ initialType = '', initialQuery = '', pageSize = 50 }: Props) {
+export function CatalogBrowser({
+initialType = '', initialQuery = '', pageSize = 50 }: Props) {
+  const styles = useStyles();
+
   const [typeFilter, setTypeFilter] = useState<CatalogItemType | ''>(initialType)
   const [query, setQuery] = useState(initialQuery)
   const { locale } = useLocale()

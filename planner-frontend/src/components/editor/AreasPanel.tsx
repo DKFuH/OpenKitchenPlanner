@@ -1,6 +1,289 @@
 import { useCallback, useEffect, useState } from 'react'
 import { areasApi, type Area, type Alternative, type ModelSettings } from '../../api/areas.js'
-import styles from './AreasPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    fontFamily: 'var(--font-sans)',
+    fontSize: '0.9rem',
+  },
+  toolbar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0.5rem 0.75rem',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+  },
+  title: {
+    fontSize: '0.85rem',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    color: tokens.colorNeutralForeground3,
+  },
+  info: {
+    padding: '1rem',
+    color: tokens.colorNeutralForeground3,
+    textAlign: 'center',
+  },
+  error: {
+    margin: '0.5rem 0.75rem',
+    padding: '0.5rem 0.75rem',
+    background: tokens.colorPaletteRedBackground1,
+    color: tokens.colorPaletteRedForeground1,
+    border: '1px solid var(--status-danger-border)',
+    borderRadius: tokens.borderRadiusSmall,
+    fontSize: '0.82rem',
+  },
+  btnAdd: {
+    padding: '0.3rem 0.65rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusCircular,
+    background: tokens.colorNeutralBackground1,
+    cursor: 'pointer',
+    fontSize: '0.82rem',
+    color: tokens.colorNeutralForeground1,
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+  },
+  tree: {
+    listStyle: 'none',
+    margin: '0',
+    padding: '0 0.5rem',
+  },
+  areaNode: {
+    marginBottom: '0.25rem',
+  },
+  areaHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.35rem 0.5rem',
+    borderRadius: tokens.borderRadiusSmall,
+    cursor: 'pointer',
+    userSelect: 'none',
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+  },
+  treeToggle: {
+    fontSize: '0.75rem',
+    color: tokens.colorNeutralForeground3,
+    width: '1rem',
+    textAlign: 'center',
+  },
+  areaName: {
+    flex: '1',
+    fontWeight: '600',
+    fontSize: '0.88rem',
+  },
+  btnAddAlt: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '1rem',
+    padding: '0 0.2rem',
+    lineHeight: '1',
+    borderRadius: tokens.borderRadiusSmall,
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      background: tokens.colorNeutralBackground2,
+    },
+  },
+  altList: {
+    listStyle: 'none',
+    margin: '0 0 0 1.25rem',
+    padding: '0',
+  },
+  altNode: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.3rem 0.5rem',
+    borderRadius: tokens.borderRadiusSmall,
+    cursor: 'default',
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+  },
+  altActive: {
+    background: `color-mix(in srgb, ${tokens.colorBrandForeground1} 10%, transparent)`,
+    fontWeight: '600',
+  },
+  altName: {
+    flex: '1',
+    fontSize: '0.86rem',
+  },
+  btnSettings: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.9rem',
+    padding: '0.1rem 0.3rem',
+    borderRadius: tokens.borderRadiusSmall,
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+      color: tokens.colorBrandForeground1,
+    },
+  },
+  emptyAlt: {
+    padding: '0.5rem 0.75rem',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.82rem',
+    fontStyle: 'italic',
+  },
+  emptyTree: {
+    padding: '0.5rem 0.75rem',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.82rem',
+    fontStyle: 'italic',
+  },
+  contextMenu: {
+    position: 'fixed',
+    zIndex: '9999',
+    minWidth: '13rem',
+    padding: '0.35rem 0',
+    background: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    boxShadow: tokens.shadow8,
+  },
+  ctxItem: {
+    display: 'block',
+    width: '100%',
+    padding: '0.45rem 1rem',
+    textAlign: 'left',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.88rem',
+    color: tokens.colorNeutralForeground1,
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+  },
+  ctxItemDanger: {
+    display: 'block',
+    width: '100%',
+    padding: '0.45rem 1rem',
+    textAlign: 'left',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '0.88rem',
+    color: tokens.colorPaletteRedForeground1,
+    '&:hover': {
+      background: tokens.colorPaletteRedBackground1,
+    },
+  },
+  dialogOverlay: {
+    position: 'fixed',
+    inset: '0',
+    zIndex: '10000',
+    background: 'rgba(0, 0, 0, 0.4)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dialog: {
+    width: 'min(48rem, 95vw)',
+    maxHeight: '85vh',
+    overflowY: 'auto',
+    background: tokens.colorNeutralBackground1,
+    borderRadius: tokens.borderRadiusLarge,
+    boxShadow: tokens.shadow8,
+    padding: '1.5rem',
+  },
+  dialogTitle: {
+    margin: '0 0 1rem',
+    fontSize: '1.1rem',
+  },
+  dialogTabs: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))',
+    gap: '1.25rem',
+  },
+  dialogSection: {
+    '& h4': {
+      margin: '0 0 0.5rem',
+      fontSize: '0.85rem',
+      textTransform: 'uppercase',
+      letterSpacing: '0.06em',
+      color: tokens.colorNeutralForeground3,
+      borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+      paddingBottom: '0.35rem',
+    },
+  },
+  field: {
+    display: 'grid',
+    gap: '0.3rem',
+    marginBottom: '0.65rem',
+    '& span': {
+      fontSize: '0.8rem',
+      color: tokens.colorNeutralForeground3,
+    },
+    '& input[type=\'text\']': {
+      width: '100%',
+      padding: '0.45rem 0.65rem',
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderRadius: tokens.borderRadiusSmall,
+      fontSize: '0.9rem',
+      background: tokens.colorNeutralBackground1,
+    },
+    '& input[type=\'number\']': {
+      width: '100%',
+      padding: '0.45rem 0.65rem',
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderRadius: tokens.borderRadiusSmall,
+      fontSize: '0.9rem',
+      background: tokens.colorNeutralBackground1,
+    },
+  },
+  fieldCheckbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gridTemplateColumns: 'auto 1fr',
+    gap: '0.5rem',
+  },
+  dialogActions: {
+    display: 'flex',
+    gap: '0.6rem',
+    justifyContent: 'flex-end',
+    marginTop: '1.25rem',
+    paddingTop: '1rem',
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+  },
+  btnPrimary: {
+    padding: '0.55rem 1rem',
+    borderRadius: tokens.borderRadiusCircular,
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    border: 'none',
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+  btnSecondary: {
+    padding: '0.55rem 1rem',
+    borderRadius: tokens.borderRadiusCircular,
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+  },
+})
 
 interface Props {
   projectId: string
@@ -20,7 +303,10 @@ const EMPTY_SETTINGS: ModelSettings = {
   extra_json: {},
 }
 
-export function AreasPanel({ projectId, onOpenAlternative }: Props) {
+export function AreasPanel({
+projectId, onOpenAlternative }: Props) {
+  const styles = useStyles();
+
   const [areas, setAreas] = useState<Area[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

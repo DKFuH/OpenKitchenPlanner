@@ -1,5 +1,94 @@
 import type { ProjectEnvironment, SunPreview } from '../../plugins/daylight/index.js'
-import styles from './DaylightPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    background: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow8,
+    padding: '12px',
+    display: 'grid',
+    gap: '10px',
+  },
+  title: {
+    margin: '0',
+    fontSize: '14px',
+    fontWeight: '600',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '8px',
+  },
+  field: {
+    display: 'grid',
+    gap: '4px',
+    fontSize: '12px',
+    color: tokens.colorNeutralForeground3,
+    '& input': {
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderRadius: tokens.borderRadiusSmall,
+      background: tokens.colorNeutralBackground1,
+      padding: '6px 8px',
+      fontSize: '13px',
+    },
+  },
+  fieldFull: {
+    gridColumn: '1 / -1',
+  },
+  slider: {
+    width: '100%',
+  },
+  toggle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '13px',
+  },
+  actions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+  },
+  btnPrimary: {
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '6px 10px',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.65',
+      cursor: 'not-allowed',
+    },
+  },
+  btnSecondary: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '6px 10px',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.65',
+      cursor: 'not-allowed',
+    },
+  },
+  meta: {
+    display: 'flex',
+    gap: '8px',
+    flexWrap: 'wrap',
+    fontSize: '12px',
+    color: tokens.colorNeutralForeground3,
+  },
+  pill: {
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    borderRadius: tokens.borderRadiusCircular,
+    padding: '3px 8px',
+    background: tokens.colorNeutralBackground2,
+  },
+})
 
 interface Props {
   environment: ProjectEnvironment
@@ -34,7 +123,7 @@ function toNumber(value: string): number | null {
 }
 
 export function DaylightPanel({
-  environment,
+environment,
   preview,
   loadingPreview,
   savingEnvironment,
@@ -42,6 +131,8 @@ export function DaylightPanel({
   onSave,
   onRefreshPreview,
 }: Props) {
+  const styles = useStyles();
+
   return (
     <section className={styles.panel}>
       <h3 className={styles.title}>Tageslicht</h3>

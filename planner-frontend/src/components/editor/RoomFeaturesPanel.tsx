@@ -10,7 +10,171 @@ import type {
   LightSource,
 } from '@shared/types'
 import { annotationsApi, worktopsApi, roomDecorationApi, lightingApi } from '../../api/rooms.js'
-import styles from './RoomFeaturesPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  section: {
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+  },
+  collapseHeader: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0.6rem 0.75rem',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    textAlign: 'left',
+    color: tokens.colorNeutralForeground1,
+    '&:hover': {
+      background: 'var(--surface-hover)',
+    },
+  },
+  sectionTitle: {
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    color: tokens.colorNeutralForeground3,
+    letterSpacing: '0.05em',
+  },
+  subTitle: {
+    fontSize: '0.72rem',
+    fontWeight: '600',
+    color: tokens.colorNeutralForeground3,
+    textTransform: 'uppercase',
+    margin: '0.4rem 0.75rem 0.3rem',
+    letterSpacing: '0.04em',
+  },
+  muted: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+    margin: '0 0.75rem 0.5rem',
+  },
+  error: {
+    fontSize: '0.8rem',
+    color: tokens.colorPaletteRedForeground1,
+    margin: '0 0.75rem 0.4rem',
+  },
+  list: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+    margin: '0 0.75rem 0.5rem',
+  },
+  listItem: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.4rem 0.5rem',
+    fontSize: '0.8rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+    '& strong': {
+      color: tokens.colorNeutralForeground1,
+      fontSize: '0.82rem',
+    },
+  },
+  dim: {
+    fontSize: '0.75rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  addBtn: {
+    width: 'calc(100% - 1.5rem)',
+    margin: '0 0.75rem 0.6rem',
+    background: 'none',
+    border: `1px dashed ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.3rem',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+    cursor: 'pointer',
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  deleteBtn: {
+    alignSelf: 'flex-start',
+    marginTop: '0.15rem',
+    padding: '0.15rem 0.5rem',
+    border: '1px solid var(--status-danger-border)',
+    borderRadius: tokens.borderRadiusSmall,
+    background: 'none',
+    color: tokens.colorPaletteRedForeground1,
+    cursor: 'pointer',
+    fontSize: '0.72rem',
+    '&:hover': {
+      background: tokens.colorPaletteRedBackground1,
+    },
+  },
+  colorGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.3rem',
+    margin: '0 0.75rem 0.5rem',
+  },
+  colorRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  colorInput: {
+    width: '2rem',
+    height: '1.4rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    cursor: 'pointer',
+    padding: '0',
+  },
+  lightDetails: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.15rem',
+  },
+  lightChip: {
+    fontSize: '0.72rem',
+    color: tokens.colorNeutralForeground3,
+    background: tokens.colorNeutralBackground2,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.1rem 0.3rem',
+  },
+  inlineForm: {
+    display: 'flex',
+    gap: '0.3rem',
+    margin: '0.3rem 0.75rem 0.6rem',
+  },
+  inlineInput: {
+    flex: '1',
+    padding: '0.25rem 0.4rem',
+    fontSize: '0.8rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    '&:focus': {
+      outline: 'none',
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  btnAdd: {
+    padding: '0.25rem 0.6rem',
+    fontSize: '0.85rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    cursor: 'pointer',
+    '&:hover': {
+      background: tokens.colorBrandForeground1,
+      color: '#fff',
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  subTitleSpaced: {
+    marginTop: '0.75rem',
+  },
+})
 
 // ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
 
@@ -33,7 +197,8 @@ interface Props {
   roomId: string
 }
 
-export function RoomFeaturesPanel({ roomId }: Props) {
+export function RoomFeaturesPanel({
+roomId }: Props) {
   return (
     <>
       <WorktopsSection roomId={roomId} />
@@ -47,6 +212,8 @@ export function RoomFeaturesPanel({ roomId }: Props) {
 // ─── Arbeitsflächen (Sprint 36) ──────────────────────────────────────────────
 
 function WorktopsSection({ roomId }: { roomId: string }) {
+  const styles = useStyles();
+
   const [worktops, setWorktops] = useState<WorktopSchema[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -129,6 +296,8 @@ function WorktopsSection({ roomId }: { roomId: string }) {
 // ─── Annotationen (Sprint 37) ────────────────────────────────────────────────
 
 function AnnotationsSection({ roomId }: { roomId: string }) {
+  const styles = useStyles();
+
   const [measureLines, setMeasureLines] = useState<MeasureLine[]>([])
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(false)
@@ -271,6 +440,8 @@ function AnnotationsSection({ roomId }: { roomId: string }) {
 // ─── Raumgestaltung (Sprint 38) ──────────────────────────────────────────────
 
 function RoomDecorationSection({ roomId }: { roomId: string }) {
+  const styles = useStyles();
+
   const [coloring, setColoring] = useState<RoomColoring | null>(null)
   const [decoObjects, setDecoObjects] = useState<DecoObject[]>([])
   const [loading, setLoading] = useState(false)
@@ -381,6 +552,8 @@ function RoomDecorationSection({ roomId }: { roomId: string }) {
 // ─── Beleuchtung (Sprint 39) ─────────────────────────────────────────────────
 
 function LightingSection({ roomId }: { roomId: string }) {
+  const styles = useStyles();
+
   const [profiles, setProfiles] = useState<LightingProfile[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

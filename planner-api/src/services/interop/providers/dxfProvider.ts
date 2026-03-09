@@ -12,6 +12,9 @@ export const dxfProvider: InteropProvider = {
   format: 'dxf',
   getCapabilities() {
     return {
+      provider_id: 'core.dxf',
+      provider_kind: 'embedded',
+      availability: 'stable',
       format: 'dxf',
       import_preview: true,
       import_execute: true,
@@ -20,6 +23,8 @@ export const dxfProvider: InteropProvider = {
       native_write: true,
       review_required_by_default: false,
       artifact_kind: 'cad',
+      import_delivery_mode: 'native',
+      export_delivery_mode: 'native',
     }
   },
   async importPreview(request) {
@@ -55,11 +60,15 @@ export const dxfProvider: InteropProvider = {
     const filename = trimmed.toLowerCase().endsWith('.dxf') ? trimmed : `${trimmed}.dxf`
 
     return {
+      provider_id: 'core.dxf',
       format: 'dxf',
+      artifact_kind: 'cad',
+      delivery_mode: 'native',
       content_type: 'application/dxf; charset=utf-8',
       filename,
       body: dxf,
       native: true,
+      review_required: false,
     }
   },
 }

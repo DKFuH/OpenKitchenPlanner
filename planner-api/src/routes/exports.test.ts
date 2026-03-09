@@ -92,6 +92,9 @@ describe('exportRoutes', () => {
     expect(response.statusCode).toBe(200)
     expect(response.headers['content-disposition']).toContain('kitchen-plan.dxf')
     expect(response.headers['content-type']).toContain('application/dxf')
+    expect(response.headers['x-okp-provider-id']).toBe('core.dxf')
+    expect(response.headers['x-okp-artifact-kind']).toBe('cad')
+    expect(response.headers['x-okp-delivery-mode']).toBe('native')
     expect(response.body).toContain('OKP_ROOM')
     expect(response.body).toContain('OKP_OPENINGS')
 
@@ -138,6 +141,8 @@ describe('exportRoutes', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.headers['x-okp-export-fallback']).toBe('dwg->dxf')
+    expect(response.headers['x-okp-provider-id']).toBe('core.dwg')
+    expect(response.headers['x-okp-delivery-mode']).toBe('fallback')
     expect(response.headers['content-disposition']).toContain('kitchen-plan.dxf')
     expect(response.headers['content-type']).toContain('application/dxf')
     expect(response.body).toContain('ENTITIES')
@@ -185,6 +190,9 @@ describe('exportRoutes', () => {
     expect(response.statusCode).toBe(200)
     expect(response.headers['content-disposition']).toContain('kitchen-plan.skp.rb')
     expect(response.headers['content-type']).toContain('application/ruby')
+    expect(response.headers['x-okp-provider-id']).toBe('core.skp')
+    expect(response.headers['x-okp-artifact-kind']).toBe('script')
+    expect(response.headers['x-okp-delivery-mode']).toBe('script')
     expect(response.body).toContain('Sketchup.active_model')
 
     await app.close()
@@ -203,6 +211,34 @@ describe('exportRoutes', () => {
 
     expect(response.statusCode).toBe(403)
     expect(response.json()).toMatchObject({ error: 'FORBIDDEN' })
+
+    await app.close()
+  })
+
+  it('returns a JSON export descriptor for project-scoped DWG artifacts', async () => {
+    const app = Fastify()
+    await app.register(tenantMiddleware)
+    await app.register(exportRoutes, { prefix: '/api/v1' })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/projects/${projectId}/export-descriptor/dwg`,
+      headers: { 'x-tenant-id': tenantId },
+      payload: createPayload(),
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toMatchObject({
+      provider_id: 'core.dwg',
+      format: 'dwg',
+      artifact_kind: 'cad',
+      delivery_mode: 'fallback',
+      filename: 'kitchen-plan.dxf',
+      content_type: 'application/dxf; charset=utf-8',
+      native: false,
+      review_required: false,
+      fallback_of: 'dwg',
+    })
 
     await app.close()
   })

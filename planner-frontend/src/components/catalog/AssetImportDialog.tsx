@@ -5,7 +5,109 @@ import {
   type AssetCategory,
   type AssetLibraryItem,
 } from '../../plugins/assetLibrary/index.js'
-import styles from './AssetImportDialog.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  overlay: {
+    position: 'fixed',
+    inset: '0',
+    background: 'rgba(0, 0, 0, 0.45)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: '1200',
+  },
+  dialog: {
+    width: 'min(420px, calc(100vw - 2rem))',
+    background: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    boxShadow: tokens.shadow16,
+    padding: '0.8rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.55rem',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.92rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  field: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+    '& input': {
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      background: tokens.colorNeutralBackground1,
+      color: tokens.colorNeutralForeground1,
+      borderRadius: tokens.borderRadiusSmall,
+      fontSize: '0.82rem',
+      padding: '0.38rem 0.45rem',
+    },
+    '& select': {
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      background: tokens.colorNeutralBackground1,
+      color: tokens.colorNeutralForeground1,
+      borderRadius: tokens.borderRadiusSmall,
+      fontSize: '0.82rem',
+      padding: '0.38rem 0.45rem',
+    },
+    '& input:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+    '& select:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  error: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.78rem',
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '0.4rem',
+  },
+  cancelBtn: {
+    borderRadius: tokens.borderRadiusSmall,
+    fontSize: '0.8rem',
+    padding: '0.34rem 0.62rem',
+    cursor: 'pointer',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground3,
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+  submitBtn: {
+    borderRadius: tokens.borderRadiusSmall,
+    fontSize: '0.8rem',
+    padding: '0.34rem 0.62rem',
+    cursor: 'pointer',
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+})
 
 interface Props {
   isOpen: boolean
@@ -30,7 +132,10 @@ function fileToBase64(file: File): Promise<string> {
   })
 }
 
-export function AssetImportDialog({ isOpen, onClose, onImported }: Props) {
+export function AssetImportDialog({
+isOpen, onClose, onImported }: Props) {
+  const styles = useStyles();
+
   const [name, setName] = useState('')
   const [category, setCategory] = useState<AssetCategory>('custom')
   const [tagsInput, setTagsInput] = useState('')

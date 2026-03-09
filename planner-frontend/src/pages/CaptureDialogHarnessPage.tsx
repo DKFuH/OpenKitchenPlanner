@@ -6,7 +6,46 @@ import {
   normalizeScreenshotOptions,
   type ScreenshotOptions,
 } from '../components/editor/screenshotCapture.js'
-import styles from './CaptureDialogHarnessPage.module.css'
+import { makeStyles } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  page: {
+    padding: '20px',
+    display: 'grid',
+    gap: '16px',
+    maxWidth: '760px',
+  },
+  controls: {
+    display: 'flex',
+    gap: '12px',
+  },
+  captureRoot: {
+    padding: '8px',
+    border: '1px solid #cfcfcf',
+    borderRadius: '10px',
+  },
+  captureCanvas: {
+    width: '360px',
+    height: '180px',
+    border: '1px solid #d6d6d6',
+    borderRadius: '8px',
+    background: '#fff',
+  },
+  dialog: {
+    display: 'grid',
+    gap: '12px',
+    border: '1px solid #ddd',
+    borderRadius: '10px',
+    padding: '12px',
+  },
+  actions: {
+    display: 'flex',
+    gap: '10px',
+  },
+  statusLine: {
+    margin: '0',
+  },
+})
 
 type HarnessScreenshotResult = {
   filename: string
@@ -43,7 +82,9 @@ function delay(ms: number): Promise<void> {
 }
 
 function PreviewCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const styles = useStyles();
+
+const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -72,7 +113,9 @@ function PreviewCanvas() {
 }
 
 export function CaptureDialogHarnessPage() {
-  const [panelOpen, setPanelOpen] = useState(false)
+  const styles = useStyles();
+
+const [panelOpen, setPanelOpen] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(true)
   const [screenshotOptions, setScreenshotOptions] = useState<ScreenshotOptions>(DEFAULT_SCREENSHOT_OPTIONS)
   const [screenshotBusy, setScreenshotBusy] = useState(false)

@@ -11,7 +11,56 @@ import {
   resolveRenderEnvironmentVisual,
   type RenderEnvironmentSettings,
 } from './renderEnvironmentState.js'
-import styles from './Preview3D.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  wrap: {
+    flex: '1',
+    display: 'flex',
+    flexDirection: 'column',
+    background: 'var(--editor-bg)',
+    color: 'var(--editor-text)',
+    minWidth: '0',
+  },
+  toolbar: {
+    height: '40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 0.75rem',
+    background: 'var(--editor-surface)',
+    borderBottom: '1px solid var(--editor-border)',
+  },
+  meta: {
+    fontSize: '0.8rem',
+    color: 'var(--editor-text-muted)',
+  },
+  toggle: {
+    fontSize: '0.78rem',
+    color: 'var(--editor-text)',
+    background: 'var(--editor-surface-alt)',
+    border: '1px solid var(--editor-border)',
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.2rem 0.55rem',
+    cursor: 'pointer',
+    '&:hover': {
+      background: 'var(--editor-border)',
+    },
+  },
+  canvas: {
+    position: 'relative',
+    flex: '1',
+    minHeight: '0',
+  },
+  empty: {
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'var(--editor-text-muted)',
+    fontSize: '0.95rem',
+  },
+})
 
 type VertexLike = { id: string; x_mm: number; y_mm: number }
 type WallLike = {
@@ -434,7 +483,10 @@ function applyNavigationControls(controls: OrbitControls, settings: NavigationSe
   }
 }
 
-export function Preview3D({ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunlight = null, navigationSettings, autoDollhouseSettings = null, renderEnvironment = null, fovDeg = 55 }: Props) {
+export function Preview3D({
+room, verticalConnections = [], cameraState = null, onCameraStateChange, sunlight = null, navigationSettings, autoDollhouseSettings = null, renderEnvironment = null, fovDeg = 55 }: Props) {
+  const styles = useStyles();
+
   const rootRef = useRef<HTMLDivElement>(null)
   const controlsRef = useRef<OrbitControls | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)

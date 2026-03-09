@@ -1,6 +1,113 @@
 import { useMemo, useState } from 'react'
 import type { CameraPreset, CameraPresetMode } from '../../api/cameraPresets.js'
-import styles from './CameraPresetPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    position: 'absolute',
+    top: 'calc(100% + 8px)',
+    right: '0',
+    width: '320px',
+    maxHeight: 'min(72vh, 560px)',
+    overflow: 'auto',
+    border: '1px solid var(--editor-border)',
+    borderRadius: tokens.borderRadiusMedium,
+    background: 'var(--editor-surface)',
+    boxShadow: tokens.shadow16,
+    zIndex: '110',
+    padding: '0.6rem',
+    display: 'grid',
+    gap: '0.55rem',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.82rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    color: 'var(--editor-text-muted)',
+  },
+  field: {
+    display: 'grid',
+    gap: '0.25rem',
+    fontSize: '0.76rem',
+    color: 'var(--editor-text-muted)',
+    '& input': {
+      border: '1px solid var(--editor-border)',
+      borderRadius: tokens.borderRadiusSmall,
+      background: 'var(--editor-surface-alt)',
+      color: 'var(--editor-text)',
+      padding: '0.35rem 0.45rem',
+    },
+    '& select': {
+      border: '1px solid var(--editor-border)',
+      borderRadius: tokens.borderRadiusSmall,
+      background: 'var(--editor-surface-alt)',
+      color: 'var(--editor-text)',
+      padding: '0.35rem 0.45rem',
+    },
+  },
+  inline: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+  },
+  action: {
+    border: '1px solid var(--editor-border)',
+    borderRadius: tokens.borderRadiusSmall,
+    background: 'var(--editor-surface-alt)',
+    color: 'var(--editor-text)',
+    padding: '0.35rem 0.55rem',
+    fontSize: '0.74rem',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.55',
+      cursor: 'not-allowed',
+    },
+  },
+  list: {
+    display: 'grid',
+    gap: '0.4rem',
+  },
+  item: {
+    border: '1px solid var(--editor-border)',
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.4rem',
+    background: 'var(--editor-surface-alt)',
+    display: 'grid',
+    gap: '0.3rem',
+  },
+  itemHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.45rem',
+  },
+  itemName: {
+    fontSize: '0.78rem',
+    color: 'var(--editor-text)',
+  },
+  itemMeta: {
+    fontSize: '0.72rem',
+    color: 'var(--editor-text-muted)',
+  },
+  itemActions: {
+    display: 'flex',
+    gap: '0.35rem',
+  },
+  empty: {
+    margin: '0',
+    color: 'var(--editor-text-muted)',
+    fontSize: '0.75rem',
+  },
+  checkboxRow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.75rem',
+    color: 'var(--editor-text)',
+  },
+})
 
 interface Props {
   presets: CameraPreset[]
@@ -16,7 +123,7 @@ interface Props {
 }
 
 export function CameraPresetPanel({
-  presets,
+presets,
   activePresetId,
   loading,
   saving,
@@ -27,6 +134,8 @@ export function CameraPresetPanel({
   onDeletePreset,
   onSetDefaultPreset,
 }: Props) {
+  const styles = useStyles();
+
   const [name, setName] = useState('Neue Ansicht')
   const [mode, setMode] = useState<CameraPresetMode>('orbit')
   const [saveAsDefault, setSaveAsDefault] = useState(false)

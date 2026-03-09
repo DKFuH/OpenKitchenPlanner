@@ -5,6 +5,9 @@ export const ifcProvider: InteropProvider = {
   format: 'ifc',
   getCapabilities() {
     return {
+      provider_id: 'core.ifc',
+      provider_kind: 'embedded',
+      availability: 'stable',
       format: 'ifc',
       import_preview: false,
       import_execute: true,
@@ -13,6 +16,8 @@ export const ifcProvider: InteropProvider = {
       native_write: true,
       review_required_by_default: false,
       artifact_kind: 'bim',
+      import_delivery_mode: 'native',
+      export_delivery_mode: 'native',
     }
   },
   async importExecute(request) {
@@ -52,11 +57,15 @@ export const ifcProvider: InteropProvider = {
     })
 
     return {
+      provider_id: 'core.ifc',
       format: 'ifc',
+      artifact_kind: 'bim',
+      delivery_mode: 'native',
       content_type: 'application/x-step',
       filename: `alternative-${payload.alternativeId}.ifc`,
       body,
       native: true,
+      review_required: false,
     }
   },
 }

@@ -3,14 +3,76 @@ import {
   type NavigationProfile,
   type NavigationSettings,
 } from './navigationSettings.js'
-import styles from './NavigationSettingsPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    position: 'absolute',
+    top: '52px',
+    right: '12px',
+    width: '320px',
+    maxWidth: 'calc(100vw - 24px)',
+    background: 'var(--editor-surface)',
+    border: '1px solid var(--editor-border)',
+    borderRadius: tokens.borderRadiusMedium,
+    boxShadow: tokens.shadow16,
+    zIndex: '90',
+    padding: '0.8rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.6rem',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.9rem',
+    color: 'var(--editor-text)',
+  },
+  hint: {
+    margin: '0',
+    fontSize: '0.75rem',
+    color: 'var(--editor-text-muted)',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0.6rem',
+  },
+  field: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    fontSize: '0.75rem',
+    color: 'var(--editor-text-muted)',
+    '& select': {
+      border: '1px solid var(--editor-border)',
+      borderRadius: tokens.borderRadiusSmall,
+      background: 'var(--editor-surface-alt)',
+      color: 'var(--editor-text)',
+      padding: '0.35rem 0.45rem',
+      fontSize: '0.82rem',
+    },
+  },
+  fieldFull: {
+    gridColumn: '1 / -1',
+  },
+  toggle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    color: 'var(--editor-text)',
+    fontSize: '0.8rem',
+  },
+})
 
 interface Props {
   settings: NavigationSettings
   onChange: (settings: NavigationSettings) => void
 }
 
-export function NavigationSettingsPanel({ settings, onChange }: Props) {
+export function NavigationSettingsPanel({
+settings, onChange }: Props) {
+  const styles = useStyles();
+
   function handleProfileChange(profile: NavigationProfile) {
     onChange(defaultsForNavigationProfile(profile))
   }

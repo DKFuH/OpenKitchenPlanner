@@ -8,7 +8,102 @@ import {
   type MaterialLibraryItem,
   type MaterialSurfaceTarget,
 } from '../../plugins/materials/index.js'
-import styles from './MaterialPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    background: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow8,
+    padding: '0.75rem',
+    display: 'grid',
+    gap: '0.65rem',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.88rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  form: {
+    display: 'grid',
+    gap: '0.6rem',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '0.5rem',
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  field: {
+    display: 'grid',
+    gap: '0.25rem',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  input: {
+    width: '100%',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.84rem',
+    padding: '0.45rem 0.55rem',
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  select: {
+    width: '100%',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.84rem',
+    padding: '0.45rem 0.55rem',
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-start',
+  },
+  primaryBtn: {
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.4rem 0.7rem',
+    fontSize: '0.82rem',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.65',
+      cursor: 'not-allowed',
+    },
+  },
+  muted: {
+    margin: '0',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.8rem',
+  },
+  error: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.8rem',
+  },
+  success: {
+    margin: '0',
+    color: tokens.colorPaletteGreenForeground1,
+    fontSize: '0.8rem',
+  },
+})
 
 interface MaterialPanelProps {
   projectId: string
@@ -116,7 +211,10 @@ function parsePlacementOptions(room: RoomPayload | null): PlacementOption[] {
     })
 }
 
-export function MaterialPanel({ projectId, room, onApplied }: MaterialPanelProps) {
+export function MaterialPanel({
+projectId, room, onApplied }: MaterialPanelProps) {
+  const styles = useStyles();
+
   const [targetType, setTargetType] = useState<TargetType>('surface')
   const [surfaceKey, setSurfaceKey] = useState<MaterialSurfaceTarget>('floor')
   const [placementId, setPlacementId] = useState('')

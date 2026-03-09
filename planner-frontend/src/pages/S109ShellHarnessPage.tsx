@@ -5,7 +5,57 @@ import { useAppShellEditorBridge } from '../components/layout/AppShellEditorBrid
 import { resolveEditorActionStates } from '../editor/actionStateResolver.js'
 import { resolvePluginSlotEntries } from '../plugins/pluginSlotRegistry.js'
 import type { TenantPluginsResponse } from '../api/tenantSettings.js'
-import styles from './S109ShellHarnessPage.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  page: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(340px, 420px) minmax(220px, 1fr)',
+    gap: '1rem',
+    minHeight: '78vh',
+    '@media (max-width: 960px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  infoPanel: {
+    display: 'grid',
+    alignContent: 'start',
+    gap: '0.65rem',
+    padding: '1rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    background: tokens.colorNeutralBackground1,
+    '& h1': {
+      margin: '0',
+      fontSize: '1rem',
+    },
+    '& p': {
+      margin: '0',
+      fontSize: '0.85rem',
+      color: tokens.colorNeutralForeground3,
+    },
+  },
+  actions: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.5rem',
+    '& button': {
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      background: tokens.colorNeutralBackground2,
+      color: tokens.colorNeutralForeground1,
+      padding: '0.35rem 0.55rem',
+      borderRadius: tokens.borderRadiusSmall,
+      cursor: 'pointer',
+    },
+  },
+  sidebarHost: {
+    minHeight: '0',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    overflow: 'hidden',
+    background: tokens.colorNeutralBackground1,
+  },
+})
 
 const HARNESS_TENANT_PLUGINS: TenantPluginsResponse = {
   available: [
@@ -17,7 +67,9 @@ const HARNESS_TENANT_PLUGINS: TenantPluginsResponse = {
 }
 
 export function S109ShellHarnessPage() {
-  const navigate = useNavigate()
+  const styles = useStyles();
+
+const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const appShellBridge = useAppShellEditorBridge()
   const [lastSidebarPath, setLastSidebarPath] = useState<string | null>(null)

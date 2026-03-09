@@ -4,13 +4,35 @@ import { ifcProvider } from './ifcProvider.js'
 import { skpProvider } from './skpProvider.js'
 import type { InteropFormat, InteropProvider } from './types.js'
 
-const providers = [dxfProvider, dwgProvider, skpProvider, ifcProvider] as const
+const defaultProviders = [dxfProvider, dwgProvider, skpProvider, ifcProvider] as const
 
-const providerMap = new Map<InteropFormat, InteropProvider>(
-  providers.map((provider) => [provider.format, provider]),
-)
+const providerMap = new Map<InteropFormat, InteropProvider>()
+const providerList: InteropProvider[] = []
+
+function registerProviderInternal(provider: InteropProvider): void {
+  if (providerMap.has(provider.format)) {
+    throw new Error(`Interop provider for format '${provider.format}' is already registered.`)
+  }
+  providerMap.set(provider.format, provider)
+  providerList.push(provider)
+}
+
+function ensureDefaultProvidersRegistered(): void {
+  if (providerList.length > 0) {
+    return
+  }
+  for (const provider of defaultProviders) {
+    registerProviderInternal(provider)
+  }
+}
+
+export function registerInteropProvider(provider: InteropProvider): void {
+  ensureDefaultProvidersRegistered()
+  registerProviderInternal(provider)
+}
 
 export function getInteropProvider(format: InteropFormat): InteropProvider {
+  ensureDefaultProvidersRegistered()
   const provider = providerMap.get(format)
   if (!provider) {
     throw new Error(`Unsupported interop format: ${format}`)
@@ -19,5 +41,16 @@ export function getInteropProvider(format: InteropFormat): InteropProvider {
 }
 
 export function listInteropCapabilities() {
-  return providers.map((provider) => provider.getCapabilities())
+  ensureDefaultProvidersRegistered()
+  return providerList.map((provider) => provider.getCapabilities())
+}
+
+export function getInteropProviders(): readonly InteropProvider[] {
+  ensureDefaultProvidersRegistered()
+  return [...providerList]
+}
+
+export function clearInteropProviders(): void {
+  providerMap.clear()
+  providerList.length = 0
 }

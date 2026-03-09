@@ -1,6 +1,101 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import styles from './OnboardingWizard.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  overlay: {
+    position: 'fixed',
+    inset: '0',
+    zIndex: '20000',
+    background: 'rgba(0, 0, 0, 0.55)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  wizard: {
+    width: 'min(28rem, 95vw)',
+    background: tokens.colorNeutralBackground1,
+    borderRadius: '1.5rem',
+    padding: '2rem 2.25rem',
+    boxShadow: '0 8px 40px rgba(0, 0, 0, 0.25)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '0.85rem',
+    textAlign: 'center',
+  },
+  stepIndicator: {
+    display: 'flex',
+    gap: '0.4rem',
+    marginBottom: '0.5rem',
+  },
+  dot: {
+    display: 'inline-block',
+    width: '0.55rem',
+    height: '0.55rem',
+    borderRadius: '999px',
+    background: tokens.colorNeutralStroke2,
+  },
+  dotActive: {
+    background: tokens.colorBrandForeground1,
+  },
+  icon: {
+    fontSize: '3rem',
+    lineHeight: '1',
+  },
+  title: {
+    margin: '0',
+    fontSize: '1.4rem',
+  },
+  description: {
+    margin: '0',
+    color: tokens.colorNeutralForeground3,
+    lineHeight: '1.5',
+    maxWidth: '22rem',
+  },
+  ctaButton: {
+    marginTop: '0.25rem',
+    padding: '0.5rem 1.25rem',
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    borderRadius: tokens.borderRadiusCircular,
+    background: `color-mix(in srgb, ${tokens.colorBrandForeground1} 12%, transparent)`,
+    color: tokens.colorBrandForeground1,
+    cursor: 'pointer',
+    fontSize: '0.95rem',
+    '&:hover': {
+      background: `color-mix(in srgb, ${tokens.colorBrandForeground1} 20%, transparent)`,
+    },
+  },
+  actions: {
+    display: 'flex',
+    gap: '0.6rem',
+    marginTop: '0.5rem',
+  },
+  btnPrimary: {
+    padding: '0.55rem 1.2rem',
+    borderRadius: tokens.borderRadiusCircular,
+    cursor: 'pointer',
+    fontSize: '0.95rem',
+    border: 'none',
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    '&:hover': {
+      background: tokens.colorBrandBackground2Hover,
+    },
+  },
+  btnSecondary: {
+    padding: '0.55rem 1.2rem',
+    borderRadius: tokens.borderRadiusCircular,
+    cursor: 'pointer',
+    fontSize: '0.95rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground3,
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+  },
+})
 
 const STEPS = [
   {
@@ -47,7 +142,10 @@ interface Props {
   onDismiss: () => void
 }
 
-export function OnboardingWizard({ onDismiss }: Props) {
+export function OnboardingWizard({
+onDismiss }: Props) {
+  const styles = useStyles();
+
   const navigate = useNavigate()
   const [stepIndex, setStepIndex] = useState(0)
   const step = STEPS[stepIndex]

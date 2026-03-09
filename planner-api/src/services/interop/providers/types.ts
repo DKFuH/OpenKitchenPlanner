@@ -1,4 +1,8 @@
 export type InteropFormat = 'dxf' | 'dwg' | 'skp' | 'ifc'
+export type InteropArtifactKind = 'cad' | 'bim' | 'script' | 'mesh'
+export type InteropDeliveryMode = 'native' | 'fallback' | 'script' | 'derived'
+export type InteropProviderKind = 'embedded' | 'plugin' | 'external'
+export type InteropAvailability = 'stable' | 'experimental' | 'disabled'
 
 export type InteropProtocolEntry = {
   entity_id: string | null
@@ -7,6 +11,9 @@ export type InteropProtocolEntry = {
 }
 
 export type InteropCapability = {
+  provider_id: string
+  provider_kind: InteropProviderKind
+  availability: InteropAvailability
   format: InteropFormat
   import_preview: boolean
   import_execute: boolean
@@ -14,7 +21,9 @@ export type InteropCapability = {
   native_read: boolean
   native_write: boolean
   review_required_by_default: boolean
-  artifact_kind: 'cad' | 'bim' | 'script'
+  artifact_kind: InteropArtifactKind
+  import_delivery_mode: InteropDeliveryMode | null
+  export_delivery_mode: InteropDeliveryMode | null
 }
 
 export type InteropImportRequest = {
@@ -40,11 +49,15 @@ export type InteropExportRequest = {
 }
 
 export type InteropExportArtifact = {
+  provider_id: string
   format: InteropFormat
+  artifact_kind: InteropArtifactKind
+  delivery_mode: InteropDeliveryMode
   content_type: string
   filename: string
   body: Buffer | string
   native: boolean
+  review_required: boolean
   fallback_of?: InteropFormat
   note?: string
 }

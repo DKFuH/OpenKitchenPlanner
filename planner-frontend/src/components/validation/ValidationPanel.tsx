@@ -5,7 +5,109 @@ import {
   type ValidationObject,
   validateProject,
 } from '../../api/validation.js'
-import styles from './ValidationPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.65rem',
+    boxShadow: tokens.shadow8,
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.95rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  trigger: {
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    borderRadius: tokens.borderRadiusCircular,
+    padding: '0.35rem 0.65rem',
+    fontSize: '0.82rem',
+    cursor: 'pointer',
+    boxShadow: tokens.shadow4,
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+  meta: {
+    margin: '0',
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  group: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: '0.55rem',
+    background: tokens.colorNeutralBackground2,
+  },
+  groupTitle: {
+    margin: '0 0 0.35rem 0',
+    fontSize: '0.82rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  list: {
+    margin: '0',
+    paddingLeft: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    '& li': {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.1rem',
+      fontSize: '0.8rem',
+    },
+  },
+  itemError: {
+    '& strong': {
+      color: tokens.colorPaletteRedForeground1,
+    },
+  },
+  itemWarning: {
+    '& strong': {
+      color: 'var(--status-warning-text)',
+    },
+  },
+  itemHint: {
+    '& strong': {
+      color: tokens.colorPaletteBlueForeground2,
+    },
+  },
+  emptyState: {
+    margin: '0',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.8rem',
+  },
+  errorState: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.82rem',
+  },
+  validState: {
+    margin: '0',
+    color: tokens.colorPaletteGreenForeground1,
+    fontSize: '0.82rem',
+  },
+  invalidState: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.82rem',
+  },
+})
 
 interface Props {
   projectId: string
@@ -24,7 +126,10 @@ function objectsSummary(objects: ValidationObject[]): string {
   return `${objects.length} Objekt${objects.length === 1 ? '' : 'e'} im Payload`
 }
 
-export function ValidationPanel({ projectId, payload }: Props) {
+export function ValidationPanel({
+projectId, payload }: Props) {
+  const styles = useStyles();
+
   const [running, setRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<ValidateProjectResponse | null>(null)

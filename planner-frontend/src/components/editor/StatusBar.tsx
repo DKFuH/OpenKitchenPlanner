@@ -1,12 +1,32 @@
 import type { ProjectDetail, Room } from '../../api/projects.js'
-import styles from './StatusBar.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  bar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1.5rem',
+    padding: '0 1rem',
+    height: '32px',
+    background: tokens.colorNeutralForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    fontSize: '0.8rem',
+    flexShrink: '0',
+  },
+  right: {
+    marginLeft: 'auto',
+  },
+})
 
 interface Props {
   project: ProjectDetail
   selectedRoom: Room | null
 }
 
-export function StatusBar({ project, selectedRoom }: Props) {
+export function StatusBar({
+project, selectedRoom }: Props) {
+  const styles = useStyles();
+
   const totalRooms = project.rooms.length
   const totalPlacements = project.rooms.reduce(
     (sum, r) => sum + (r.placements as unknown[]).length,

@@ -1,7 +1,113 @@
 import { useEffect, useState } from 'react'
 import type { WallObject, WallInstallation } from '@shared/types'
 import { wallObjectsApi, installationsApi, wallsApi } from '../../api/rooms.js'
-import styles from './WallFeaturesPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  section: {
+    padding: '0.75rem',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+  },
+  sectionTitle: {
+    margin: '0 0 0.5rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    color: tokens.colorNeutralForeground3,
+    letterSpacing: '0.05em',
+  },
+  muted: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+    margin: '0 0 0.4rem',
+  },
+  error: {
+    fontSize: '0.8rem',
+    color: tokens.colorPaletteRedForeground1,
+    margin: '0 0 0.4rem',
+  },
+  list: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.4rem',
+    marginBottom: '0.4rem',
+  },
+  listItem: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.4rem 0.5rem',
+    fontSize: '0.8rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+    '& strong': {
+      fontSize: '0.82rem',
+      color: tokens.colorNeutralForeground1,
+    },
+    '& span': {
+      color: tokens.colorNeutralForeground3,
+    },
+  },
+  inlineRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    fontSize: '0.78rem',
+    '& select': {
+      fontSize: '0.78rem',
+      padding: '0.1rem 0.3rem',
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderRadius: tokens.borderRadiusSmall,
+      background: tokens.colorNeutralBackground1,
+    },
+  },
+  addBtn: {
+    width: '100%',
+    background: 'none',
+    border: `1px dashed ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.3rem',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+    cursor: 'pointer',
+    marginTop: '0.2rem',
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  buttonRow: {
+    display: 'flex',
+    gap: '0.3rem',
+    flexWrap: 'wrap',
+  },
+  btnSmall: {
+    padding: '0.25rem 0.5rem',
+    fontSize: '0.75rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    cursor: 'pointer',
+    color: tokens.colorNeutralForeground1,
+    '&:hover': {
+      background: 'var(--surface-hover)',
+    },
+  },
+  btnTiny: {
+    alignSelf: 'flex-start',
+    padding: '0.15rem 0.4rem',
+    fontSize: '0.72rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: 'none',
+    cursor: 'pointer',
+    color: tokens.colorNeutralForeground3,
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+})
 
 // ─── Typen ──────────────────────────────────────────────────────────────────
 
@@ -30,7 +136,10 @@ interface Props {
   wallLengthMm: number
 }
 
-export function WallFeaturesPanel({ roomId, wallId, wallLengthMm }: Props) {
+export function WallFeaturesPanel({
+roomId, wallId, wallLengthMm }: Props) {
+  const styles = useStyles();
+
   const [wallObjects, setWallObjects] = useState<WallObject[]>([])
   const [installations, setInstallations] = useState<WallInstallation[]>([])
   const [loadingObjects, setLoadingObjects] = useState(false)
@@ -221,6 +330,8 @@ function WallObjectRow({ obj, onUpdateHinge, onToggleVisibility }: {
   onUpdateHinge: (id: string, side: 'left' | 'right') => void
   onToggleVisibility: (obj: WallObject) => void
 }) {
+  const styles = useStyles();
+
   return (
     <div className={styles.listItem}>
       <strong>{WALL_OBJECT_TYPE_LABELS[obj.type] ?? obj.type}</strong>

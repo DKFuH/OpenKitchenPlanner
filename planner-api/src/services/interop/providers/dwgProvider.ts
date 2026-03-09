@@ -15,6 +15,9 @@ export const dwgProvider: InteropProvider = {
   format: 'dwg',
   getCapabilities() {
     return {
+      provider_id: 'core.dwg',
+      provider_kind: 'embedded',
+      availability: 'stable',
       format: 'dwg',
       import_preview: false,
       import_execute: true,
@@ -23,6 +26,8 @@ export const dwgProvider: InteropProvider = {
       native_write: false,
       review_required_by_default: true,
       artifact_kind: 'cad',
+      import_delivery_mode: 'fallback',
+      export_delivery_mode: 'fallback',
     }
   },
   async importExecute(request) {
@@ -73,11 +78,15 @@ export const dwgProvider: InteropProvider = {
     const requestedFilename = trimmed.toLowerCase().endsWith('.dwg') ? trimmed : `${trimmed}.dwg`
 
     return {
+      provider_id: 'core.dwg',
       format: 'dwg',
+      artifact_kind: 'cad',
+      delivery_mode: 'fallback',
       content_type: 'application/dxf; charset=utf-8',
       filename: requestedFilename.replace(/\.dwg$/i, '.dxf'),
       body,
       native: false,
+      review_required: false,
       fallback_of: 'dwg',
       note: 'dwg endpoint currently returns ASCII DXF content for CAD compatibility',
     }

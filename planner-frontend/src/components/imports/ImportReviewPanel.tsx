@@ -6,7 +6,159 @@ import {
   type ImportProtocolEntry,
   type MappingState,
 } from '../../api/imports.js'
-import styles from './ImportReviewPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    padding: '0.75rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    background: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow8,
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.95rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  jobId: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  meta: {
+    margin: '0',
+    fontSize: '0.82rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  metaGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '0.4rem 0.75rem',
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  metaItem: {
+    margin: '0',
+    fontSize: '0.82rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  error: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.82rem',
+  },
+  groups: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: '0.6rem',
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  group: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: '0.45rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+    minHeight: '120px',
+  },
+  groupTitle: {
+    margin: '0',
+    fontSize: '0.82rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  empty: {
+    margin: '0',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  protocolList: {
+    listStyle: 'none',
+    margin: '0',
+    padding: '0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.3rem',
+  },
+  protocolItem: {
+    borderRadius: tokens.borderRadiusMedium,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    padding: '0.35rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+    fontSize: '0.78rem',
+  },
+  protocolReason: {
+    color: tokens.colorNeutralForeground1,
+  },
+  protocolMeta: {
+    color: tokens.colorNeutralForeground3,
+  },
+  imported: {
+    background: tokens.colorNeutralBackground2,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+  },
+  ignored: {
+    background: tokens.colorNeutralBackground2,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+  },
+  needsReview: {
+    background: 'var(--status-warning-bg)',
+    border: '1px solid var(--status-warning-border)',
+  },
+  mappingSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+  },
+  mappingList: {
+    listStyle: 'none',
+    margin: '0',
+    padding: '0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+  },
+  mappingItem: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: '0.35rem',
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr) auto',
+    gap: '0.25rem 0.5rem',
+    alignItems: 'center',
+  },
+  mappingKey: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  mappingValue: {
+    fontSize: '0.75rem',
+    color: tokens.colorNeutralForeground1,
+    fontWeight: '600',
+    borderRadius: tokens.borderRadiusMedium,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    padding: '0.15rem 0.35rem',
+  },
+  mappingReason: {
+    gridColumn: '1 / -1',
+    fontSize: '0.75rem',
+    color: tokens.colorNeutralForeground3,
+  },
+})
 
 interface Props {
   jobId: string
@@ -61,7 +213,7 @@ function getMappingState(job: ImportJob | null, importAsset: ImportAsset | null)
   return job?.mapping_state ?? importAsset?.mapping_state ?? null
 }
 
-function statusClassName(status: ImportProtocolEntry['status']): string {
+function statusClassName(status: ImportProtocolEntry['status'], styles: ReturnType<typeof useStyles>): string {
   if (status === 'needs_review') {
     return styles.needsReview
   }
@@ -71,7 +223,12 @@ function statusClassName(status: ImportProtocolEntry['status']): string {
   return styles.imported
 }
 
-function renderProtocolGroup(title: string, status: ImportProtocolEntry['status'], entries: ImportProtocolEntry[]) {
+function renderProtocolGroup(
+  title: string,
+  status: ImportProtocolEntry['status'],
+  entries: ImportProtocolEntry[],
+  styles: ReturnType<typeof useStyles>,
+) {
   return (
     <section className={styles.group}>
       <h4 className={styles.groupTitle}>
@@ -82,7 +239,7 @@ function renderProtocolGroup(title: string, status: ImportProtocolEntry['status'
       ) : (
         <ul className={styles.protocolList}>
           {entries.map((entry, index) => (
-            <li key={`${entry.entity_id ?? 'null'}-${index}`} className={`${styles.protocolItem} ${statusClassName(status)}`}>
+            <li key={`${entry.entity_id ?? 'null'}-${index}`} className={`${styles.protocolItem} ${statusClassName(status, styles)}`}>
               <span className={styles.protocolReason}>{entry.reason}</span>
               {entry.entity_id && <span className={styles.protocolMeta}>Entity: {entry.entity_id}</span>}
             </li>
@@ -94,6 +251,8 @@ function renderProtocolGroup(title: string, status: ImportProtocolEntry['status'
 }
 
 export function ImportReviewPanel({ jobId }: Props) {
+  const styles = useStyles();
+
   const [job, setJob] = useState<ImportJob | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -160,9 +319,9 @@ export function ImportReviewPanel({ jobId }: Props) {
           {job.error_message && <p className={styles.error}>{job.error_message}</p>}
 
           <div className={styles.groups}>
-            {renderProtocolGroup('Imported', 'imported', grouped.imported)}
-            {renderProtocolGroup('Ignored', 'ignored', grouped.ignored)}
-            {renderProtocolGroup('Needs review', 'needs_review', grouped.needs_review)}
+            {renderProtocolGroup('Imported', 'imported', grouped.imported, styles)}
+            {renderProtocolGroup('Ignored', 'ignored', grouped.ignored, styles)}
+            {renderProtocolGroup('Needs review', 'needs_review', grouped.needs_review, styles)}
           </div>
 
           {mappingState?.layers && (
@@ -172,7 +331,7 @@ export function ImportReviewPanel({ jobId }: Props) {
                 {Object.entries(mappingState.layers).map(([layerName, mapping]) => (
                   <li key={layerName} className={styles.mappingItem}>
                     <span className={styles.mappingKey}>{layerName}</span>
-                    <span className={`${styles.mappingValue} ${statusClassName(mapping.action)}`}>{mapping.action}</span>
+                    <span className={`${styles.mappingValue} ${statusClassName(mapping.action, styles)}`}>{mapping.action}</span>
                     {mapping.reason && <span className={styles.mappingReason}>{mapping.reason}</span>}
                   </li>
                 ))}

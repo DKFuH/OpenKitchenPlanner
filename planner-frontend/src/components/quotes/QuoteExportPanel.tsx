@@ -7,7 +7,124 @@ import {
   type Quote,
 } from '../../api/quotes.js'
 import { useLocale } from '../../hooks/useLocale.js'
-import styles from './QuoteExportPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.6rem',
+    boxShadow: tokens.shadow8,
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.95rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  actions: {
+    display: 'flex',
+    gap: '0.45rem',
+    flexWrap: 'wrap',
+  },
+  localeField: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.25rem',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.78rem',
+    '& select': {
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderRadius: tokens.borderRadiusCircular,
+      background: tokens.colorNeutralBackground1,
+      color: tokens.colorNeutralForeground1,
+      fontSize: '0.82rem',
+      padding: '0.35rem 0.7rem',
+    },
+  },
+  primaryBtn: {
+    borderRadius: tokens.borderRadiusCircular,
+    fontSize: '0.82rem',
+    padding: '0.35rem 0.7rem',
+    cursor: 'pointer',
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    boxShadow: tokens.shadow4,
+    '&:hover': {
+      background: tokens.colorBrandBackground2Hover,
+    },
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+  secondaryBtn: {
+    borderRadius: tokens.borderRadiusCircular,
+    fontSize: '0.82rem',
+    padding: '0.35rem 0.7rem',
+    cursor: 'pointer',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+  refreshBtn: {
+    borderRadius: tokens.borderRadiusCircular,
+    fontSize: '0.82rem',
+    padding: '0.35rem 0.7rem',
+    cursor: 'pointer',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+  metaList: {
+    margin: '0',
+    display: 'grid',
+    gridTemplateColumns: 'auto 1fr',
+    gap: '0.25rem 0.55rem',
+    fontSize: '0.82rem',
+    '& dt': {
+      color: tokens.colorNeutralForeground3,
+      fontWeight: '600',
+    },
+    '& dd': {
+      margin: '0',
+      color: tokens.colorNeutralForeground1,
+    },
+  },
+  empty: {
+    margin: '0',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.82rem',
+  },
+  error: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.82rem',
+  },
+})
 
 interface Props {
   projectId: string
@@ -15,7 +132,10 @@ interface Props {
   buildCreatePayload?: () => Promise<CreateQuotePayload>
 }
 
-export function QuoteExportPanel({ projectId, createPayload = {}, buildCreatePayload }: Props) {
+export function QuoteExportPanel({
+projectId, createPayload = {}, buildCreatePayload }: Props) {
+  const styles = useStyles();
+
   const { formatDate, locale } = useLocale()
   const [quote, setQuote] = useState<Quote | null>(null)
   const [exportLocale, setExportLocale] = useState<'de' | 'en'>('de')

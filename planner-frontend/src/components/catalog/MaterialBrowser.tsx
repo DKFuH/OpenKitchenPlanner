@@ -12,7 +12,188 @@ import {
   type MaterialCategory,
   type MaterialLibraryItem,
 } from '../../plugins/materials/index.js'
-import styles from './MaterialBrowser.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.75rem',
+    boxShadow: tokens.shadow8,
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.95rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  subTitle: {
+    margin: '0',
+    fontSize: '0.82rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    color: tokens.colorNeutralForeground3,
+  },
+  filters: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '0.5rem',
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  savedFilterRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.45rem',
+    alignItems: 'center',
+  },
+  createForm: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: '0.6rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.6rem',
+    background: tokens.colorNeutralBackground2,
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '0.5rem',
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  field: {
+    display: 'grid',
+    gap: '0.25rem',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  checkField: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  input: {
+    width: '100%',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.83rem',
+    padding: '0.45rem 0.55rem',
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  select: {
+    width: '100%',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.83rem',
+    padding: '0.45rem 0.55rem',
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  actions: {
+    display: 'flex',
+    gap: '0.45rem',
+    flexWrap: 'wrap',
+  },
+  primaryBtn: {
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.38rem 0.65rem',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.65',
+      cursor: 'not-allowed',
+    },
+  },
+  dangerBtn: {
+    border: '1px solid var(--status-danger-border)',
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorPaletteRedForeground1,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.38rem 0.65rem',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.65',
+      cursor: 'not-allowed',
+    },
+  },
+  secondaryBtn: {
+    border: `1px dashed ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground3,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.36rem 0.58rem',
+    fontSize: '0.78rem',
+    cursor: 'pointer',
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  listWrap: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: '0.6rem',
+    background: tokens.colorNeutralBackground2,
+  },
+  list: {
+    listStyle: 'none',
+    padding: '0',
+    margin: '0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+    maxHeight: '460px',
+    overflow: 'auto',
+  },
+  item: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.55rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.5rem',
+  },
+  muted: {
+    margin: '0',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.82rem',
+  },
+  error: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.82rem',
+  },
+})
 
 type CategoryFilter = '' | MaterialCategory
 
@@ -94,7 +275,9 @@ function parseOptionalRotation(value: string): number | undefined {
 }
 
 export function MaterialBrowser() {
-  const [query, setQuery] = useState('')
+  const styles = useStyles();
+
+const [query, setQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('')
   const [favoriteOnly, setFavoriteOnly] = useState(false)
   const [folderFilter, setFolderFilter] = useState('')

@@ -5,7 +5,166 @@ import type {
   DrawingGroupKind,
   DrawingGroupMember,
 } from '../../api/drawingGroups.js'
-import styles from './GroupsPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  section: {
+    padding: '0.75rem',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+  },
+  sectionTitle: {
+    margin: '0 0 0.5rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    color: tokens.colorNeutralForeground3,
+    letterSpacing: '0.05em',
+  },
+  empty: {
+    margin: '0',
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  field: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+    marginBottom: '0.5rem',
+  },
+  fieldLabel: {
+    fontSize: '0.75rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  fieldInput: {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '0.3rem 0.5rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    fontSize: '0.85rem',
+    background: tokens.colorNeutralBackground1,
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  select: {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '0.3rem 0.5rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    fontSize: '0.85rem',
+    background: tokens.colorNeutralBackground1,
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  row: {
+    display: 'flex',
+    gap: '0.35rem',
+    '& > *': {
+      flex: '1',
+    },
+  },
+  primaryBtn: {
+    width: '100%',
+    borderRadius: tokens.borderRadiusSmall,
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandBackground2,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.34rem 0.5rem',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.5',
+      cursor: 'not-allowed',
+    },
+  },
+  ghostBtn: {
+    width: '100%',
+    borderRadius: tokens.borderRadiusSmall,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.34rem 0.5rem',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.5',
+      cursor: 'not-allowed',
+    },
+  },
+  dangerBtn: {
+    width: '100%',
+    borderRadius: tokens.borderRadiusSmall,
+    border: '1px solid var(--status-danger-border)',
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorPaletteRedForeground1,
+    padding: '0.34rem 0.5rem',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.5',
+      cursor: 'not-allowed',
+    },
+  },
+  list: {
+    margin: '0.6rem 0 0',
+    padding: '0',
+    listStyle: 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+  },
+  item: {
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.35rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+  },
+  itemActive: {
+    background: tokens.colorBrandBackground2,
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+  },
+  itemMeta: {
+    flex: '1',
+    minWidth: '0',
+  },
+  itemName: {
+    display: 'block',
+    fontSize: '0.8rem',
+    fontWeight: '600',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  itemHint: {
+    display: 'block',
+    fontSize: '0.7rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  subTitle: {
+    margin: '0.75rem 0 0.5rem',
+    fontSize: '0.72rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    color: tokens.colorNeutralForeground3,
+  },
+  checkbox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground1,
+    marginBottom: '0.4rem',
+  },
+})
 
 type Props = {
   groups: DrawingGroup[]
@@ -26,7 +185,7 @@ type Props = {
 }
 
 export function GroupsPanel({
-  groups,
+groups,
   selectedGroupId,
   selectionMembers,
   onSelectGroup,
@@ -35,6 +194,8 @@ export function GroupsPanel({
   onApplyTransform,
   onSyncConfig,
 }: Props) {
+  const styles = useStyles();
+
   const [groupName, setGroupName] = useState('Neue Gruppe')
   const [groupKind, setGroupKind] = useState<DrawingGroupKind>('selection_set')
   const [dx, setDx] = useState('0')

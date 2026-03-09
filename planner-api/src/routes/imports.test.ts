@@ -218,10 +218,28 @@ describe('importRoutes', () => {
     expect(response.statusCode).toBe(200)
     expect(response.json()).toMatchObject({
       formats: expect.arrayContaining([
-        expect.objectContaining({ format: 'dxf', import_execute: true, export_artifact: true }),
-        expect.objectContaining({ format: 'dwg', review_required_by_default: true }),
-        expect.objectContaining({ format: 'skp', artifact_kind: 'script' }),
-        expect.objectContaining({ format: 'ifc', artifact_kind: 'bim' }),
+        expect.objectContaining({
+          format: 'dxf',
+          provider_id: 'core.dxf',
+          import_execute: true,
+          export_artifact: true,
+          export_delivery_mode: 'native',
+        }),
+        expect.objectContaining({
+          format: 'dwg',
+          review_required_by_default: true,
+          export_delivery_mode: 'fallback',
+        }),
+        expect.objectContaining({
+          format: 'skp',
+          artifact_kind: 'script',
+          export_delivery_mode: 'script',
+        }),
+        expect.objectContaining({
+          format: 'ifc',
+          artifact_kind: 'bim',
+          provider_kind: 'embedded',
+        }),
       ]),
     })
 

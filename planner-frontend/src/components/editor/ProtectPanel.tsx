@@ -8,7 +8,210 @@ import {
   type RuleSeverity,
 } from '../../api/validateV2.js'
 import type { Placement } from '../../api/placements.js'
-import styles from './ProtectPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+    padding: '0.75rem',
+  },
+  title: {
+    fontSize: '0.8rem',
+    fontWeight: '700',
+    color: tokens.colorNeutralForeground1,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+    margin: '0 0 0.5rem',
+  },
+  tenantInput: {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '0.3rem 0.5rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    fontSize: '0.75rem',
+    marginBottom: '0.5rem',
+    fontFamily: 'monospace',
+    background: tokens.colorNeutralBackground1,
+    '&:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  btnRow: {
+    display: 'flex',
+    gap: '0.4rem',
+    marginBottom: '0.5rem',
+  },
+  runBtn: {
+    flex: '1',
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    border: 'none',
+    borderRadius: tokens.borderRadiusCircular,
+    padding: '0.35rem 0.5rem',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    boxShadow: tokens.shadow4,
+    '&:hover': {
+      background: tokens.colorBrandBackground2Hover,
+    },
+    '&:disabled': {
+      opacity: '0.5',
+      cursor: 'not-allowed',
+    },
+  },
+  finalBtn: {
+    background: 'none',
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    color: tokens.colorBrandForeground1,
+    borderRadius: tokens.borderRadiusCircular,
+    padding: '0.35rem 0.6rem',
+    fontSize: '0.8rem',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    '&:hover': {
+      background: tokens.colorBrandBackground2,
+    },
+    '&:disabled': {
+      opacity: '0.5',
+      cursor: 'not-allowed',
+    },
+  },
+  finalOk: {
+    color: tokens.colorPaletteGreenForeground1,
+    fontSize: '0.8rem',
+    margin: '0 0 0.5rem',
+    fontWeight: '600',
+  },
+  finalFail: {
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.8rem',
+    margin: '0 0 0.5rem',
+    fontWeight: '600',
+  },
+  error: {
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.8rem',
+    margin: '0 0 0.5rem',
+    background: tokens.colorPaletteRedBackground1,
+    border: '1px solid var(--status-danger-border)',
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.3rem 0.5rem',
+  },
+  summary: {
+    display: 'flex',
+    gap: '0.5rem',
+    marginBottom: '0.5rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+  },
+  sumError: {
+    color: tokens.colorPaletteRedForeground1,
+  },
+  sumWarn: {
+    color: 'var(--status-warning-text)',
+  },
+  sumHint: {
+    color: tokens.colorNeutralForeground3,
+  },
+  filters: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.3rem',
+    marginBottom: '0.5rem',
+  },
+  filterRow: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.25rem',
+  },
+  chip: {
+    background: tokens.colorNeutralBackground2,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusCircular,
+    padding: '0.15rem 0.5rem',
+    fontSize: '0.7rem',
+    cursor: 'pointer',
+    color: tokens.colorNeutralForeground1,
+    lineHeight: '1.4',
+    '&:hover': {
+      background: tokens.colorNeutralStroke1,
+    },
+  },
+  chipActive: {
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    '&:hover': {
+      background: tokens.colorBrandBackground2Hover,
+    },
+  },
+  empty: {
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.8rem',
+    textAlign: 'center',
+    padding: '0.5rem 0',
+  },
+  list: {
+    listStyle: 'none',
+    padding: '0',
+    margin: '0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+    maxHeight: '260px',
+    overflowY: 'auto',
+  },
+  item: {
+    borderLeft: `3px solid ${tokens.colorNeutralStroke2}`,
+    padding: '0.3rem 0.5rem',
+    borderRadius: `0 ${tokens.borderRadiusSmall} ${tokens.borderRadiusSmall} 0`,
+    background: tokens.colorNeutralBackground2,
+  },
+  itemError: {
+    borderLeftColor: tokens.colorPaletteRedForeground1,
+    background: tokens.colorPaletteRedBackground1,
+  },
+  itemWarning: {
+    borderLeftColor: 'var(--status-warning)',
+    background: 'var(--status-warning-bg)',
+  },
+  itemHint: {
+    borderLeftColor: tokens.colorNeutralForeground3,
+  },
+  itemHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '0.15rem',
+  },
+  ruleKey: {
+    fontFamily: 'monospace',
+    fontSize: '0.7rem',
+    fontWeight: '700',
+    color: tokens.colorNeutralForeground1,
+  },
+  sevLabel: {
+    fontSize: '0.65rem',
+    color: tokens.colorNeutralForeground3,
+    textTransform: 'uppercase',
+    letterSpacing: '0.04em',
+  },
+  itemMsg: {
+    fontSize: '0.75rem',
+    color: tokens.colorNeutralForeground1,
+    margin: '0',
+    lineHeight: '1.4',
+  },
+  itemHintText: {
+    fontSize: '0.7rem',
+    color: tokens.colorNeutralForeground3,
+    margin: '0.1rem 0 0',
+    fontStyle: 'italic',
+  },
+})
 
 type CategoryFilter = 'all' | RuleCategory
 type SeverityFilter = 'all' | RuleSeverity
@@ -34,7 +237,10 @@ interface Props {
   ceilingHeightMm: number
 }
 
-export function ProtectPanel({ projectId, roomId, placements, ceilingHeightMm }: Props) {
+export function ProtectPanel({
+projectId, roomId, placements, ceilingHeightMm }: Props) {
+  const styles = useStyles();
+
   const [tenantId, setTenantId] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -160,7 +366,7 @@ export function ProtectPanel({ projectId, roomId, placements, ceilingHeightMm }:
                 <button
                   key={sev}
                   type="button"
-                  className={`${styles.chip} ${styles[`sev_${sev}`] ?? ''} ${severityFilter === sev ? styles.chipActive : ''}`}
+                  className={`${styles.chip} ${severityFilter === sev ? styles.chipActive : ''}`}
                   onClick={() => setSeverityFilter(sev)}
                 >
                   {sev === 'all' ? 'Alle' : SEVERITY_LABELS[sev]}

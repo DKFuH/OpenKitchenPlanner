@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '../db.js'
 import { sendBadRequest, sendNotFound } from '../errors.js'
 import { getInteropProvider } from '../services/interop/providers/registry.js'
+import type { InteropExportArtifact } from '../services/interop/providers/types.js'
 
 const ParamsSchema = z.object({
   id: z.string().uuid(),
@@ -108,6 +109,32 @@ function ensureBuffer(raw: unknown): Buffer | null {
   }
 
   return null
+}
+
+function toArtifactDescriptor(artifact: InteropExportArtifact) {
+  return {
+    provider_id: artifact.provider_id,
+    format: artifact.format,
+    artifact_kind: artifact.artifact_kind,
+    delivery_mode: artifact.delivery_mode,
+    filename: artifact.filename,
+    content_type: artifact.content_type,
+    native: artifact.native,
+    review_required: artifact.review_required,
+    fallback_of: artifact.fallback_of ?? null,
+    note: artifact.note ?? null,
+  }
+}
+
+function applyArtifactHeaders(reply: { header: (name: string, value: string) => unknown }, artifact: InteropExportArtifact): void {
+  reply.header('x-okp-provider-id', artifact.provider_id)
+  reply.header('x-okp-artifact-format', artifact.format)
+  reply.header('x-okp-artifact-kind', artifact.artifact_kind)
+  reply.header('x-okp-delivery-mode', artifact.delivery_mode)
+  reply.header('x-okp-review-required', String(artifact.review_required))
+  if (artifact.note) {
+    reply.header('x-okp-export-note', artifact.note)
+  }
 }
 
 export async function ifcInteropRoutes(app: FastifyInstance) {
@@ -321,9 +348,120 @@ export async function ifcInteropRoutes(app: FastifyInstance) {
       throw new Error('Export provider for ifc is not configured for artifacts.')
     }
 
+    applyArtifactHeaders(reply, artifact)
     reply.header('Content-Type', artifact.content_type)
     reply.header('Content-Disposition', `attachment; filename="${artifact.filename}"`)
     return reply.send(artifact.body)
+  })
+
+  app.post<{ Params: { id: string }; Body: z.infer<typeof IfcExportBodySchema> }>('/alternatives/:id/export/ifc/descriptor', async (request, reply) => {
+    const parsedParams = ParamsSchema.safeParse(request.params)
+    if (!parsedParams.success) {
+      return sendBadRequest(reply, parsedParams.error.errors[0]?.message ?? 'Invalid alternative id')
+    }
+
+    const parsedBody = IfcExportBodySchema.safeParse(request.body ?? {})
+    if (!parsedBody.success) {
+      return sendBadRequest(reply, parsedBody.error.errors[0]?.message ?? 'Invalid payload')
+    }
+
+    const alternative = await prisma.alternative.findUnique({
+      where: { id: parsedParams.data.id },
+      include: {
+        area: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+
+    if (!alternative) {
+      return sendNotFound(reply, 'Alternative not found')
+    }
+
+    const project = alternative.area.project
+    const level = parsedBody.data.level_id
+      ? await prisma.buildingLevel.findFirst({
+          where: {
+            id: parsedBody.data.level_id,
+            project_id: project.id,
+          },
+          select: { id: true, name: true },
+        })
+      : null
+
+    if (parsedBody.data.level_id && !level) {
+      return sendBadRequest(reply, 'level_id must reference a level in project scope')
+    }
+
+    const rooms = await prisma.room.findMany({
+      where: {
+        project_id: project.id,
+        ...(parsedBody.data.level_id ? { level_id: parsedBody.data.level_id } : {}),
+      },
+      orderBy: { created_at: 'asc' },
+    })
+
+    const sectionLines = rooms.flatMap((room) => parseSectionLines(room.section_lines))
+    const sectionLine = parsedBody.data.section_line_id
+      ? sectionLines.find((line) => line.id === parsedBody.data.section_line_id) ?? null
+      : sectionLines[0] ?? null
+
+    if (parsedBody.data.section_line_id && !sectionLine) {
+      return sendBadRequest(reply, 'section_line_id must reference a section line in project scope')
+    }
+
+    const exportRooms = rooms.map((room) => {
+      const boundary = (room.boundary as ExportBoundary | null) ?? null
+      const placements = (room.placements as ExportPlacement[] | null) ?? []
+
+      return {
+        id: room.id,
+        name: room.name,
+        boundary,
+        placements: placements.map((placement) => ({
+          id: placement.id,
+          width_mm: placement.width_mm ?? 600,
+          depth_mm: placement.depth_mm ?? 600,
+          height_mm: 720,
+          article_name: placement.article_id ?? 'Artikel',
+          offset_mm: placement.offset_mm ?? 0,
+        })),
+      }
+    })
+
+    const provider = getInteropProvider('ifc')
+    const artifact = await provider.exportArtifact?.({
+      projectId: project.id,
+      payload: {
+        projectName: project.name,
+        rooms: exportRooms as any,
+        alternativeId: parsedParams.data.id,
+        metadata: {
+          level_id: level?.id ?? sectionLine?.level_id ?? null,
+          level_name: level?.name ?? null,
+          section_line: sectionLine
+            ? {
+                id: sectionLine.id,
+                label: sectionLine.label ?? null,
+                direction: sectionLine.direction ?? null,
+                depth_mm: sectionLine.depth_mm ?? null,
+                level_scope: sectionLine.level_scope ?? null,
+                level_id: sectionLine.level_id ?? null,
+                sheet_visibility: sectionLine.sheet_visibility ?? null,
+                start: sectionLine.start,
+                end: sectionLine.end,
+              }
+            : null,
+        },
+      },
+    })
+    if (!artifact) {
+      throw new Error('Export provider for ifc is not configured for artifacts.')
+    }
+
+    return reply.send(toArtifactDescriptor(artifact))
   })
 
   app.get<{ Params: { id: string } }>('/projects/:id/ifc-jobs', async (request, reply) => {

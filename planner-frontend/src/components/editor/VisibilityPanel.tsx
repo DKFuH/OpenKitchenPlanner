@@ -1,6 +1,78 @@
 import { useEffect, useState } from 'react'
 import type { AutoDollhousePatch, AutoDollhouseSettings } from '../../api/visibility.js'
-import styles from './VisibilityPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    padding: '0.75rem',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+  },
+  title: {
+    margin: '0 0 0.45rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    color: tokens.colorNeutralForeground3,
+    letterSpacing: '0.05em',
+  },
+  row: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+    marginBottom: '0.4rem',
+  },
+  label: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  hint: {
+    margin: '0.25rem 0 0',
+    fontSize: '0.74rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  autoSection: {
+    marginTop: '0.7rem',
+    paddingTop: '0.55rem',
+    borderTop: `1px dashed ${tokens.colorNeutralStroke1}`,
+  },
+  autoHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: '0.45rem',
+  },
+  autoTitle: {
+    fontSize: '0.78rem',
+    fontWeight: '600',
+    color: tokens.colorNeutralForeground1,
+  },
+  autoStatus: {
+    fontSize: '0.72rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  field: {
+    display: 'grid',
+    gap: '0.2rem',
+    marginBottom: '0.45rem',
+    fontSize: '0.75rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  saveButton: {
+    width: '100%',
+    fontSize: '0.76rem',
+    padding: '0.35rem 0.5rem',
+    borderRadius: '6px',
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    background: 'var(--surface-raised, #182130)',
+    color: tokens.colorNeutralForeground1,
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+})
 
 interface Props {
   activeLevelName: string | null
@@ -26,6 +98,8 @@ function ToggleRow({
   value: boolean | null
   onChange: (next: boolean) => void
 }) {
+  const styles = useStyles();
+
   return (
     <label className={styles.row}>
       <span className={styles.label}>{label}</span>
@@ -40,7 +114,7 @@ function ToggleRow({
 }
 
 export function VisibilityPanel({
-  activeLevelName,
+activeLevelName,
   activeLevelVisible,
   dimensionsVisible,
   placementsVisible,
@@ -53,6 +127,8 @@ export function VisibilityPanel({
   onSetSelectedWallVisible,
   onSaveAutoDollhouse,
 }: Props) {
+  const styles = useStyles();
+
   const [draftEnabled, setDraftEnabled] = useState(false)
   const [draftAlpha, setDraftAlpha] = useState(0.32)
   const [draftDistance, setDraftDistance] = useState(2400)

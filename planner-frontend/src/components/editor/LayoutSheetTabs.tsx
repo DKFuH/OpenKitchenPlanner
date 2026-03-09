@@ -1,7 +1,45 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client.js'
 import { layoutStylesApi, type LayoutStylePreset } from '../../api/layoutStyles.js'
-import styles from './LayoutSheetTabs.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  tabBar: {
+    display: 'flex',
+    gap: '0.125rem',
+    padding: '0.3rem 1rem',
+    background: 'var(--editor-bg)',
+    borderBottom: '1px solid var(--editor-border)',
+    overflowX: 'auto',
+  },
+  tab: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.35rem 0.75rem',
+    border: '1px solid transparent',
+    borderRadius: `${tokens.borderRadiusSmall} ${tokens.borderRadiusSmall} 0 0`,
+    background: 'none',
+    color: 'var(--editor-text-muted)',
+    cursor: 'pointer',
+    fontSize: '0.8rem',
+    whiteSpace: 'nowrap',
+    '&:hover': {
+      background: 'var(--editor-surface-alt)',
+      color: 'var(--editor-text)',
+    },
+  },
+  active: {
+    background: 'var(--editor-surface)',
+    borderBottomColor: 'var(--editor-surface)',
+    color: 'var(--editor-text)',
+    fontWeight: '600',
+    border: '1px solid var(--editor-border)',
+  },
+  icon: {
+    fontSize: '0.7rem',
+  },
+})
 
 export interface LayoutSheet {
   id: string
@@ -33,7 +71,10 @@ const SHEET_LABELS: Record<string, string> = {
   section: 'SC',
 }
 
-export function LayoutSheetTabs({ projectId, activeLevelId = null, activeSheetId, onSheetChange, showDaylightOptions = false }: Props) {
+export function LayoutSheetTabs({
+projectId, activeLevelId = null, activeSheetId, onSheetChange, showDaylightOptions = false }: Props) {
+  const styles = useStyles();
+
   const [sheets, setSheets] = useState<LayoutSheet[]>([])
   const [presets, setPresets] = useState<LayoutStylePreset[]>([])
 

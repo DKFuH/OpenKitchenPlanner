@@ -6,7 +6,86 @@ import {
   type ImportJob,
   type ImportProtocolEntry,
 } from '../../api/imports.js'
-import styles from './ImportJobPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    padding: '0.75rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    background: tokens.colorNeutralBackground1,
+    boxShadow: tokens.shadow8,
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.95rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  status: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  controls: {
+    display: 'flex',
+    gap: '0.5rem',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  fileInput: {
+    fontSize: '0.82rem',
+  },
+  uploadBtn: {
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    borderRadius: tokens.borderRadiusCircular,
+    padding: '0.35rem 0.7rem',
+    fontSize: '0.82rem',
+    cursor: 'pointer',
+    boxShadow: tokens.shadow4,
+    '&:disabled': {
+      opacity: '0.55',
+      cursor: 'not-allowed',
+    },
+  },
+  meta: {
+    margin: '0',
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  error: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.82rem',
+  },
+  protocol: {
+    margin: '0',
+    paddingLeft: '1rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.3rem',
+  },
+  protocolItem: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  protocolTag: {
+    display: 'inline-block',
+    marginRight: '0.35rem',
+    minWidth: '5.2rem',
+    fontWeight: '600',
+    color: tokens.colorNeutralForeground1,
+  },
+})
 
 interface Props {
   projectId: string
@@ -32,7 +111,10 @@ function normalizeProtocol(protocol: ImportJob['protocol']): ImportProtocolEntry
   )) as ImportProtocolEntry[]
 }
 
-export function ImportJobPanel({ projectId, pollIntervalMs = 1500, onJobUpdated }: Props) {
+export function ImportJobPanel({
+projectId, pollIntervalMs = 1500, onJobUpdated }: Props) {
+  const styles = useStyles();
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [activeJob, setActiveJob] = useState<ImportJob | null>(null)
   const [loading, setLoading] = useState(false)

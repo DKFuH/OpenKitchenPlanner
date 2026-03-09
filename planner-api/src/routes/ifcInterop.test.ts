@@ -188,6 +188,9 @@ describe('ifcInteropRoutes', () => {
 
     expect(response.statusCode).toBe(200)
     expect(response.headers['content-type']).toContain('application/x-step')
+    expect(response.headers['x-okp-provider-id']).toBe('core.ifc')
+    expect(response.headers['x-okp-artifact-kind']).toBe('bim')
+    expect(response.headers['x-okp-delivery-mode']).toBe('native')
 
     await app.close()
   })
@@ -253,6 +256,29 @@ describe('ifcInteropRoutes', () => {
 
     expect(response.statusCode).toBe(400)
     expect(response.json()).toMatchObject({ error: 'BAD_REQUEST' })
+
+    await app.close()
+  })
+
+  it('returns a descriptor for IFC export artifacts', async () => {
+    const app = await createApp()
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/alternatives/${alternativeId}/export/ifc/descriptor`,
+    })
+
+    expect(response.statusCode).toBe(200)
+    expect(response.json()).toMatchObject({
+      provider_id: 'core.ifc',
+      format: 'ifc',
+      artifact_kind: 'bim',
+      delivery_mode: 'native',
+      filename: `alternative-${alternativeId}.ifc`,
+      content_type: 'application/x-step',
+      native: true,
+      review_required: false,
+    })
 
     await app.close()
   })

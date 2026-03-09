@@ -12,7 +12,63 @@ import type { EditorAPI } from '../../editor/usePolygonEditor.js'
 import { autofixBoundaryVertices, buildBoundaryFromVertices, rebindOpeningsAndPlacements } from '../../editor/roomTopology.js'
 import type { NavigationSettings } from './navigationSettings.js'
 import { CompassOverlay } from './CompassOverlay.js'
-import styles from './CanvasArea.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  canvas: {
+    flex: '1',
+    background: tokens.colorNeutralBackground2,
+    position: 'relative',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  canvasViewport: {
+    flex: '1',
+    overflow: 'hidden',
+  },
+  placeholder: {
+    flex: '1',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: tokens.colorNeutralForeground3,
+    '& p': {
+      margin: '0.25rem 0',
+      fontSize: '1rem',
+    },
+  },
+  hint: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralStroke2,
+    marginTop: '0.5rem !important',
+  },
+  overlay: {
+    position: 'absolute',
+    inset: '0',
+    background: 'rgba(0, 0, 0, 0.45)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '1rem',
+    color: tokens.colorBrandForeground1,
+    zIndex: '10',
+  },
+  errorOverlay: {
+    position: 'absolute',
+    bottom: '2rem',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: tokens.colorPaletteRedBackground1,
+    color: tokens.colorPaletteRedForeground1,
+    padding: '0.5rem 1rem',
+    borderRadius: tokens.borderRadiusSmall,
+    border: '1px solid var(--status-danger-border)',
+    fontSize: '0.875rem',
+    zIndex: '10',
+  },
+})
 
 interface Props {
   room: RoomPayload | null
@@ -64,7 +120,10 @@ function createWallId(): string {
   return `wall-${Math.random().toString(36).slice(2, 12)}`
 }
 
-export function CanvasArea({ room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, centerlines, selectedPlacementId, onSelectPlacement, highlightedOpeningIds = [], highlightedPlacementIds = [], canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, edgeLengthPreviewMm = null, onReferenceImageUpdate, navigationSettings, safeEditMode, showCompass = false, northAngleDeg = 0, virtualVisitor = null, onRepositionVisitor, onBoundaryTopologyRebind, onShortcutBlocked }: Props) {
+export function CanvasArea({
+room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, centerlines, selectedPlacementId, onSelectPlacement, highlightedOpeningIds = [], highlightedPlacementIds = [], canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, edgeLengthPreviewMm = null, onReferenceImageUpdate, navigationSettings, safeEditMode, showCompass = false, northAngleDeg = 0, virtualVisitor = null, onRepositionVisitor, onBoundaryTopologyRebind, onShortcutBlocked }: Props) {
+  const styles = useStyles();
+
   const containerRef = useRef<HTMLDivElement>(null)
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 600 })
   const [saving, setSaving] = useState(false)

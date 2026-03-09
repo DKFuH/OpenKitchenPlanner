@@ -3,7 +3,27 @@ import { useTranslation } from 'react-i18next'
 import { languagePacksApi } from '../api/languagePacks.js'
 import { hydrateLocaleMessages } from '../i18n/index.js'
 import { SUPPORTED_LOCALES } from '../i18n/resolveLocale.js'
-import styles from './LanguageSwitcher.module.css'
+import { makeStyles } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  switcher: {
+    display: 'flex',
+    gap: '4px',
+  },
+  button: {
+    padding: '4px 10px',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
+    fontWeight: '400',
+    cursor: 'pointer',
+    background: 'transparent',
+  },
+  buttonActive: {
+    border: '2px solid currentColor',
+    fontWeight: '700',
+    cursor: 'default',
+  },
+})
 
 const LOCALE_LABELS: Record<string, string> = {
   de: 'DE',
@@ -20,7 +40,10 @@ interface Props {
  * Updates i18next, localStorage (okp_locale), document.documentElement.lang,
  * and fires-and-forgets a PUT /api/v1/tenant/locale-settings.
  */
-export function LanguageSwitcher({ onChange }: Props) {
+export function LanguageSwitcher({
+onChange }: Props) {
+  const styles = useStyles();
+
   const { i18n } = useTranslation()
   const current = i18n.language
   const [packLocales, setPackLocales] = useState<string[]>([])

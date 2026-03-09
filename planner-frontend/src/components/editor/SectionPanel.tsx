@@ -1,7 +1,176 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { SectionLine } from '@shared/types'
 import type { BuildingLevel } from '../../api/levels.js'
-import styles from './SectionPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  section: {
+    padding: '0.75rem',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.45rem',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '0.5rem',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    color: tokens.colorNeutralForeground3,
+    letterSpacing: '0.05em',
+  },
+  newButton: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.72rem',
+    padding: '0.18rem 0.45rem',
+    cursor: 'pointer',
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+    '&:disabled': {
+      cursor: 'not-allowed',
+      opacity: '0.6',
+    },
+  },
+  list: {
+    listStyle: 'none',
+    margin: '0',
+    padding: '0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+    maxHeight: '132px',
+    overflowY: 'auto',
+  },
+  rowButton: {
+    width: '100%',
+    textAlign: 'left',
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.3rem 0.4rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.12rem',
+    cursor: 'pointer',
+    '&:hover': {
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+    '&:disabled': {
+      cursor: 'not-allowed',
+      opacity: '0.6',
+    },
+  },
+  rowButtonActive: {
+    background: tokens.colorBrandBackground2,
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+  },
+  rowLabel: {
+    fontSize: '0.72rem',
+    fontWeight: '600',
+    color: tokens.colorNeutralForeground1,
+  },
+  rowMeta: {
+    fontSize: '0.7rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  form: {
+    display: 'grid',
+    gridTemplateColumns: '1fr',
+    gap: '0.24rem',
+  },
+  label: {
+    fontSize: '0.68rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  input: {
+    width: '100%',
+    boxSizing: 'border-box',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.25rem 0.4rem',
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    fontSize: '0.76rem',
+    '&:disabled': {
+      cursor: 'not-allowed',
+      opacity: '0.6',
+    },
+  },
+  hint: {
+    margin: '0',
+    fontSize: '0.76rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  warn: {
+    margin: '0',
+    fontSize: '0.74rem',
+    color: 'var(--status-warning-text)',
+    background: 'var(--status-warning-bg)',
+    border: '1px solid var(--status-warning-border)',
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.3rem 0.45rem',
+  },
+  error: {
+    margin: '0',
+    fontSize: '0.74rem',
+    color: tokens.colorPaletteRedForeground1,
+  },
+  actions: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: '0.3rem',
+  },
+  primaryButton: {
+    borderRadius: tokens.borderRadiusSmall,
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    fontSize: '0.74rem',
+    padding: '0.26rem 0.35rem',
+    cursor: 'pointer',
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    '&:disabled': {
+      cursor: 'not-allowed',
+      opacity: '0.6',
+    },
+  },
+  secondaryButton: {
+    borderRadius: tokens.borderRadiusSmall,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    fontSize: '0.74rem',
+    padding: '0.26rem 0.35rem',
+    cursor: 'pointer',
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    '&:disabled': {
+      cursor: 'not-allowed',
+      opacity: '0.6',
+    },
+  },
+  deleteButton: {
+    borderRadius: tokens.borderRadiusSmall,
+    border: `1px solid ${tokens.colorPaletteRedForeground1}`,
+    fontSize: '0.74rem',
+    padding: '0.26rem 0.35rem',
+    cursor: 'pointer',
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorPaletteRedForeground1,
+    '&:disabled': {
+      cursor: 'not-allowed',
+      opacity: '0.6',
+    },
+  },
+})
 
 type SectionDirection = 'left' | 'right' | 'both'
 type SectionScope = 'room_level' | 'single_level' | 'range' | 'all_levels'
@@ -52,7 +221,7 @@ const VISIBILITY_OPTIONS: Array<{ value: SectionVisibility; label: string }> = [
 ]
 
 export function SectionPanel({
-  enabled,
+enabled,
   hasSelectedRoom,
   activeLevelId,
   levels,
@@ -63,6 +232,8 @@ export function SectionPanel({
   onUpdate,
   onDelete,
 }: Props) {
+  const styles = useStyles();
+
   const [label, setLabel] = useState('')
   const [depthMm, setDepthMm] = useState('1500')
   const [direction, setDirection] = useState<SectionDirection>('both')

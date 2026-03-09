@@ -1,7 +1,127 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Placement } from '../api/placements.js'
 import { kitchenAssistantApi, type CatalogMacro, type LayoutSuggestion } from '../api/kitchenAssistant.js'
-import styles from './KitchenAssistantPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  section: {
+    padding: '0.75rem',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+  },
+  title: {
+    margin: '0 0 0.5rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    color: tokens.colorNeutralForeground3,
+    letterSpacing: '0.05em',
+  },
+  row: {
+    display: 'flex',
+    gap: '0.35rem',
+    marginBottom: '0.4rem',
+  },
+  select: {
+    width: '100%',
+    boxSizing: 'border-box',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.35rem 0.45rem',
+    fontSize: '0.8rem',
+  },
+  input: {
+    width: '100%',
+    boxSizing: 'border-box',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.35rem 0.45rem',
+    fontSize: '0.8rem',
+  },
+  button: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.3rem 0.45rem',
+    fontSize: '0.75rem',
+    cursor: 'pointer',
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+  list: {
+    margin: '0',
+    padding: '0',
+    listStyle: 'none',
+    display: 'grid',
+    gap: '0.35rem',
+  },
+  item: {
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.35rem',
+    fontSize: '0.75rem',
+  },
+  itemTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '0.35rem',
+  },
+  name: {
+    margin: '0',
+    fontWeight: '600',
+    color: tokens.colorNeutralForeground1,
+  },
+  meta: {
+    margin: '0',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.7rem',
+  },
+  inline: {
+    display: 'flex',
+    gap: '0.3rem',
+    flexWrap: 'wrap',
+  },
+  hint: {
+    margin: '0.3rem 0 0',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.72rem',
+  },
+  error: {
+    margin: '0.3rem 0 0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.72rem',
+  },
+  tabs: {
+    display: 'flex',
+    gap: '0.3rem',
+    marginBottom: '0.5rem',
+  },
+  tab: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground3,
+    padding: '0.25rem 0.45rem',
+    fontSize: '0.72rem',
+    cursor: 'pointer',
+  },
+  tabActive: {
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.25rem 0.45rem',
+    fontSize: '0.72rem',
+    cursor: 'pointer',
+  },
+})
 
 interface Props {
   roomId: string | null
@@ -10,7 +130,10 @@ interface Props {
 
 type AssistantTab = 'catalog' | 'assistant'
 
-export function KitchenAssistantPanel({ roomId, placements }: Props) {
+export function KitchenAssistantPanel({
+roomId, placements }: Props) {
+  const styles = useStyles();
+
   const [tab, setTab] = useState<AssistantTab>('catalog')
   const [collections, setCollections] = useState<string[]>([])
   const [families, setFamilies] = useState<string[]>([])

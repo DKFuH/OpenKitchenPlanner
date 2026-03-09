@@ -7,7 +7,41 @@ import {
   type ConstraintType,
   type GeometryConstraint,
 } from '../api/constraints.js'
-import styles from './ConstraintsPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  section: {
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+    marginTop: '12px',
+    paddingTop: '12px',
+  },
+  title: {
+    margin: '0 0 8px',
+  },
+  formGrid: {
+    display: 'grid',
+    gap: '8px',
+  },
+  solveSection: {
+    marginTop: '10px',
+    display: 'grid',
+    gap: '8px',
+  },
+  persistLabel: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+  },
+  listSection: {
+    marginTop: '12px',
+  },
+  empty: {
+    marginTop: '6px',
+  },
+  deleteButton: {
+    marginLeft: '8px',
+  },
+})
 
 type Props = {
   roomId: string
@@ -24,7 +58,10 @@ const CONSTRAINT_TYPES: ConstraintType[] = [
   'driving_dimension',
 ]
 
-export function ConstraintsPanel({ roomId }: Props) {
+export function ConstraintsPanel({
+roomId }: Props) {
+  const styles = useStyles();
+
   const [items, setItems] = useState<GeometryConstraint[]>([])
   const [type, setType] = useState<ConstraintType>('horizontal')
   const [targetRefsText, setTargetRefsText] = useState('')

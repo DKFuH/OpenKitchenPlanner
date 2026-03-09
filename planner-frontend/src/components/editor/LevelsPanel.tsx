@@ -1,6 +1,148 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import type { BuildingLevel } from '../../api/levels.js'
-import styles from './LevelsPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  section: {
+    padding: '0.75rem',
+    borderBottom: `1px solid ${tokens.colorNeutralStroke1}`,
+  },
+  title: {
+    margin: '0 0 0.5rem',
+    fontSize: '0.75rem',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    color: tokens.colorNeutralForeground3,
+    letterSpacing: '0.05em',
+  },
+  empty: {
+    margin: '0 0 0.5rem',
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  list: {
+    listStyle: 'none',
+    margin: '0',
+    padding: '0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+  },
+  row: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+  },
+  levelButton: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    width: '100%',
+    border: 'none',
+    background: tokens.colorNeutralBackground2,
+    color: tokens.colorNeutralForeground1,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.35rem 0.5rem',
+    cursor: 'pointer',
+    fontSize: '0.82rem',
+    '&:hover': {
+      background: 'var(--surface-hover)',
+    },
+  },
+  levelButtonActive: {
+    background: tokens.colorBrandBackground2,
+    color: tokens.colorBrandForeground1,
+    fontWeight: '600',
+  },
+  meta: {
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.75rem',
+  },
+  visibilityToggle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.35rem',
+    fontSize: '0.74rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  addButton: {
+    width: '100%',
+    border: `1px dashed ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.35rem',
+    fontSize: '0.8rem',
+    background: 'none',
+    color: tokens.colorNeutralForeground3,
+    cursor: 'pointer',
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  confirmButton: {
+    width: 'auto',
+    border: `1px dashed ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.35rem',
+    fontSize: '0.8rem',
+    background: 'none',
+    color: tokens.colorNeutralForeground3,
+    cursor: 'pointer',
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+    flex: '1',
+  },
+  cancelButton: {
+    width: 'auto',
+    border: `1px dashed ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0.35rem',
+    fontSize: '0.8rem',
+    background: 'none',
+    color: tokens.colorNeutralForeground3,
+    cursor: 'pointer',
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+    flex: '1',
+  },
+  addForm: {
+    marginTop: '0.35rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.35rem',
+  },
+  fieldLabel: {
+    fontSize: '0.73rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  select: {
+    width: '100%',
+    boxSizing: 'border-box',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.3rem 0.45rem',
+    fontSize: '0.8rem',
+  },
+  input: {
+    width: '100%',
+    boxSizing: 'border-box',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.3rem 0.45rem',
+    fontSize: '0.8rem',
+  },
+  actions: {
+    display: 'flex',
+    gap: '0.35rem',
+  },
+})
 
 interface Props {
   levels: BuildingLevel[]
@@ -18,7 +160,10 @@ const PRESET_ELEVATIONS: Record<Exclude<LevelPreset, 'custom'>, number> = {
   UG: -2800,
 }
 
-export function LevelsPanel({ levels, activeLevelId, onSelectLevel, onToggleVisibility, onCreateLevel }: Props) {
+export function LevelsPanel({
+levels, activeLevelId, onSelectLevel, onToggleVisibility, onCreateLevel }: Props) {
+  const styles = useStyles();
+
   const [adding, setAdding] = useState(false)
   const [preset, setPreset] = useState<LevelPreset>('EG')
   const [customName, setCustomName] = useState('')

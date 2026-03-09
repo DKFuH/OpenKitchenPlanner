@@ -11,6 +11,9 @@ export const skpProvider: InteropProvider = {
   format: 'skp',
   getCapabilities() {
     return {
+      provider_id: 'core.skp',
+      provider_kind: 'embedded',
+      availability: 'stable',
       format: 'skp',
       import_preview: true,
       import_execute: true,
@@ -19,6 +22,8 @@ export const skpProvider: InteropProvider = {
       native_write: false,
       review_required_by_default: true,
       artifact_kind: 'script',
+      import_delivery_mode: 'fallback',
+      export_delivery_mode: 'script',
     }
   },
   async importPreview(request) {
@@ -63,11 +68,15 @@ export const skpProvider: InteropProvider = {
           : `${trimmed}.skp.rb`
 
     return {
+      provider_id: 'core.skp',
       format: 'skp',
+      artifact_kind: 'script',
+      delivery_mode: 'script',
       content_type: 'application/ruby; charset=utf-8',
       filename,
       body,
       native: false,
+      review_required: false,
       note: 'skp endpoint returns a SketchUp Ruby import script',
     }
   },

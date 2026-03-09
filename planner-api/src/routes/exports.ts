@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { prisma } from '../db.js'
 import { sendBadRequest, sendForbidden, sendNotFound } from '../errors.js'
 import { getInteropProvider } from '../services/interop/providers/registry.js'
+import type { InteropExportArtifact, InteropFormat } from '../services/interop/providers/types.js'
 
 type GltfBoundary = {
   wall_segments?: Array<{
@@ -88,6 +89,11 @@ const ExportProjectParamsSchema = z.object({
   projectId: z.string().uuid(),
 })
 
+const ExportFormatParamsSchema = z.object({
+  projectId: z.string().uuid(),
+  format: z.enum(['dxf', 'dwg', 'skp']),
+})
+
 function getTenantId(request: unknown): string | null {
   const scopedTenantId = (request as { tenantId?: string | null }).tenantId
   if (scopedTenantId) {
@@ -126,6 +132,87 @@ function mapWallSegmentsForCad(payload: z.infer<typeof ExportRequestSchema>['pay
   }))
 }
 
+function toArtifactDescriptor(artifact: InteropExportArtifact) {
+  return {
+    provider_id: artifact.provider_id,
+    format: artifact.format,
+    artifact_kind: artifact.artifact_kind,
+    delivery_mode: artifact.delivery_mode,
+    filename: artifact.filename,
+    content_type: artifact.content_type,
+    native: artifact.native,
+    review_required: artifact.review_required,
+    fallback_of: artifact.fallback_of ?? null,
+    note: artifact.note ?? null,
+  }
+}
+
+function applyArtifactHeaders(reply: FastifyReply, artifact: InteropExportArtifact): void {
+  reply.header('x-okp-provider-id', artifact.provider_id)
+  reply.header('x-okp-artifact-format', artifact.format)
+  reply.header('x-okp-artifact-kind', artifact.artifact_kind)
+  reply.header('x-okp-delivery-mode', artifact.delivery_mode)
+  reply.header('x-okp-review-required', String(artifact.review_required))
+
+  if (artifact.fallback_of) {
+    reply.header('x-okp-export-fallback', `${artifact.fallback_of}->${artifact.format === 'dwg' ? 'dxf' : artifact.format}`)
+  }
+  if (artifact.note) {
+    reply.header('x-okp-export-note', artifact.note)
+  }
+}
+
+async function buildProjectScopedArtifact(
+  format: InteropFormat,
+  projectId: string,
+  parsed: z.infer<typeof ExportRequestSchema>,
+): Promise<InteropExportArtifact> {
+  const provider = getInteropProvider(format)
+
+  if (format === 'dxf') {
+    const artifact = await provider.exportArtifact?.({
+      projectId,
+      filename: parsed.filename,
+      payload: parsed.payload as Record<string, unknown>,
+    })
+    if (!artifact) {
+      throw new Error('Export provider for dxf is not configured for artifacts.')
+    }
+    return artifact
+  }
+
+  if (format === 'dwg') {
+    const artifact = await provider.exportArtifact?.({
+      projectId,
+      filename: parsed.filename,
+      payload: {
+        projectName: parsed.filename?.trim() || `project-${projectId}`,
+        wall_segments: mapWallSegmentsForCad(parsed.payload),
+        placements: [],
+      },
+    })
+    if (!artifact) {
+      throw new Error('Export provider for dwg is not configured for artifacts.')
+    }
+    return artifact
+  }
+
+  const artifact = await provider.exportArtifact?.({
+    projectId,
+    filename: parsed.filename,
+    payload: {
+      projectName: parsed.filename?.trim() || `project-${projectId}`,
+      wall_segments: mapWallSegmentsForCad(parsed.payload),
+      placements: [],
+      ceiling_height_mm: 2600,
+    },
+  })
+  if (!artifact) {
+    throw new Error('Export provider for skp is not configured for artifacts.')
+  }
+  return artifact
+}
+
 export async function exportRoutes(app: FastifyInstance) {
   const dxfHandler = async (
     request: { body: unknown; params?: unknown; tenantId?: string | null },
@@ -159,16 +246,9 @@ export async function exportRoutes(app: FastifyInstance) {
       return reply
     }
 
-    const provider = getInteropProvider('dxf')
-    const artifact = await provider.exportArtifact?.({
-      projectId,
-      filename: parsed.data.filename,
-      payload: parsed.data.payload as Record<string, unknown>,
-    })
-    if (!artifact) {
-      throw new Error('Export provider for dxf is not configured for artifacts.')
-    }
+    const artifact = await buildProjectScopedArtifact('dxf', projectId, parsed.data)
 
+    applyArtifactHeaders(reply, artifact)
     reply.header('content-disposition', `attachment; filename="${artifact.filename}"`)
     reply.type(artifact.content_type)
     return reply.send(artifact.body)
@@ -206,26 +286,9 @@ export async function exportRoutes(app: FastifyInstance) {
       return reply
     }
 
-    const provider = getInteropProvider('dwg')
-    const artifact = await provider.exportArtifact?.({
-      projectId,
-      filename: parsed.data.filename,
-      payload: {
-        projectName: parsed.data.filename?.trim() || `project-${projectId}`,
-        wall_segments: mapWallSegmentsForCad(parsed.data.payload),
-        placements: [],
-      },
-    })
-    if (!artifact) {
-      throw new Error('Export provider for dwg is not configured for artifacts.')
-    }
+    const artifact = await buildProjectScopedArtifact('dwg', projectId, parsed.data)
 
-    if (artifact.fallback_of) {
-      reply.header('x-okp-export-fallback', `${artifact.fallback_of}->${artifact.format === 'dwg' ? 'dxf' : artifact.format}`)
-    }
-    if (artifact.note) {
-      reply.header('x-okp-export-note', artifact.note)
-    }
+    applyArtifactHeaders(reply, artifact)
     reply.header('content-disposition', `attachment; filename="${artifact.filename}"`)
     reply.type(artifact.content_type)
     return reply.send(artifact.body)
@@ -263,28 +326,42 @@ export async function exportRoutes(app: FastifyInstance) {
       return reply
     }
 
-    const provider = getInteropProvider('skp')
-    const artifact = await provider.exportArtifact?.({
-      projectId,
-      filename: parsed.data.filename,
-      payload: {
-        projectName: parsed.data.filename?.trim() || `project-${projectId}`,
-        wall_segments: mapWallSegmentsForCad(parsed.data.payload),
-        placements: [],
-        ceiling_height_mm: 2600,
-      },
-    })
-    if (!artifact) {
-      throw new Error('Export provider for skp is not configured for artifacts.')
-    }
+    const artifact = await buildProjectScopedArtifact('skp', projectId, parsed.data)
 
-    if (artifact.note) {
-      reply.header('x-okp-export-note', artifact.note)
-    }
+    applyArtifactHeaders(reply, artifact)
     reply.header('content-disposition', `attachment; filename="${artifact.filename}"`)
     reply.type(artifact.content_type)
     return reply.send(artifact.body)
   }
+
+  app.post('/projects/:projectId/export-descriptor/:format', async (request, reply) => {
+    const tenantId = getTenantId(request)
+    if (!tenantId) {
+      return sendForbidden(reply, 'Tenant scope is required')
+    }
+
+    const parsedBody = ExportRequestSchema.safeParse(request.body)
+    if (!parsedBody.success) {
+      return sendBadRequest(reply as never, parsedBody.error.errors[0].message)
+    }
+
+    const parsedParams = ExportFormatParamsSchema.safeParse(request.params)
+    if (!parsedParams.success) {
+      return sendBadRequest(reply as never, parsedParams.error.errors[0].message)
+    }
+
+    if (parsedBody.data.project_id && parsedBody.data.project_id !== parsedParams.data.projectId) {
+      return sendBadRequest(reply as never, 'project_id in payload must match route parameter.')
+    }
+
+    const project = await assertProjectInTenantScope(reply, tenantId, parsedParams.data.projectId)
+    if (!project) {
+      return reply
+    }
+
+    const artifact = await buildProjectScopedArtifact(parsedParams.data.format, parsedParams.data.projectId, parsedBody.data)
+    return reply.send(toArtifactDescriptor(artifact))
+  })
 
   app.post('/exports/dxf', dxfHandler)
   app.post('/projects/:projectId/export-dxf', dxfHandler)

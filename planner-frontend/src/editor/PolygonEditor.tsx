@@ -14,7 +14,192 @@ import { resolvePolygonShortcutStates } from './actionStateResolver.js'
 import { CenterlineLayer } from '../components/canvas/CenterlineLayer.js'
 import { AcousticOverlay } from '../pages/AcousticOverlay.js'
 import { profileZoomFactor, type NavigationSettings } from '../components/editor/navigationSettings.js'
-import styles from './PolygonEditor.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '100%',
+    height: '100%',
+  },
+  toolbar: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+    padding: '0.4rem 0.75rem',
+    background: tokens.colorNeutralBackground1,
+    borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
+    flexShrink: '0',
+  },
+  spacer: {
+    flex: '1',
+  },
+  hiddenFileInput: {
+    display: 'none',
+  },
+  referenceOpacitySlider: {
+    width: '80px',
+  },
+  modifierBadge: {
+    padding: '0.2rem 0.5rem',
+    borderRadius: tokens.borderRadiusCircular,
+    border: `1px solid ${tokens.colorPaletteBlueForeground2}`,
+    color: tokens.colorPaletteBlueForeground2,
+    background: tokens.colorPaletteBlueBackground2,
+    fontSize: '0.72rem',
+    fontWeight: '700',
+    letterSpacing: '0.03em',
+  },
+  settingToggle: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.28rem',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  settingField: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.3rem',
+    fontSize: '0.78rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  settingMeta: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '0.18rem 0.45rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusCircular,
+    background: tokens.colorNeutralBackground2,
+    fontSize: '0.74rem',
+    color: tokens.colorNeutralForeground3,
+    whiteSpace: 'nowrap',
+  },
+  settingMetaWarn: {
+    background: tokens.colorPaletteRedBackground1,
+    color: tokens.colorPaletteRedForeground1,
+    border: `1px solid ${tokens.colorPaletteRedForeground1}`,
+  },
+  settingMetaActive: {
+    background: tokens.colorBrandBackground2,
+    color: tokens.colorBrandForeground1,
+    fontWeight: '600',
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+  },
+  settingMetaSubtle: {
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground3,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+  },
+  settingMetaButton: {
+    appearance: 'none',
+    cursor: 'pointer',
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  settingInput: {
+    width: '62px',
+    height: '24px',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    padding: '0 0.3rem',
+    fontSize: '0.78rem',
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    '&:focus': {
+      outline: 'none',
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  stageCrosshair: {
+    cursor: 'crosshair',
+  },
+  stageDefault: {
+    cursor: 'default',
+  },
+  toolBtn: {
+    padding: '0.3rem 0.75rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+    color: tokens.colorNeutralForeground1,
+    '&:hover': {
+      color: tokens.colorBrandForeground1,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  toolBtnActive: {
+    background: tokens.colorBrandBackground2,
+    color: tokens.colorBrandForeground1,
+    fontWeight: '600',
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+  },
+  closeBtn: {
+    padding: '0.3rem 0.75rem',
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    borderRadius: tokens.borderRadiusCircular,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+  },
+  resetBtn: {
+    padding: '0.3rem 0.75rem',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusCircular,
+    background: 'none',
+    color: tokens.colorNeutralForeground3,
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+    '&:hover': {
+      color: tokens.colorPaletteRedForeground1,
+      border: `1px solid ${tokens.colorPaletteRedForeground1}`,
+    },
+  },
+  saveBtn: {
+    padding: '0.3rem 1rem',
+    border: 'none',
+    borderRadius: tokens.borderRadiusCircular,
+    background: tokens.colorPaletteGreenForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+    fontWeight: '600',
+    '&:hover': {
+      background: tokens.colorPaletteGreenBackground3,
+    },
+  },
+  errorBadge: {
+    fontSize: '0.78rem',
+    color: tokens.colorPaletteRedForeground1,
+    background: tokens.colorPaletteRedBackground1,
+    padding: '0.2rem 0.6rem',
+    borderRadius: tokens.borderRadiusSmall,
+    maxWidth: '300px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  info: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '0.25rem 0.75rem',
+    background: tokens.colorNeutralBackground2,
+    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+    fontSize: '0.75rem',
+    color: tokens.colorNeutralForeground3,
+    flexShrink: '0',
+  },
+  vertexCount: {
+    fontWeight: '600',
+    color: tokens.colorNeutralForeground3,
+  },
+})
 
 // ─── Koordinaten-Umrechnung ───────────────────────────────────────────────────
 // Welt (mm) ↔ Canvas (px): 1px = SCALE mm
@@ -196,7 +381,7 @@ interface Props {
 }
 
 export function PolygonEditor({
-  width, height, state, isValid,
+width, height, state, isValid,
   onAddVertex, onClosePolygon, onMoveVertex,
   onSelectVertex, onSelectEdge, onHoverVertex, onDeleteVertex,
   onUpdateSettings,
@@ -222,6 +407,8 @@ export function PolygonEditor({
   safeEditMode = false,
   onShortcutBlocked,
 }: Props) {
+  const styles = useStyles();
+
   const containerRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const calibrationPointsRef = useRef<Array<{ x: number; y: number }>>([])
@@ -1486,6 +1673,8 @@ export function PolygonEditor({
 function ToolBtn({ active, onClick, children }: {
   active: boolean; onClick: () => void; children: React.ReactNode
 }) {
+  const styles = useStyles();
+
   return (
     <button
       type="button"

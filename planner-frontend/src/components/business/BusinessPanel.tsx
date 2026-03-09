@@ -11,7 +11,218 @@ import {
   type LeadStatus,
   type UpdateBusinessSummaryPayload,
 } from '../../api/business.js'
-import styles from './BusinessPanel.module.css'
+import { makeStyles, tokens } from '@fluentui/react-components'
+
+const useStyles = makeStyles({
+  panel: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusLarge,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.75rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.7rem',
+    boxShadow: tokens.shadow8,
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '0.5rem',
+  },
+  title: {
+    margin: '0',
+    fontSize: '0.95rem',
+    color: tokens.colorNeutralForeground1,
+  },
+  meta: {
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground3,
+  },
+  fields: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: '0.5rem',
+    '@media (max-width: 900px)': {
+      gridTemplateColumns: '1fr',
+    },
+  },
+  field: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+    fontSize: '0.8rem',
+    color: tokens.colorNeutralForeground1,
+    '& input': {
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderRadius: tokens.borderRadiusSmall,
+      padding: '0.35rem 0.45rem',
+      fontSize: '0.82rem',
+      background: tokens.colorNeutralBackground1,
+    },
+    '& select': {
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderRadius: tokens.borderRadiusSmall,
+      padding: '0.35rem 0.45rem',
+      fontSize: '0.82rem',
+      background: tokens.colorNeutralBackground1,
+    },
+    '& input:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+    '& select:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+  },
+  webhookRow: {
+    '& input': {
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      borderRadius: tokens.borderRadiusSmall,
+      padding: '0.35rem 0.45rem',
+      fontSize: '0.82rem',
+      background: tokens.colorNeutralBackground1,
+      flex: '1',
+    },
+    '& input:focus': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${tokens.colorStrokeFocus2}`,
+      border: `1px solid ${tokens.colorBrandForeground1}`,
+    },
+    '& button': {
+      borderRadius: tokens.borderRadiusCircular,
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      background: tokens.colorNeutralBackground1,
+      color: tokens.colorNeutralForeground1,
+      padding: '0.35rem 0.6rem',
+      fontSize: '0.82rem',
+      cursor: 'pointer',
+    },
+    '& button:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+    '& button:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+    display: 'flex',
+    gap: '0.4rem',
+    '@media (max-width: 900px)': {
+      flexDirection: 'column',
+    },
+  },
+  saveBtn: {
+    borderRadius: tokens.borderRadiusCircular,
+    border: `1px solid ${tokens.colorBrandForeground1}`,
+    background: tokens.colorBrandForeground1,
+    color: tokens.colorNeutralForegroundInverted,
+    padding: '0.35rem 0.6rem',
+    fontSize: '0.82rem',
+    cursor: 'pointer',
+    boxShadow: tokens.shadow4,
+    '&:hover': {
+      background: tokens.colorBrandBackground2Hover,
+    },
+    '&:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+  },
+  exportActions: {
+    '& button': {
+      borderRadius: tokens.borderRadiusCircular,
+      border: `1px solid ${tokens.colorNeutralStroke2}`,
+      background: tokens.colorNeutralBackground1,
+      color: tokens.colorNeutralForeground1,
+      padding: '0.35rem 0.6rem',
+      fontSize: '0.82rem',
+      cursor: 'pointer',
+    },
+    '& button:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+    '& button:disabled': {
+      opacity: '0.6',
+      cursor: 'not-allowed',
+    },
+    display: 'flex',
+    gap: '0.4rem',
+    flexWrap: 'wrap',
+  },
+  downloadBtn: {
+    borderRadius: tokens.borderRadiusCircular,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    padding: '0.35rem 0.6rem',
+    fontSize: '0.82rem',
+    cursor: 'pointer',
+    '&:hover': {
+      background: tokens.colorNeutralBackground2,
+    },
+  },
+  listBlock: {
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    background: tokens.colorNeutralBackground2,
+    padding: '0.55rem',
+    '& h4': {
+      margin: '0 0 0.35rem 0',
+      fontSize: '0.84rem',
+      color: tokens.colorNeutralForeground1,
+    },
+    '& ul': {
+      margin: '0',
+      paddingLeft: '1rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.2rem',
+      fontSize: '0.8rem',
+    },
+  },
+  exportBlock: {
+    '& h4': {
+      margin: '0 0 0.35rem 0',
+      fontSize: '0.84rem',
+      color: tokens.colorNeutralForeground1,
+    },
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    background: tokens.colorNeutralBackground2,
+    padding: '0.55rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.45rem',
+  },
+  jsonPreview: {
+    margin: '0',
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    background: tokens.colorNeutralBackground1,
+    padding: '0.5rem',
+    maxHeight: '220px',
+    overflow: 'auto',
+    fontSize: '0.75rem',
+  },
+  empty: {
+    margin: '0',
+    color: tokens.colorNeutralForeground3,
+    fontSize: '0.82rem',
+  },
+  error: {
+    margin: '0',
+    color: tokens.colorPaletteRedForeground1,
+    fontSize: '0.82rem',
+  },
+  success: {
+    margin: '0',
+    color: tokens.colorPaletteGreenForeground1,
+    fontSize: '0.82rem',
+  },
+})
 
 interface Props {
   projectId: string
@@ -62,7 +273,10 @@ function toUpdatePayload(summary: BusinessSummary): UpdateBusinessSummaryPayload
   }
 }
 
-export function BusinessPanel({ projectId }: Props) {
+export function BusinessPanel({
+projectId }: Props) {
+  const styles = useStyles();
+
   const [snapshot, setSnapshot] = useState<BusinessSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
