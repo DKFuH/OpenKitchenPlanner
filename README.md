@@ -1,7 +1,7 @@
 # OpenKitchenPlanner (OKP)
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-v0.1.2-green.svg)]()
+[![Status](https://img.shields.io/badge/Status-v0.1.3-green.svg)]()
 [![Node](https://img.shields.io/badge/Node-v20%20%7C%20v22-green)](https://nodejs.org/)
 
 [English](#english) | [Deutsch](#deutsch)
@@ -14,10 +14,11 @@
 OpenKitchenPlanner is a web-based planning platform for carpentry workshops and kitchen studios. It combines room modeling, catalog-based CAD workflows, pricing, quote generation, and production export pipelines in a single monorepo — with a Fluent 2 ribbon UI and full MCP integration.
 
 ### 🚀 Status
-* **Version:** `0.1.2` (2026-03-09)
-* **Build:** Green — 160 frontend tests, full tsc + vite build clean.
+* **Version:** `0.1.3` (2026-03-10)
+* **Build:** Green — 165 frontend tests, full tsc + vite build clean.
 * **UI:** Fluent 2 Ribbon Shell across all areas (Kanban, Editor, Settings). All pages migrated to `makeStyles`/`tokens`.
 * **Backend:** Fastify REST API + PostgreSQL (Prisma).
+* **3D Preview:** WebGPU renderer with automatic WebGL-2 fallback; OffscreenCanvas Worker rendering (Chromium) keeps main thread free.
 * **Plugins:** 11 registered plugins fully wired: `presentation`, `viewer-export`, `tischler`, `daylight`, `materials`, `stairs`, `multilevel-docs`, `asset-library`, `feng-shui`, `raumakustik`, `survey-import`.
 
 ### 🛠 Core Capabilities
@@ -32,6 +33,7 @@ OpenKitchenPlanner is a web-based planning platform for carpentry workshops and 
 ### 🏗 Development Phases
 * **Phase 1–4 (Sprints 0–98):** MVP → multi-tenancy → industry features → stabilization.
 * **Phase 5 (Sprints 99–116):** Workflow engine, masterdata sync, mobile client, Fluent 2 migration, Ribbon Shell, plugin infrastructure hardening.
+* **Phase 6 (Sprints 117–120+):** CAD/BIM Interop modernization, WebGPU renderer, OffscreenCanvas Worker rendering.
 
 ---
 
@@ -81,10 +83,11 @@ npm run dev --workspace planner-frontend
 OpenKitchenPlanner ist eine webbasierte Planungsplattform für Schreinereien und Küchenstudios. Sie vereint Raumplanung, Katalog-CAD, Kalkulation, Angebotserstellung und Produktions-Export in einem Monorepo — mit Fluent 2 Ribbon-UI und vollständiger MCP-Integration.
 
 ### 🚀 Status
-* **Version:** `0.1.2` (09.03.2026)
-* **Build:** Grün — 160 Frontend-Tests, tsc + vite sauber.
+* **Version:** `0.1.3` (10.03.2026)
+* **Build:** Grün — 165 Frontend-Tests, tsc + vite sauber.
 * **UI:** Fluent 2 Ribbon-Shell in allen Bereichen (Kanban, Editor, Einstellungen). Alle Seiten auf `makeStyles`/`tokens` migriert.
 * **Backend:** Fastify REST-API + PostgreSQL (Prisma).
+* **3D-Preview:** WebGPU-Renderer mit automatischem WebGL-2-Fallback; OffscreenCanvas Worker-Rendering (Chromium) entlastet den Main-Thread.
 * **Plugins:** 11 registrierte Plugins vollständig verdrahtet: `presentation`, `viewer-export`, `tischler`, `daylight`, `materials`, `stairs`, `multilevel-docs`, `asset-library`, `feng-shui`, `raumakustik`, `survey-import`.
 
 ### 🛠 Kernfunktionen

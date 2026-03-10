@@ -1820,3 +1820,31 @@ Noch offen in `S118`:
 - persistente `interop_jobs`-/`interop_artifacts`-Tabellen
 - externe/native Worker fuer schwere oder proprietaere Provider
 - capability-getriebene Frontend-Dialoge fuer Interop
+
+---
+
+## Zusatzstand 2026-03-10 - 3D-Preview WebGPU + OffscreenCanvas
+
+### S119 – WebGPU Renderer (abgeschlossen, PR #35)
+
+- `WebGPURenderer` mit automatischem WebGL-2-Fallback
+- `rendererCapabilities.ts`: `isWebGPUSupported()`, `createSceneRenderer()`
+- Bundle-Optimierung: `three/webgpu`-Chunk (153 kB gzip) wird nur fuer WebGPU-Browser geladen
+- Error-Boundary in `Preview3D.tsx`, `rendererBackend`-State-Reset bei Remount
+- 165/165 Tests gruen
+
+### S120 – OffscreenCanvas Worker-Renderer (abgeschlossen)
+
+- `preview3DWorker.ts`: vollstaendige Szene, Lichter, OrbitControls, Render-Loop im Web Worker
+- `EventProxy extends EventTarget`: Proxy fuer OrbitControls ohne DOM, nimmt weitergeleitete Events
+- `setTimeout(animate, 0)`-Loop (Workers haben kein `requestAnimationFrame`; vsync via OffscreenCanvas-Commit)
+- `Preview3D.tsx`: automatische Pfadwahl (`useOffscreenWorker = isOffscreenCanvasSupported()`)
+  - Worker-Pfad: `<canvas ref={canvasRef}>` + Canvas-Transfer + Event-Forwarding + ResizeObserver
+  - Fallback-Pfad: bisheriger Main-Thread-Renderer fuer Firefox/Safari
+- Postmessage-Protokoll: `init | setFov | setSunlight | setRenderEnvironment | setCameraState |
+  setNavigationSettings | resize | event | dispose` → `ready | cameraChanged | error`
+
+Noch offen (niedrige Prio):
+
+- `forceWebGL`-Flag per UI/URL-Parameter exponieren (S119 Punkt 3)
+- `autoDollhouseSettings` live per postMessage an Worker (aktuell nur im `init`)
