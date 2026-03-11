@@ -84,8 +84,9 @@ test('project-scoped shell keeps return paths across plugin settings and project
   await expect(page).toHaveURL(new RegExp(`/settings/plugins\\?projectId=${PROJECT_ID}$`))
   await expect(page.getByTestId('shell-project-scope-badge')).toContainText(/Projektgebunden|Project scoped/i)
   await expect(page.getByTestId('shell-back-to-editor')).toBeVisible()
+  await expect(page.getByTestId('plugins-back-to-editor')).toBeVisible()
 
-  await page.getByTestId('shell-back-to-editor').click()
+  await page.getByTestId('plugins-back-to-editor').click()
   await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}$`))
   await expect(page.getByTestId('shell-back-to-projects')).toBeVisible()
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Badge,
   Body1,
@@ -16,6 +17,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { getTenantPlugins, updateTenantPlugins } from '../api/tenantSettings.js'
+import { projectIdFromRouteContext, withProjectContext } from '../routing/projectContext.js'
 
 const useStyles = makeStyles({
   page: {
@@ -30,6 +32,13 @@ const useStyles = makeStyles({
     display: 'flex',
     flexDirection: 'column',
     gap: tokens.spacingVerticalXS,
+  },
+  headerTop: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: tokens.spacingHorizontalM,
+    flexWrap: 'wrap',
   },
   subtitle: { color: tokens.colorNeutralForeground3 },
   section: {
@@ -158,6 +167,9 @@ const CATEGORY_COLOR: Record<PluginMeta['category'], 'brand' | 'success' | 'warn
 
 export function PluginsSettingsPage() {
   const styles = useStyles()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const projectId = projectIdFromRouteContext(location.pathname, location.search)
   const [available, setAvailable] = useState<Array<{ id: string; name: string }>>([])
   const [enabled, setEnabled] = useState<string[]>([])
   const [original, setOriginal] = useState<string[]>([])
@@ -228,7 +240,27 @@ export function PluginsSettingsPage() {
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <Title2>Plugins</Title2>
+        <div className={styles.headerTop}>
+          <Title2>Plugins</Title2>
+          <div className={styles.actions}>
+            {projectId && (
+              <Button
+                appearance="secondary"
+                data-testid="plugins-back-to-editor"
+                onClick={() => navigate(`/projects/${projectId}`)}
+              >
+                Zum Editor
+              </Button>
+            )}
+            <Button
+              appearance="subtle"
+              data-testid="plugins-back-to-settings"
+              onClick={() => navigate(withProjectContext('/settings', projectId))}
+            >
+              Zu Einstellungen
+            </Button>
+          </div>
+        </div>
         <Body1 className={styles.subtitle}>
           Aktiviere optionale Fachmodule für diesen Mandanten. Änderungen gelten für alle Nutzer.
         </Body1>
