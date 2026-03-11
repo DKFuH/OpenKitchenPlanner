@@ -122,6 +122,7 @@ export function useEditor11PageRuntime() {
   return {
     styles,
     pageState,
+    roomOperations,
     chromeNodes,
     dockPanels,
     workspaceView,
