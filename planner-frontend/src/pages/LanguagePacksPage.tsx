@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Body1,
   Body1Strong,
@@ -24,6 +24,7 @@ import {
   type LanguagePackCreateBody,
 } from '../api/languagePacks.js'
 import { useLocale } from '../hooks/useLocale.js'
+import { projectIdFromRouteContext, withProjectContext } from '../routing/projectContext.js'
 
 const useStyles = makeStyles({
   page: {
@@ -73,7 +74,9 @@ const useStyles = makeStyles({
 export function LanguagePacksPage() {
   const styles = useStyles()
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useLocale()
+  const projectId = projectIdFromRouteContext(location.pathname, location.search)
 
   const [items, setItems] = useState<LanguagePack[]>([])
   const [draftJson, setDraftJson] = useState<Record<string, string>>({})
@@ -182,7 +185,7 @@ export function LanguagePacksPage() {
           <Title2>{t('settings.languagePacks')}</Title2>
           <Subtitle2>{t('settings.languagePacksSubtitle')}</Subtitle2>
         </div>
-        <Button appearance='subtle' onClick={() => navigate('/settings')}>
+        <Button appearance='subtle' onClick={() => navigate(withProjectContext('/settings', projectId))}>
           {t('common.back')}
         </Button>
       </div>

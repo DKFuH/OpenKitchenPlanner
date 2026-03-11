@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Body1,
   Button,
@@ -14,6 +14,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { getProjectDefaults, updateProjectDefaults, type ProjectDefaults } from '../api/tenantSettings.js'
+import { projectIdFromRouteContext, withProjectContext } from '../routing/projectContext.js'
 
 const useStyles = makeStyles({
   page: { display: 'grid', rowGap: tokens.spacingVerticalXL },
@@ -35,6 +36,8 @@ const useStyles = makeStyles({
 export function ProjectDefaultsPage() {
   const styles = useStyles()
   const navigate = useNavigate()
+  const location = useLocation()
+  const projectId = projectIdFromRouteContext(location.pathname, location.search)
   const [form, setForm] = useState<ProjectDefaults>({
     default_advisor: null,
     default_processor: null,
@@ -60,10 +63,13 @@ export function ProjectDefaultsPage() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    setSaving(true); setError(null); setSuccess(false)
+    setSaving(true)
+    setError(null)
+    setSuccess(false)
     try {
       const updated = await updateProjectDefaults(form)
-      setForm(updated); setSuccess(true)
+      setForm(updated)
+      setSuccess(true)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Defaults konnten nicht gespeichert werden')
     } finally {
@@ -74,7 +80,7 @@ export function ProjectDefaultsPage() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: '64px' }}>
-        <Spinner label="Lade Projekt-Defaults…" />
+        <Spinner label="Lade Projekt-Defaults..." />
       </div>
     )
   }
@@ -85,10 +91,10 @@ export function ProjectDefaultsPage() {
         <div>
           <Title2>Projekt-Defaults</Title2>
           <Body1 style={{ color: tokens.colorNeutralForeground3, display: 'block' }}>
-            Standardwerte für neue Projekte: Berater, Bearbeiter, Bereich und Alternative.
+            Standardwerte fuer neue Projekte: Berater, Bearbeiter, Bereich und Alternative.
           </Body1>
         </div>
-        <Button appearance="secondary" onClick={() => navigate('/settings')}>← Zurück</Button>
+        <Button appearance="secondary" onClick={() => navigate(withProjectContext('/settings', projectId))}>Zurueck</Button>
       </div>
 
       {error && <MessageBar intent="error"><MessageBarBody>{error}</MessageBarBody></MessageBar>}

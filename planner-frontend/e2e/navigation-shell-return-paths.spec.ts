@@ -93,3 +93,22 @@ test('project-scoped shell keeps return paths across plugin settings and project
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByTestId('shell-project-scope-badge')).toContainText(/Global/i)
 })
+
+test('settings subroutes keep project context and return to settings root', async ({ page }) => {
+  await page.goto(`/settings?projectId=${PROJECT_ID}`)
+
+  await expect(page.getByTestId('shell-project-scope-badge')).toContainText(/Projektgebunden|Project scoped/i)
+
+  await page.getByRole('button', { name: /Firmenprofil|Company Profile/i }).click()
+  await expect(page).toHaveURL(new RegExp(`/settings/company\\?projectId=${PROJECT_ID}$`))
+  await expect(page.getByTestId('shell-back-to-editor')).toBeVisible()
+
+  await page.getByRole('button', { name: /Zurueck|Zurück/i }).click()
+  await expect(page).toHaveURL(new RegExp(`/settings\\?projectId=${PROJECT_ID}$`))
+
+  await page.getByRole('button', { name: /Projekt-Defaults/i }).click()
+  await expect(page).toHaveURL(new RegExp(`/settings/project-defaults\\?projectId=${PROJECT_ID}$`))
+
+  await page.getByRole('button', { name: /Zurueck|Zurück/i }).click()
+  await expect(page).toHaveURL(new RegExp(`/settings\\?projectId=${PROJECT_ID}$`))
+})

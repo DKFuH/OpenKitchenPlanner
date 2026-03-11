@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Body1, Button, Subtitle2, Title2, makeStyles, tokens } from '@fluentui/react-components'
 import { useLocale } from '../hooks/useLocale.js'
 import { LanguageSwitcher } from '../components/LanguageSwitcher.js'
+import { projectIdFromRouteContext, withProjectContext } from '../routing/projectContext.js'
 
 const useStyles = makeStyles({
   page: { display: 'grid', rowGap: tokens.spacingVerticalXL },
@@ -12,7 +13,9 @@ const useStyles = makeStyles({
 export function SettingsPage() {
   const styles = useStyles()
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useLocale()
+  const projectId = projectIdFromRouteContext(location.pathname, location.search)
 
   return (
     <div className={styles.page}>
@@ -26,19 +29,19 @@ export function SettingsPage() {
       <section className={styles.section}>
         <Subtitle2>{t('settings.sections')}</Subtitle2>
         <div className={styles.actions}>
-          <Button appearance="primary" onClick={() => navigate('/settings/company')}>
+          <Button appearance="primary" onClick={() => navigate(withProjectContext('/settings/company', projectId))}>
             {t('settings.companyProfile')}
           </Button>
-          <Button appearance="secondary" onClick={() => navigate('/settings/project-defaults')}>
+          <Button appearance="secondary" onClick={() => navigate(withProjectContext('/settings/project-defaults', projectId))}>
             Projekt-Defaults
           </Button>
-          <Button appearance="secondary" onClick={() => navigate('/settings/plugins')}>
+          <Button appearance="secondary" onClick={() => navigate(withProjectContext('/settings/plugins', projectId))}>
             {t('settings.plugins')}
           </Button>
-          <Button appearance="secondary" onClick={() => navigate('/settings/layout-styles')}>
+          <Button appearance="secondary" onClick={() => navigate(withProjectContext('/settings/layout-styles', projectId))}>
             {t('settings.layoutStyles')}
           </Button>
-          <Button appearance="secondary" onClick={() => navigate('/settings/language-packs')}>
+          <Button appearance="secondary" onClick={() => navigate(withProjectContext('/settings/language-packs', projectId))}>
             {t('settings.languagePacks')}
           </Button>
         </div>

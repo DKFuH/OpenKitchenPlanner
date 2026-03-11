@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Body1Strong,
   Button,
@@ -18,6 +18,7 @@ import {
   tokens,
 } from '@fluentui/react-components'
 import { layoutStylesApi, type LayoutStylePreset } from '../api/layoutStyles.js'
+import { projectIdFromRouteContext, withProjectContext } from '../routing/projectContext.js'
 
 type StyleForm = {
   name: string; text_height_mm: number; arrow_size_mm: number
@@ -43,6 +44,8 @@ const useStyles = makeStyles({
 export function LayoutStylesPage() {
   const styles = useStyles()
   const navigate = useNavigate()
+  const location = useLocation()
+  const projectId = projectIdFromRouteContext(location.pathname, location.search)
   const [items, setItems] = useState<LayoutStylePreset[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [form, setForm] = useState<StyleForm>(DEFAULT_FORM)
@@ -112,7 +115,7 @@ export function LayoutStylesPage() {
           <Title2>Layout-Stile</Title2>
           <Subtitle2>Annotative Presets f\u00fcr Text, Pfeile und Linien pro Blattma\u00dfstab.</Subtitle2>
         </div>
-        <Button appearance='subtle' onClick={() => navigate('/settings')}>\u2190 Zur\u00fcck</Button>
+        <Button appearance='subtle' onClick={() => navigate(withProjectContext('/settings', projectId))}>\u2190 Zur\u00fcck</Button>
       </div>
 
       {error && <MessageBar intent='error'><MessageBarBody>{error}</MessageBarBody></MessageBar>}
