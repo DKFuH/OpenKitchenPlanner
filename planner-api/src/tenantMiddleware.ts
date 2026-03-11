@@ -7,6 +7,8 @@
  */
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 
+const FASTIFY_SKIP_OVERRIDE = Symbol.for('skip-override')
+
 declare module 'fastify' {
     interface FastifyRequest {
         tenantId: string | null
@@ -14,7 +16,7 @@ declare module 'fastify' {
     }
 }
 
-export async function tenantMiddleware(app: FastifyInstance) {
+async function tenantMiddlewarePlugin(app: FastifyInstance) {
     app.decorateRequest('tenantId', null)
     app.decorateRequest('branchId', null)
 
@@ -25,3 +27,7 @@ export async function tenantMiddleware(app: FastifyInstance) {
         request.branchId = Array.isArray(branchHeader) ? (branchHeader[0] ?? null) : (branchHeader ?? null)
     })
 }
+
+export const tenantMiddleware = Object.assign(tenantMiddlewarePlugin, {
+    [FASTIFY_SKIP_OVERRIDE]: true,
+})

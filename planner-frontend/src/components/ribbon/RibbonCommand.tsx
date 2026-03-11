@@ -108,6 +108,7 @@ export function RibbonCommand({ command, onExecute, compact = false }: RibbonCom
                   key={sub.id}
                   disabled={!sub.enabled}
                   icon={SubIcon ? <SubIcon /> : undefined}
+                  data-testid={`ribbon-subcmd-${sub.id}`}
                   onClick={() => { if (sub.enabled) onExecute(sub) }}
                 >
                   {t(sub.labelKey)}
@@ -125,6 +126,7 @@ export function RibbonCommand({ command, onExecute, compact = false }: RibbonCom
       appearance={command.active ? 'primary' : 'subtle'}
       className={btnClass}
       disabled={!command.enabled}
+      title={disabledReason}
       data-testid={`ribbon-cmd-${command.id}`}
       onClick={() => {
         if (command.enabled) onExecute(command)

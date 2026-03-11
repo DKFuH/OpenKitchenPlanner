@@ -178,7 +178,8 @@ test('cross-page shell smoke: start -> projects -> editor -> presentation keeps 
   const modeBadgeBefore = await page.getByTestId('shell-mode-badge').innerText()
   await expect(page.getByTestId('shell-workflow-badge')).toBeVisible()
 
-  await page.getByRole('tab', { name: /Praesentation|Presentation/i }).click()
+  await page.getByTestId('ribbon-tab-render').click()
+  await page.getByTestId('ribbon-cmd-cmd-presentation').click()
   await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}/presentation$`))
   await expect(page.getByTestId('shell-project-scope-badge')).toContainText(/Projektgebunden|Project scoped/i)
   await expect(page.getByTestId('shell-mode-badge')).toContainText(modeBadgeBefore.split(':')[0])

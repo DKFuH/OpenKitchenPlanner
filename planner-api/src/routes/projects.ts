@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { prisma } from '../db.js'
-import { sendBadRequest, sendNotFound } from '../errors.js'
+import { sendBadRequest, sendForbidden, sendNotFound } from '../errors.js'
 import { queueNotification } from '../services/notificationService.js'
 
 const projectWorkflowStatusValues = [
@@ -134,8 +134,12 @@ function projectBoardSelect() {
   } as const
 }
 
-function resolveTenantScope(request: { tenantId?: string | null }) {
-  return request.tenantId ? { tenant_id: request.tenantId } : {}
+function requireTenantId(request: { tenantId?: string | null }, reply: { status: (code: number) => { send: (body: unknown) => unknown } }) {
+  if (!request.tenantId) {
+    sendForbidden(reply as never, 'Missing tenant scope')
+    return null
+  }
+  return request.tenantId
 }
 
 export async function projectRoutes(app: FastifyInstance) {
@@ -148,6 +152,9 @@ export async function projectRoutes(app: FastifyInstance) {
       include_archived?: boolean
     }
   }>('/projects', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsedQuery = ProjectListQuerySchema.safeParse(request.query)
     if (!parsedQuery.success) {
       return sendBadRequest(reply, parsedQuery.error.errors[0]?.message ?? 'Invalid query')
@@ -158,7 +165,7 @@ export async function projectRoutes(app: FastifyInstance) {
     const projects = await prisma.project.findMany({
       where: {
         ...(user_id ? { user_id } : {}),
-        ...resolveTenantScope(request),
+        tenant_id: tenantId,
         ...(!include_archived ? { status: 'active' } : {}),
         ...(status_filter ? { project_status: status_filter as typeof projectWorkflowStatusValues[number] } : {}),
         ...(sales_rep ? { sales_rep } : {}),
@@ -181,6 +188,9 @@ export async function projectRoutes(app: FastifyInstance) {
       retention_until_after?: string
     }
   }>('/projects/archive', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsedQuery = ProjectArchiveQuerySchema.safeParse(request.query)
     if (!parsedQuery.success) {
       return sendBadRequest(reply, parsedQuery.error.errors[0]?.message ?? 'Invalid query')
@@ -195,7 +205,7 @@ export async function projectRoutes(app: FastifyInstance) {
 
     const projects = await prisma.project.findMany({
       where: {
-        ...resolveTenantScope(request),
+        tenant_id: tenantId,
         status: 'archived',
         ...(parsedQuery.data.search
           ? { name: { contains: parsedQuery.data.search, mode: 'insensitive' } }
@@ -229,18 +239,20 @@ export async function projectRoutes(app: FastifyInstance) {
       status_filter?: typeof projectWorkflowStatusValues[number]
     }
   }>('/projects/board', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsedQuery = ProjectBoardQuerySchema.safeParse(request.query)
     if (!parsedQuery.success) {
       return sendBadRequest(reply, parsedQuery.error.errors[0]?.message ?? 'Invalid query')
     }
 
     const { user_id, branch_id, status_filter } = parsedQuery.data
-    const tenantId = request.tenantId
 
     const projects = await prisma.project.findMany({
       where: {
         ...(user_id ? { user_id } : {}),
-        ...(tenantId ? { tenant_id: tenantId } : {}),
+        tenant_id: tenantId,
         ...(branch_id ?? request.branchId ? { branch_id: branch_id ?? request.branchId ?? undefined } : {}),
         ...(status_filter ? { project_status: status_filter } : {}),
         status: 'active',
@@ -256,18 +268,20 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.get<{ Querystring: { user_id?: string; branch_id?: string } }>('/projects/gantt', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsedQuery = ProjectBoardQuerySchema.omit({ status_filter: true }).safeParse(request.query)
     if (!parsedQuery.success) {
       return sendBadRequest(reply, parsedQuery.error.errors[0]?.message ?? 'Invalid query')
     }
 
     const { user_id, branch_id } = parsedQuery.data
-    const tenantId = request.tenantId
 
     const projects = await prisma.project.findMany({
       where: {
         ...(user_id ? { user_id } : {}),
-        ...(tenantId ? { tenant_id: tenantId } : {}),
+        tenant_id: tenantId,
         ...(branch_id ?? request.branchId ? { branch_id: branch_id ?? request.branchId ?? undefined } : {}),
         status: 'active',
       },
@@ -288,35 +302,47 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.post('/projects', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsed = CreateProjectSchema.safeParse(request.body)
     if (!parsed.success) {
       return sendBadRequest(reply, parsed.error.errors[0]?.message ?? 'Invalid payload')
     }
 
     const { name, description, user_id } = parsed.data
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user_id },
+      select: { id: true, tenant_id: true, branch_id: true },
+    })
+
+    if (existingUser?.tenant_id && existingUser.tenant_id !== tenantId) {
+      return sendForbidden(reply, 'Cross-tenant user assignment is not allowed')
+    }
+
     const user = await prisma.user.upsert({
       where: { id: user_id },
-      update: {},
+      update: {
+        tenant_id: tenantId,
+      },
       create: {
         id: user_id,
         email: `${user_id}@okp.local`,
         name: user_id,
         password_hash: '',
+        tenant_id: tenantId,
       },
     })
 
-    const tenantId = user.tenant_id ?? request.tenantId ?? null
-    const defaults = tenantId
-      ? await prisma.tenantSetting.findUnique({
-          where: { tenant_id: tenantId },
-          select: {
-            default_advisor: true,
-            default_processor: true,
-            default_area_name: true,
-            default_alternative_name: true,
-          },
-        })
-      : null
+    const defaults = await prisma.tenantSetting.findUnique({
+      where: { tenant_id: tenantId },
+      select: {
+        default_advisor: true,
+        default_processor: true,
+        default_area_name: true,
+        default_alternative_name: true,
+      },
+    })
 
     const defaultAreaName = defaults?.default_area_name?.trim() || 'Bereich 1'
     const defaultAlternativeName = defaults?.default_alternative_name?.trim() || 'Variante A'
@@ -327,7 +353,7 @@ export async function projectRoutes(app: FastifyInstance) {
           name,
           description,
           user_id,
-          tenant_id: tenantId ?? undefined,
+          tenant_id: tenantId,
           branch_id: user.branch_id ?? request.branchId ?? undefined,
           advisor: defaults?.default_advisor?.trim() || null,
           assigned_to: defaults?.default_processor?.trim() || null,
@@ -359,6 +385,9 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.post<{ Params: { id: string } }>('/projects/:id/archive', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsedBody = ArchiveProjectBodySchema.safeParse(request.body ?? {})
     if (!parsedBody.success) {
       return sendBadRequest(reply, parsedBody.error.errors[0]?.message ?? 'Invalid payload')
@@ -367,7 +396,7 @@ export async function projectRoutes(app: FastifyInstance) {
     const existing = await prisma.project.findFirst({
       where: {
         id: request.params.id,
-        ...resolveTenantScope(request),
+        tenant_id: tenantId,
       },
       select: { id: true },
     })
@@ -395,10 +424,13 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.post<{ Params: { id: string } }>('/projects/:id/restore', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const existing = await prisma.project.findFirst({
       where: {
         id: request.params.id,
-        ...resolveTenantScope(request),
+        tenant_id: tenantId,
       },
       select: { id: true },
     })
@@ -422,8 +454,14 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.get<{ Params: { id: string } }>('/projects/:id', async (request, reply) => {
-    const project = await prisma.project.findUnique({
-      where: { id: request.params.id },
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
+    const project = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
       include: {
         rooms: true,
         quotes: {
@@ -441,10 +479,13 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.get<{ Params: { id: string } }>('/projects/:id/lock-state', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const project = await prisma.project.findFirst({
       where: {
         id: request.params.id,
-        ...resolveTenantScope(request),
+        tenant_id: tenantId,
       },
       select: { id: true },
     })
@@ -485,12 +526,20 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.put<{ Params: { id: string } }>('/projects/:id', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsed = UpdateProjectSchema.safeParse(request.body)
     if (!parsed.success) {
       return sendBadRequest(reply, parsed.error.errors[0]?.message ?? 'Invalid payload')
     }
 
-    const existing = await prisma.project.findUnique({ where: { id: request.params.id } })
+    const existing = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
+    })
     if (!existing) {
       return sendNotFound(reply, 'Project not found')
     }
@@ -508,12 +557,20 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.patch<{ Params: { id: string } }>('/projects/:id/status', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsed = UpdateProjectStatusSchema.safeParse(request.body)
     if (!parsed.success) {
       return sendBadRequest(reply, parsed.error.errors[0]?.message ?? 'Invalid payload')
     }
 
-    const existing = await prisma.project.findUnique({ where: { id: request.params.id } })
+    const existing = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
+    })
     if (!existing) {
       return sendNotFound(reply, 'Project not found')
     }
@@ -548,12 +605,20 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.patch<{ Params: { id: string } }>('/projects/:id/assign', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsed = AssignProjectSchema.safeParse(request.body)
     if (!parsed.success) {
       return sendBadRequest(reply, parsed.error.errors[0]?.message ?? 'Invalid payload')
     }
 
-    const existing = await prisma.project.findUnique({ where: { id: request.params.id } })
+    const existing = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
+    })
     if (!existing) {
       return sendNotFound(reply, 'Project not found')
     }
@@ -573,7 +638,15 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.delete<{ Params: { id: string } }>('/projects/:id', async (request, reply) => {
-    const existing = await prisma.project.findUnique({ where: { id: request.params.id } })
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
+    const existing = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
+    })
     if (!existing) {
       return sendNotFound(reply, 'Project not found')
     }
@@ -583,13 +656,19 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.post<{ Params: { id: string } }>('/projects/:id/versions', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsedBody = CreateVersionBodySchema.safeParse(request.body)
     if (!parsedBody.success) {
       return sendBadRequest(reply, parsedBody.error.errors[0]?.message ?? 'Invalid payload')
     }
 
-    const project = await prisma.project.findUnique({
-      where: { id: request.params.id },
+    const project = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
       include: { rooms: true },
     })
 
@@ -617,6 +696,21 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.get<{ Params: { id: string } }>('/projects/:id/versions', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
+    const project = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
+      select: { id: true },
+    })
+
+    if (!project) {
+      return sendNotFound(reply, 'Project not found')
+    }
+
     const versions = await prisma.projectVersion.findMany({
       where: { project_id: request.params.id },
       orderBy: { version: 'desc' },
@@ -633,12 +727,20 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.patch<{ Params: { id: string } }>('/projects/:id/advisor', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsed = AdvisorSchema.safeParse(request.body)
     if (!parsed.success) {
       return sendBadRequest(reply, parsed.error.errors[0]?.message ?? 'Invalid payload')
     }
 
-    const existing = await prisma.project.findUnique({ where: { id: request.params.id } })
+    const existing = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
+    })
     if (!existing) {
       return sendNotFound(reply, 'Project not found')
     }
@@ -661,12 +763,20 @@ export async function projectRoutes(app: FastifyInstance) {
   })
 
   app.patch<{ Params: { id: string }; Querystring: { action?: string } }>('/projects/:id/3dots', async (request, reply) => {
+    const tenantId = requireTenantId(request, reply)
+    if (!tenantId) return
+
     const parsedQuery = ThreeDotsQuerySchema.safeParse(request.query)
     if (!parsedQuery.success) {
       return sendBadRequest(reply, parsedQuery.error.errors[0]?.message ?? 'Invalid action')
     }
 
-    const existing = await prisma.project.findUnique({ where: { id: request.params.id } })
+    const existing = await prisma.project.findFirst({
+      where: {
+        id: request.params.id,
+        tenant_id: tenantId,
+      },
+    })
     if (!existing) {
       return sendNotFound(reply, 'Project not found')
     }

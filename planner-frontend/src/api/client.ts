@@ -1,5 +1,6 @@
 import { tenantScopedHeaders } from './runtimeContext.js'
 const BASE_URL = '/api/v1'
+const DEMO_MODE_STORAGE_KEY = 'okp-demo-mode'
 
 type ApiError = { error: string; message: string }
 
@@ -31,7 +32,30 @@ export const api = {
     request<void>(path, { method: 'DELETE' }, headers),
 }
 
+function isExplicitDemoModeEnabled(): boolean {
+  const envEnabled = typeof import.meta !== 'undefined'
+    && Boolean((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_ENABLE_DEMO_FALLBACK === 'true')
+
+  if (envEnabled) {
+    return true
+  }
+
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.localStorage.getItem(DEMO_MODE_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
 export function shouldUseDemoFallback(error: unknown): boolean {
+  if (!isExplicitDemoModeEnabled()) {
+    return false
+  }
+
   if (!(error instanceof Error)) {
     return false
   }

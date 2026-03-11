@@ -82,12 +82,12 @@ vi.mock('../services/notificationService.js', () => ({
 
 import { projectRoutes } from './projects.js'
 
-function makeApp() {
+function makeApp(tenantId: string | null = TENANT_ID) {
   const app = Fastify()
   app.decorateRequest('tenantId', null)
   app.decorateRequest('branchId', null)
   app.addHook('preHandler', (request, _reply, done) => {
-    request.tenantId = TENANT_ID
+    request.tenantId = tenantId
     done()
   })
   app.register(projectRoutes)
@@ -136,6 +136,16 @@ describe('projectRoutes', () => {
         }),
       })
     )
+
+    await app.close()
+  })
+
+  it('GET /projects returns 403 when tenant scope is missing', async () => {
+    const app = makeApp(null)
+    const response = await app.inject({ method: 'GET', url: '/projects' })
+
+    expect(response.statusCode).toBe(403)
+    expect(prismaMock.project.findMany).not.toHaveBeenCalled()
 
     await app.close()
   })
@@ -295,6 +305,24 @@ describe('projectRoutes', () => {
         create: expect.objectContaining({ id: USER_ID }),
       })
     )
+
+    await app.close()
+  })
+
+  it('POST /projects returns 403 when tenant scope is missing', async () => {
+    const app = makeApp(null)
+    const response = await app.inject({
+      method: 'POST',
+      url: '/projects',
+      payload: {
+        name: 'No Tenant Project',
+        user_id: USER_ID,
+      },
+    })
+
+    expect(response.statusCode).toBe(403)
+    expect(prismaMock.user.upsert).not.toHaveBeenCalled()
+    expect(prismaMock.project.create).not.toHaveBeenCalled()
 
     await app.close()
   })

@@ -23,16 +23,16 @@ test('smoke: header backend/plugins/mcp menus and sidebar slots in one flow', as
   await expect(page.getByTestId('s109-shell-harness')).toBeVisible()
   await expect(page.getByTestId('harness-project-id')).toContainText(PROJECT_ID)
 
-  await page.getByTestId('header-backend-menu-trigger').click()
-  await expect(page.getByTestId('header-backend-feature-quote-lines')).toBeVisible()
-  await page.keyboard.press('Escape')
+  await page.getByTestId('ribbon-tab-daten').click()
+  await expect(page.getByTestId('ribbon-cmd-cmd-quote-lines')).toBeVisible()
+  await expect(page.getByTestId('ribbon-cmd-backend-panel-camera')).toBeVisible()
 
-  await page.getByTestId('header-plugins-menu-trigger').click()
-  await expect(page.getByTestId('header-plugin-slot-plugin-settings')).toBeVisible()
-  await page.keyboard.press('Escape')
+  await page.getByTestId('ribbon-tab-plugins').click()
+  await expect(page.getByTestId('ribbon-cmd-cmd-plugin-settings')).toBeVisible()
+  await expect(page.getByTestId('ribbon-cmd-plugin-presentation')).toBeVisible()
 
-  await page.getByTestId('header-menu-trigger').click()
-  await expect(page.getByTestId('header-menu-action-mcp-hub')).toBeVisible()
+  await page.getByTestId('ribbon-cmd-mcp-menu').click()
+  await expect(page.getByTestId('ribbon-subcmd-mcp-ribbon-mcp-hub')).toBeVisible()
   await page.keyboard.press('Escape')
 
   await page.getByTestId('sidebar-plugin-slot-presentation').click()
@@ -51,21 +51,19 @@ test('hardening: global context keeps project-scoped actions disabled', async ({
   await expect(page.getByTestId('s109-shell-harness')).toBeVisible()
   await expect(page.getByTestId('harness-project-id')).toContainText('global-context')
 
-  await page.getByTestId('header-backend-menu-trigger').click()
-  await expect(page.getByTestId('header-backend-feature-panel-camera')).toBeDisabled()
-  await expect(page.getByTestId('header-backend-feature-panel-camera')).toHaveAttribute(
+  await page.getByTestId('ribbon-tab-daten').click()
+  await expect(page.getByTestId('ribbon-cmd-backend-panel-camera')).toBeDisabled()
+  await expect(page.getByTestId('ribbon-cmd-backend-panel-camera')).toHaveAttribute(
     'title',
     /Projektkontext fehlt|Project context missing/,
   )
-  await page.keyboard.press('Escape')
 
-  await page.getByTestId('header-plugins-menu-trigger').click()
-  await expect(page.getByTestId('header-plugin-slot-presentation')).toBeDisabled()
-  await expect(page.getByTestId('header-plugin-slot-presentation')).toHaveAttribute(
+  await page.getByTestId('ribbon-tab-plugins').click()
+  await expect(page.getByTestId('ribbon-cmd-plugin-presentation')).toBeDisabled()
+  await expect(page.getByTestId('ribbon-cmd-plugin-presentation')).toHaveAttribute(
     'title',
     /Projektkontext fehlt|Project context missing/,
   )
-  await page.keyboard.press('Escape')
 
   await expect(page.getByTestId('sidebar-plugin-slot-presentation')).toBeDisabled()
   await expect(page.getByTestId('sidebar-plugin-slot-asset-library')).toBeEnabled()

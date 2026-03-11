@@ -61,6 +61,21 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalS,
     flexShrink: 0,
   },
+  shellStatus: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalXS,
+    flexWrap: 'wrap',
+  },
+  statusBadge: {
+    padding: `2px ${tokens.spacingHorizontalS}`,
+    borderRadius: tokens.borderRadiusMedium,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    backgroundColor: tokens.colorNeutralBackground2,
+    color: tokens.colorNeutralForeground2,
+    fontSize: tokens.fontSizeBase100,
+    whiteSpace: 'nowrap',
+  },
   projectTitle: {
     flex: 1,
     overflow: 'hidden',
@@ -82,6 +97,9 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
   const styles = useStyles()
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const projectScopeLabel = shellState.projectId ? t('shell.badges.projectBound') : t('shell.badges.globalContext')
+  const modeLabel = `${t('shell.mode.label')}: ${editorBridgeState?.modeLabel ?? shellState.modeLabel}`
+  const workflowLabel = `${t('ribbon.groups.workflow')}: ${t(`shell.workflow.steps.${shellState.workflowStep}`)}`
 
   const tenantPlugins = editorBridgeState?.tenantPlugins ?? null
   const selectedKanbanProjectId = kanbanBridgeState?.selectedProjectId ?? null
@@ -270,6 +288,17 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
         <QuickAccessBar commands={ribbonState.quickAccess} onExecute={handleExecute} />
 
         <div className={styles.topBarRight}>
+          <div className={styles.shellStatus}>
+            <Caption1 className={styles.statusBadge} data-testid='shell-project-scope-badge'>
+              {projectScopeLabel}
+            </Caption1>
+            <Caption1 className={styles.statusBadge} data-testid='shell-mode-badge'>
+              {modeLabel}
+            </Caption1>
+            <Caption1 className={styles.statusBadge} data-testid='shell-workflow-badge'>
+              {workflowLabel}
+            </Caption1>
+          </div>
           <LanguageSwitcher />
         </div>
       </div>

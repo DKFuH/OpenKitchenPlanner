@@ -28,22 +28,20 @@ test.beforeEach(async ({ page }) => {
 test('i18n switch updates shell menu labels and disabled reasons (DE/EN)', async ({ page }) => {
   await page.goto('/__e2e/s109-shell')
 
-  await expect(page.getByTestId('header-backend-menu-trigger')).toHaveText('Backend-Features')
-  await page.getByTestId('header-backend-menu-trigger').click()
-  await expect(page.getByTestId('header-backend-feature-panel-camera')).toHaveAttribute('title', 'Projektkontext fehlt')
-  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('ribbon-tab-datei')).toHaveText('Datei')
+  await page.getByTestId('ribbon-tab-daten').click()
+  await expect(page.getByTestId('ribbon-cmd-backend-panel-camera')).toHaveAttribute('title', 'Projektkontext fehlt')
 
   await page.getByTestId('language-switch-en').click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await expect(page.getByTestId('header-backend-menu-trigger')).toHaveText('Backend features')
+  await expect(page.getByTestId('ribbon-tab-datei')).toHaveText('File')
 
-  await page.getByTestId('header-backend-menu-trigger').click()
-  await expect(page.getByTestId('header-backend-feature-panel-camera')).toHaveAttribute('title', 'Project context missing')
-  await page.keyboard.press('Escape')
+  await page.getByTestId('ribbon-tab-daten').click()
+  await expect(page.getByTestId('ribbon-cmd-backend-panel-camera')).toHaveAttribute('title', 'Project context missing')
 
   await expect(page.getByTestId('sidebar-plugin-slot-presentation')).toHaveAttribute('title', 'Project context missing')
 
   await page.getByTestId('language-switch-de').click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'de')
-  await expect(page.getByTestId('header-backend-menu-trigger')).toHaveText('Backend-Features')
+  await expect(page.getByTestId('ribbon-tab-datei')).toHaveText('Datei')
 })

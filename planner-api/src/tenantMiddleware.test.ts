@@ -54,4 +54,22 @@ describe('tenantMiddleware', () => {
     expect(res.json().branchId).toBeNull()
     await app.close()
   })
+
+  it('works when registered before routes on root app', async () => {
+    const app = Fastify()
+    await app.register(tenantMiddleware)
+    app.get('/root-probe', async (request, reply) => {
+      reply.send({ tenantId: request.tenantId, branchId: request.branchId })
+    })
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/root-probe',
+      headers: { 'x-tenant-id': 'tenant-root', 'x-branch-id': 'branch-root' },
+    })
+
+    expect(res.statusCode).toBe(200)
+    expect(res.json()).toEqual({ tenantId: 'tenant-root', branchId: 'branch-root' })
+    await app.close()
+  })
 })
