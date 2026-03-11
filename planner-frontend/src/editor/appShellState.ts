@@ -15,12 +15,10 @@ import {
   type EditorMode,
 } from './editorModeStore.js'
 import type { EditorTool } from './usePolygonEditor.js'
-
-const PROJECT_PATH_PATTERN = /^\/projects\/([^/]+)/
+import { projectIdFromRouteContext } from '../routing/projectContext.js'
 
 export function projectIdFromPathname(pathname: string): string | null {
-  const match = pathname.match(PROJECT_PATH_PATTERN)
-  return match?.[1] ?? null
+  return projectIdFromRouteContext(pathname)
 }
 
 export type AppArea = 'kanban' | 'editor' | 'project-detail' | 'settings' | 'app'
@@ -129,16 +127,18 @@ export interface AppShellState {
 
 interface UseAppShellStateOptions {
   pathname: string
+  search?: string
   initialWorkflowStep?: WorkflowStep
   initialDrawMode?: DrawCreationMode
 }
 
 export function useAppShellState({
   pathname,
+  search = '',
   initialWorkflowStep = 'walls',
   initialDrawMode = 'wallCreate',
 }: UseAppShellStateOptions): AppShellState {
-  const projectId = useMemo(() => projectIdFromPathname(pathname), [pathname])
+  const projectId = useMemo(() => projectIdFromRouteContext(pathname, search), [pathname, search])
   const area = useMemo(() => areaFromPathname(pathname), [pathname])
   const compactLayout = useCompactLayout()
 
@@ -190,6 +190,7 @@ export function useAppShellState({
     }),
     [
       actionMatrix.actionStates,
+      area,
       compactLayout,
       modeStore.activeDrawMode,
       modeStore.mode,

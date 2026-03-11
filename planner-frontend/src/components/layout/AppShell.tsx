@@ -48,6 +48,7 @@ export function AppShell() {
 
   const shellState = useAppShellState({
     pathname: location.pathname,
+    search: location.search,
   })
 
   useEffect(() => {

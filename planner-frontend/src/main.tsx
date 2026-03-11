@@ -1,7 +1,7 @@
 import { Component, StrictMode, useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom'
 import { FluentProvider } from '@fluentui/react-components'
 import { ProjectList } from './pages/ProjectList.js'
 import { Editor } from './pages/Editor.js'
@@ -38,6 +38,7 @@ import { AppShell } from './components/layout/AppShell.js'
 import { getTenantPlugins } from './api/tenantSettings.js'
 import { bootstrapOfflinePwa } from './pwa/offlineBootstrap.js'
 import { okpFluentTheme } from './theme/fluentTheme.js'
+import { withProjectContext } from './routing/projectContext.js'
 import './i18n/index.js'
 import './global.css'
 
@@ -46,8 +47,11 @@ const tischlerPluginEnabled = String(tischlerPluginFlag ?? 'true').toLowerCase()
 
 function TenantPluginRoute({ pluginId, children }: { pluginId: string; children: ReactNode }) {
   const { t } = useTranslation()
+  const location = useLocation()
+  const { id: routeProjectId } = useParams<{ id: string }>()
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [errored, setErrored] = useState(false)
+  const pluginSettingsPath = withProjectContext('/settings/plugins', routeProjectId ?? null)
 
   useEffect(() => {
     let active = true
@@ -68,11 +72,11 @@ function TenantPluginRoute({ pluginId, children }: { pluginId: string; children:
   }, [pluginId])
 
   if (!tischlerPluginEnabled && pluginId === 'tischler') {
-    return <Navigate to="/settings/plugins" replace />
+    return <Navigate to={pluginSettingsPath} replace state={{ from: location.pathname }} />
   }
 
   if (errored) {
-    return <Navigate to="/settings/plugins" replace />
+    return <Navigate to={pluginSettingsPath} replace state={{ from: location.pathname }} />
   }
 
   if (enabled === null) {
@@ -80,7 +84,7 @@ function TenantPluginRoute({ pluginId, children }: { pluginId: string; children:
   }
 
   if (!enabled) {
-    return <Navigate to="/settings/plugins" replace />
+    return <Navigate to={pluginSettingsPath} replace state={{ from: location.pathname }} />
   }
 
   return <>{children}</>

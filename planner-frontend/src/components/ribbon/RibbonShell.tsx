@@ -1,4 +1,4 @@
-import { Body1Strong, Caption1, Subtitle2, makeStyles, tokens } from '@fluentui/react-components'
+import { Body1Strong, Button, Caption1, Subtitle2, makeStyles, tokens } from '@fluentui/react-components'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -16,6 +16,7 @@ import {
 } from './ribbonStateResolver.js'
 import type { AppShellState } from '../../editor/appShellState.js'
 import type { AppShellKanbanBridgeState } from '../layout/AppShellKanbanBridge.js'
+import { withProjectContext } from '../../routing/projectContext.js'
 
 interface RibbonShellProps {
   shellState: AppShellState
@@ -61,6 +62,12 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalS,
     flexShrink: 0,
   },
+  navigationActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: tokens.spacingHorizontalXS,
+    flexWrap: 'wrap',
+  },
   shellStatus: {
     display: 'flex',
     alignItems: 'center',
@@ -100,6 +107,8 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
   const projectScopeLabel = shellState.projectId ? t('shell.badges.projectBound') : t('shell.badges.globalContext')
   const modeLabel = `${t('shell.mode.label')}: ${editorBridgeState?.modeLabel ?? shellState.modeLabel}`
   const workflowLabel = `${t('ribbon.groups.workflow')}: ${t(`shell.workflow.steps.${shellState.workflowStep}`)}`
+  const showBackToEditor = Boolean(shellState.projectId) && shellState.area !== 'editor' && shellState.area !== 'kanban'
+  const showBackToProjects = shellState.area === 'editor' || shellState.area === 'project-detail'
 
   const tenantPlugins = editorBridgeState?.tenantPlugins ?? null
   const selectedKanbanProjectId = kanbanBridgeState?.selectedProjectId ?? null
@@ -263,7 +272,7 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
         return
       }
       if (command.targetPath) {
-        navigate(command.targetPath)
+        navigate(withProjectContext(command.targetPath, shellState.projectId))
         return
       }
     },
@@ -288,6 +297,28 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
         <QuickAccessBar commands={ribbonState.quickAccess} onExecute={handleExecute} />
 
         <div className={styles.topBarRight}>
+          <div className={styles.navigationActions}>
+            {showBackToEditor && shellState.projectId && (
+              <Button
+                appearance='subtle'
+                size='small'
+                data-testid='shell-back-to-editor'
+                onClick={() => navigate(`/projects/${shellState.projectId}`)}
+              >
+                {t('shell.actions.backToEditor')}
+              </Button>
+            )}
+            {showBackToProjects && (
+              <Button
+                appearance='subtle'
+                size='small'
+                data-testid='shell-back-to-projects'
+                onClick={() => navigate('/')}
+              >
+                {t('shell.actions.backToProjects')}
+              </Button>
+            )}
+          </div>
           <div className={styles.shellStatus}>
             <Caption1 className={styles.statusBadge} data-testid='shell-project-scope-badge'>
               {projectScopeLabel}

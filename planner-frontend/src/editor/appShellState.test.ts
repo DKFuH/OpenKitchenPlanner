@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { projectIdFromPathname, resolveAppShellActionMatrix } from './appShellState.js'
+import { projectIdFromRouteContext, withProjectContext } from '../routing/projectContext.js'
 
 describe('appShellState helpers', () => {
   it('extracts project id from project routes', () => {
@@ -10,6 +11,11 @@ describe('appShellState helpers', () => {
   it('returns null project id outside project routes', () => {
     expect(projectIdFromPathname('/')).toBe(null)
     expect(projectIdFromPathname('/settings')).toBe(null)
+  })
+
+  it('restores project id from settings query context', () => {
+    expect(projectIdFromRouteContext('/settings/plugins', '?projectId=abc-123')).toBe('abc-123')
+    expect(withProjectContext('/settings/plugins', 'abc-123')).toBe('/settings/plugins?projectId=abc-123')
   })
 
   it('disables project-scoped actions without project context', () => {

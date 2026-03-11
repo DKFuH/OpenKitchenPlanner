@@ -94,6 +94,8 @@ export const en: Messages = {
     actions: {
       previousStep: 'Back',
       nextStep: 'Next',
+      backToEditor: 'Back to editor',
+      backToProjects: 'Back to projects',
       previousStepDisabled: 'Already at the first workflow step',
       nextStepDisabled: 'Already at the last workflow step',
       disabledFallback: 'This action is currently unavailable',

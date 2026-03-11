@@ -1,4 +1,5 @@
 import type { PluginSlotContext, PluginSlotEntry } from './pluginUiContract.js'
+import { withProjectContext } from '../routing/projectContext.js'
 
 const PROJECT_SCOPED_PLUGIN_IDS = new Set([
   'presentation',
@@ -70,7 +71,7 @@ export function resolvePluginSlotEntries(context: PluginSlotContext): PluginSlot
       id: 'plugin-settings',
       slot: 'header',
       label: 'Plugin-Einstellungen',
-      path: '/settings/plugins',
+      path: withProjectContext('/settings/plugins', context.projectId),
       enabled: true,
     })
   }
@@ -85,7 +86,7 @@ export function resolvePluginSlotEntries(context: PluginSlotContext): PluginSlot
       slot: context.slot,
       label: plugin.name,
       pluginId: plugin.id,
-      path: targetPath ?? '/settings/plugins',
+      path: targetPath ?? withProjectContext('/settings/plugins', context.projectId),
       enabled: enabled && Boolean(targetPath),
       reasonIfDisabled,
     }

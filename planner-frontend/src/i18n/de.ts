@@ -92,6 +92,8 @@ export const de = {
     actions: {
       previousStep: 'Zurueck',
       nextStep: 'Weiter',
+      backToEditor: 'Zum Editor',
+      backToProjects: 'Zur Projektliste',
       previousStepDisabled: 'Bereits im ersten Workflow-Schritt',
       nextStepDisabled: 'Bereits im letzten Workflow-Schritt',
       disabledFallback: 'Diese Aktion ist aktuell nicht verfuegbar',
