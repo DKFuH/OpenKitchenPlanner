@@ -111,9 +111,10 @@ function buildMagnetismSegments(vertices: Vertex[], closed: boolean, excludedVer
 
 /** Berechnet Kantenlänge in mm */
 export function edgeLengthMm(vertices: Vertex[], edgeIndex: number): number {
-  if (vertices.length < 2) return 0
+  if (vertices.length < 2 || edgeIndex < 0 || edgeIndex >= vertices.length) return 0
   const a = vertices[edgeIndex]
   const b = vertices[(edgeIndex + 1) % vertices.length]
+  if (!a || !b) return 0
   return Math.hypot(b.x_mm - a.x_mm, b.y_mm - a.y_mm)
 }
 

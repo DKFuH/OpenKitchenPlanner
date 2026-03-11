@@ -488,7 +488,10 @@ export function Preview3D({
 room, verticalConnections = [], cameraState = null, onCameraStateChange, sunlight = null, navigationSettings, autoDollhouseSettings = null, renderEnvironment = null, fovDeg = 55 }: Props) {
   const styles = useStyles();
 
-  const useOffscreenWorker = isOffscreenCanvasSupported()
+  const isLocalPreviewHost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+  const useOffscreenWorker = !isLocalPreviewHost && isOffscreenCanvasSupported()
   const rootRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const workerRef = useRef<Worker | null>(null)

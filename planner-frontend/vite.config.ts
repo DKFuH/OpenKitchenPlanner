@@ -56,6 +56,9 @@ function tsJsFallbackPlugin() {
 
 export default defineConfig({
   plugins: [react(), tsJsFallbackPlugin()],
+  worker: {
+    format: 'es',
+  },
   optimizeDeps: {
     // Pre-bundle at startup so Vite doesn't trigger mid-session re-optimization
     // (which causes React null errors during HMR when new icon imports are added)
@@ -69,9 +72,11 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // In Docker the API runs at http://api:3000; locally at http://localhost:3000.
+    // Override with VITE_API_TARGET env var when needed.
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: process.env['VITE_API_TARGET'] ?? 'http://localhost:3000',
         changeOrigin: true,
       },
     },

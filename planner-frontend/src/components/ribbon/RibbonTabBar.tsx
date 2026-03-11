@@ -1,4 +1,4 @@
-import { Button, makeStyles, tokens } from '@fluentui/react-components'
+import { Button, makeStyles, mergeClasses, tokens } from '@fluentui/react-components'
 import { useTranslation } from 'react-i18next'
 import { RibbonGroup } from './RibbonGroup.js'
 import type {
@@ -90,13 +90,13 @@ export function RibbonTabBar({
         {primaryTabs.map((tab) => {
           const isActive = tab.id === activeTabId && !isContextActive
           return (
-            <Button
-              key={tab.id}
-              appearance='subtle'
-              className={`${styles.tabButton} ${isActive ? styles.tabButtonActive : ''}`}
-              role='tab'
-              aria-selected={isActive}
-              data-testid={`ribbon-tab-${tab.id}`}
+              <Button
+                key={tab.id}
+                appearance='subtle'
+                className={mergeClasses(styles.tabButton, isActive ? styles.tabButtonActive : undefined)}
+                role='tab'
+                aria-selected={isActive}
+                data-testid={`ribbon-tab-${tab.id}`}
               onClick={() => onTabChange(tab.id)}
             >
               {t(tab.labelKey)}
@@ -113,7 +113,10 @@ export function RibbonTabBar({
               <Button
                 key={ct.id}
                 appearance='subtle'
-                className={`${styles.tabButton} ${isActive ? styles.tabButtonContextActive : styles.tabButtonContext}`}
+                className={mergeClasses(
+                  styles.tabButton,
+                  isActive ? styles.tabButtonContextActive : styles.tabButtonContext,
+                )}
                 role='tab'
                 aria-selected={isActive}
                 data-testid={`ribbon-context-tab-${ct.id}`}

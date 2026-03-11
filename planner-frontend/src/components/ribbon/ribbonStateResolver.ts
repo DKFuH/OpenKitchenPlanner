@@ -37,6 +37,7 @@ export type RibbonCommandId = string
 export interface RibbonCommand {
   id: RibbonCommandId
   labelKey: string
+  active?: boolean
   /** Optional reason i18n key shown when disabled */
   reasonKey?: string
   enabled: boolean
@@ -102,6 +103,12 @@ export interface RibbonStateInput {
   selectedKanbanProjectId: string | null
   viewMode: string
   openPanels: Record<string, boolean>
+  magnetismEnabled?: boolean
+  axisMagnetismEnabled?: boolean
+  angleSnapEnabled?: boolean
+  safeEditEnabled?: boolean
+  areasVisible?: boolean
+  rightSidebarVisible?: boolean
   /** The currently active primary tab (controlled externally) */
   activeTabId: RibbonTabId
 }
@@ -162,7 +169,7 @@ function buildDateiTab(
   ])
 
   const exportGroup = group('datei-export', 'ribbon.groups.export', [
-    cmd('cmd-gltf-export', 'ribbon.commands.gltfExport', actionStates.gltfExport),
+    { ...cmd('cmd-gltf-export', 'ribbon.commands.gltfExport', actionStates.gltfExport), editorAction: 'cmd:gltfExport' },
     cmd('cmd-exports', 'ribbon.commands.viewerExports', actionStates.navViewerExports, {
       targetPath: projectRoot ? `${projectRoot}/exports` : '/',
     }),
@@ -179,20 +186,31 @@ function buildStartTab(
   actionStates: EditorActionStates,
   workflowStep: WorkflowStep,
 ): RibbonTab {
-  const clipboardGroup = group('start-clipboard', 'ribbon.groups.clipboard', [
-    enabledCmd('cmd-undo', 'ribbon.commands.undo'),
-    enabledCmd('cmd-redo', 'ribbon.commands.redo'),
-    enabledCmd('cmd-cut', 'ribbon.commands.cut'),
-    enabledCmd('cmd-copy', 'ribbon.commands.copy'),
-    enabledCmd('cmd-paste', 'ribbon.commands.paste'),
-  ])
-
-  const selectionGroup = group('start-selection', 'ribbon.groups.selection', [
-    enabledCmd('cmd-select-all', 'ribbon.commands.selectAll'),
-    enabledCmd('cmd-deselect', 'ribbon.commands.deselect'),
-  ])
-
   const workflowGroup = group('start-workflow', 'ribbon.groups.workflow', [
+    {
+      id: 'cmd-workflow-walls',
+      labelKey: 'shell.workflow.steps.walls',
+      active: workflowStep === 'walls',
+      enabled: true,
+      visible: true,
+      editorAction: 'cmd:setWorkflow:walls',
+    },
+    {
+      id: 'cmd-workflow-openings',
+      labelKey: 'shell.workflow.steps.openings',
+      active: workflowStep === 'openings',
+      enabled: true,
+      visible: true,
+      editorAction: 'cmd:setWorkflow:openings',
+    },
+    {
+      id: 'cmd-workflow-furniture',
+      labelKey: 'shell.workflow.steps.furniture',
+      active: workflowStep === 'furniture',
+      enabled: true,
+      visible: true,
+      editorAction: 'cmd:setWorkflow:furniture',
+    },
     cmd(
       'cmd-prev-step',
       'ribbon.commands.previousStep',
@@ -213,13 +231,13 @@ function buildStartTab(
       },
       { workflowAction: 'next' },
     ),
-    cmd('cmd-autocomplete', 'ribbon.commands.autoComplete', actionStates.autoComplete),
+    { ...cmd('cmd-autocomplete', 'ribbon.commands.autoComplete', actionStates.autoComplete), editorAction: 'cmd:autocomplete' },
   ])
 
   return {
     id: 'start',
     labelKey: 'ribbon.tabs.start',
-    groups: [clipboardGroup, selectionGroup, workflowGroup].filter((g) => g.commands.length > 0),
+    groups: [workflowGroup].filter((g) => g.commands.length > 0),
   }
 }
 
@@ -275,22 +293,34 @@ function buildEinfuegenTab(_projectId: string | null): RibbonTab {
   }
 }
 
-function buildCadTab(_editorMode: EditorMode): RibbonTab {
+function buildCadTab(
+  editorMode: EditorMode,
+  options: {
+    magnetismEnabled: boolean
+    axisMagnetismEnabled: boolean
+    angleSnapEnabled: boolean
+    safeEditEnabled: boolean
+    areasVisible: boolean
+  },
+): RibbonTab {
   const zeichnenGroup = group('cad-draw', 'ribbon.groups.draw', [
-    enabledCmd('cmd-wall', 'ribbon.commands.wall', { targetMode: 'wallCreate' }),
-    enabledCmd('cmd-room', 'ribbon.commands.room', { targetMode: 'roomCreate' }),
-    enabledCmd('cmd-polyline', 'ribbon.commands.polyline', { targetMode: 'polylineCreate' }),
+    { id: 'cmd-wall', labelKey: 'ribbon.commands.wall', active: editorMode === 'wallCreate', enabled: true, visible: true, editorAction: 'cmd:setMode:wallCreate' },
+    { id: 'cmd-room', labelKey: 'ribbon.commands.room', active: editorMode === 'roomCreate', enabled: true, visible: true, editorAction: 'cmd:setMode:roomCreate' },
+    { id: 'cmd-polyline', labelKey: 'ribbon.commands.polyline', active: editorMode === 'polylineCreate', enabled: true, visible: true, editorAction: 'cmd:setMode:polylineCreate' },
   ])
 
   const bearbeitenGroup = group('cad-edit', 'ribbon.groups.edit', [
-    enabledCmd('cmd-select', 'ribbon.commands.select', { targetMode: 'selection' }),
-    enabledCmd('cmd-pan', 'ribbon.commands.pan', { targetMode: 'pan' }),
-    enabledCmd('cmd-calibrate', 'ribbon.commands.calibrate', { targetMode: 'calibrate' }),
+    { id: 'cmd-select', labelKey: 'ribbon.commands.select', active: editorMode === 'selection', enabled: true, visible: true, editorAction: 'cmd:setMode:selection' },
+    { id: 'cmd-pan', labelKey: 'ribbon.commands.pan', active: editorMode === 'pan', enabled: true, visible: true, editorAction: 'cmd:setMode:pan' },
+    { id: 'cmd-calibrate', labelKey: 'ribbon.commands.calibrate', active: editorMode === 'calibrate', enabled: true, visible: true, editorAction: 'cmd:setMode:calibrate' },
   ])
 
   const snapGroup = group('cad-snap', 'ribbon.groups.snap', [
-    enabledCmd('cmd-snap-align', 'ribbon.commands.snapAlign'),
-    enabledCmd('cmd-topology', 'ribbon.commands.topology'),
+    { id: 'cmd-snap-point', labelKey: 'ribbon.commands.pointSnap', active: options.magnetismEnabled, enabled: true, visible: true, editorAction: 'cmd:toggleMagnetism' },
+    { id: 'cmd-snap-axis', labelKey: 'ribbon.commands.axisSnap', active: options.axisMagnetismEnabled, enabled: true, visible: true, editorAction: 'cmd:toggleAxisMagnetism' },
+    { id: 'cmd-snap-angle', labelKey: 'ribbon.commands.angleSnap', active: options.angleSnapEnabled, enabled: true, visible: true, editorAction: 'cmd:toggleAngleSnap' },
+    { id: 'cmd-safe-edit', labelKey: 'ribbon.commands.safeEdit', active: options.safeEditEnabled, enabled: true, visible: true, editorAction: 'cmd:toggleSafeEdit' },
+    { id: 'cmd-areas', labelKey: 'ribbon.commands.areas', active: options.areasVisible, enabled: true, visible: true, editorAction: 'cmd:toggleAreas' },
   ])
 
   return {
@@ -300,9 +330,25 @@ function buildCadTab(_editorMode: EditorMode): RibbonTab {
   }
 }
 
-function buildAnsichtTab(actionStates: EditorActionStates, _viewMode: string, openPanels: Record<string, boolean>): RibbonTab {
+function buildAnsichtTab(
+  actionStates: EditorActionStates,
+  viewMode: string,
+  openPanels: Record<string, boolean>,
+  options: {
+    safeEditEnabled: boolean
+    rightSidebarVisible: boolean
+  },
+): RibbonTab {
   function viewCmd(id: string, labelKey: string, mode: string, state: ResolvedActionState = { enabled: true, visible: true }): RibbonCommand {
-    return { id, labelKey, enabled: state.enabled, visible: state.visible !== false, reasonKey: state.reasonIfDisabled, editorAction: 'view:' + mode }
+    return {
+      id,
+      labelKey,
+      active: viewMode === mode,
+      enabled: state.enabled,
+      visible: state.visible !== false,
+      reasonKey: state.reasonIfDisabled,
+      editorAction: 'view:' + mode,
+    }
   }
 
   const viewGroup = group('ansicht-view', 'ribbon.groups.view', [
@@ -312,26 +358,38 @@ function buildAnsichtTab(actionStates: EditorActionStates, _viewMode: string, op
     viewCmd('cmd-view-3d', 'ribbon.commands.view3d', '3d'),
     viewCmd('cmd-view-elevation', 'ribbon.commands.viewElevation', 'elevation', actionStates.viewElevation),
     viewCmd('cmd-view-section', 'ribbon.commands.viewSection', 'section', actionStates.viewSection),
+    { id: 'cmd-view-reset-layout', labelKey: 'ribbon.commands.resetLayout', enabled: true, visible: true, editorAction: 'cmd:resetLayout' },
+  ])
+
+  const visibilityGroup = group('ansicht-visibility', 'ribbon.groups.visibility', [
+    { id: 'cmd-toggle-active-level-visibility', labelKey: 'ribbon.commands.activeLevelVisibility', enabled: true, visible: true, editorAction: 'cmd:toggleActiveLevelVisibility' },
+    { id: 'cmd-toggle-dimensions-visibility', labelKey: 'ribbon.commands.dimensionsVisibility', enabled: true, visible: true, editorAction: 'cmd:toggleDimensionsVisibility' },
+    { id: 'cmd-toggle-placements-visibility', labelKey: 'ribbon.commands.placementsVisibility', enabled: true, visible: true, editorAction: 'cmd:togglePlacementsVisibility' },
+  ])
+
+  const lockingGroup = group('ansicht-locking', 'ribbon.groups.locking', [
+    { id: 'cmd-toggle-active-level-lock', labelKey: 'ribbon.commands.activeLevelLock', enabled: true, visible: true, editorAction: 'cmd:toggleActiveLevelLock' },
+    { id: 'cmd-toggle-dimensions-lock', labelKey: 'ribbon.commands.dimensionsLock', enabled: true, visible: true, editorAction: 'cmd:toggleDimensionsLock' },
+    { id: 'cmd-safe-edit-view', labelKey: 'ribbon.commands.safeEdit', active: options.safeEditEnabled, enabled: true, visible: true, editorAction: 'cmd:toggleSafeEdit' },
   ])
 
   const panelGroup = group('ansicht-panels', 'ribbon.groups.panels', [
     { id: 'cmd-panel-navigation', labelKey: 'ribbon.commands.navigationPanel', enabled: actionStates.panelNavigation.enabled, visible: true, reasonKey: actionStates.panelNavigation.reasonIfDisabled, editorAction: 'panel:navigation' },
     { id: 'cmd-panel-camera', labelKey: openPanels.camera ? 'ribbon.commands.cameraPanelClose' : 'ribbon.commands.cameraPanel', enabled: actionStates.panelCamera.enabled, visible: true, reasonKey: actionStates.panelCamera.reasonIfDisabled, editorAction: 'panel:camera' },
-    { id: 'cmd-panel-left', labelKey: 'ribbon.commands.toggleLeftSidebar', enabled: true, visible: true, editorAction: 'panel:leftSidebar' },
-    { id: 'cmd-panel-right', labelKey: 'ribbon.commands.toggleRightSidebar', enabled: true, visible: true, editorAction: 'panel:rightSidebar' },
+    { id: 'cmd-panel-right', labelKey: 'ribbon.commands.toggleRightSidebar', active: options.rightSidebarVisible, enabled: true, visible: true, editorAction: 'panel:rightSidebar' },
   ])
 
   return {
     id: 'ansicht',
     labelKey: 'ribbon.tabs.ansicht',
-    groups: [viewGroup, panelGroup].filter((g) => g.commands.length > 0),
+    groups: [viewGroup, visibilityGroup, lockingGroup, panelGroup].filter((g) => g.commands.length > 0),
   }
 }
 
 function buildRenderTab(actionStates: EditorActionStates, projectId: string | null): RibbonTab {
   const screenshotGroup = group('render-screenshot', 'ribbon.groups.screenshot', [
-    cmd('cmd-screenshot', 'ribbon.commands.screenshot', actionStates.captureScreenshot),
-    cmd('cmd-360', 'ribbon.commands.capture360', actionStates.capture360),
+    { ...cmd('cmd-screenshot', 'ribbon.commands.screenshot', actionStates.captureScreenshot), editorAction: 'cmd:screenshot' },
+    { ...cmd('cmd-360', 'ribbon.commands.capture360', actionStates.capture360), editorAction: 'cmd:export360' },
     { ...cmd('cmd-panel-capture', 'ribbon.commands.capturePanel', actionStates.panelCapture), editorAction: 'panel:capture' },
   ])
 
@@ -483,12 +541,12 @@ function buildContextTabs(
     active: wallsActive,
     groups: [
       group('wt-draw', 'ribbon.groups.draw', [
-        enabledCmd('cmd-ct-wall', 'ribbon.commands.wall', { targetMode: 'wallCreate' }),
-        enabledCmd('cmd-ct-room', 'ribbon.commands.room', { targetMode: 'roomCreate' }),
+        { id: 'cmd-ct-wall', labelKey: 'ribbon.commands.wall', enabled: true, visible: true, editorAction: 'cmd:setMode:wallCreate' },
+        { id: 'cmd-ct-room', labelKey: 'ribbon.commands.room', enabled: true, visible: true, editorAction: 'cmd:setMode:roomCreate' },
       ]),
       group('wt-edit', 'ribbon.groups.edit', [
-        enabledCmd('cmd-ct-select', 'ribbon.commands.select', { targetMode: 'selection' }),
-        enabledCmd('cmd-ct-snap', 'ribbon.commands.snapAlign'),
+        { id: 'cmd-ct-select', labelKey: 'ribbon.commands.select', enabled: true, visible: true, editorAction: 'cmd:setMode:selection' },
+        { id: 'cmd-ct-snap-point', labelKey: 'ribbon.commands.pointSnap', enabled: true, visible: true, editorAction: 'cmd:toggleMagnetism' },
       ]),
     ],
   }
@@ -674,6 +732,12 @@ export function resolveRibbonState(input: RibbonStateInput): RibbonState {
     selectedKanbanProjectId,
     viewMode,
     openPanels,
+    magnetismEnabled = true,
+    axisMagnetismEnabled = true,
+    angleSnapEnabled = true,
+    safeEditEnabled = false,
+    areasVisible = false,
+    rightSidebarVisible = true,
     activeTabId,
   } = input
 
@@ -700,8 +764,17 @@ export function resolveRibbonState(input: RibbonStateInput): RibbonState {
     buildDateiTab(projectId, actionStates),
     buildStartTab(actionStates, workflowStep),
     buildEinfuegenTab(projectId),
-    buildCadTab(editorMode),
-    buildAnsichtTab(actionStates, viewMode, openPanels),
+    buildCadTab(editorMode, {
+      magnetismEnabled,
+      axisMagnetismEnabled,
+      angleSnapEnabled,
+      safeEditEnabled,
+      areasVisible,
+    }),
+    buildAnsichtTab(actionStates, viewMode, openPanels, {
+      safeEditEnabled,
+      rightSidebarVisible,
+    }),
     buildRenderTab(actionStates, projectId),
     buildDatenTab(actionStates, backendEntries, projectId),
     buildPluginsTab(projectId, availablePlugins, enabledPluginIds, mcpActions),

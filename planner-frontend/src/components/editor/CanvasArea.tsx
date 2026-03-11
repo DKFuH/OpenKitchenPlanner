@@ -111,6 +111,7 @@ interface Props {
     changedPlacements: number
   }) => void
   onShortcutBlocked?: (reason: string) => void
+  editorChromeMode?: 'full' | 'minimal'
 }
 
 function createWallId(): string {
@@ -121,7 +122,7 @@ function createWallId(): string {
 }
 
 export function CanvasArea({
-room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, centerlines, selectedPlacementId, onSelectPlacement, highlightedOpeningIds = [], highlightedPlacementIds = [], canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, edgeLengthPreviewMm = null, onReferenceImageUpdate, navigationSettings, safeEditMode, showCompass = false, northAngleDeg = 0, virtualVisitor = null, onRepositionVisitor, onBoundaryTopologyRebind, onShortcutBlocked }: Props) {
+room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, onSelectOpening, onAddOpening, placements, dimensions, centerlines, selectedPlacementId, onSelectPlacement, highlightedOpeningIds = [], highlightedPlacementIds = [], canAddPlacement, onAddPlacement, acousticGrid, acousticVisible, acousticOpacity, edgeLengthPreviewMm = null, onReferenceImageUpdate, navigationSettings, safeEditMode, showCompass = false, northAngleDeg = 0, virtualVisitor = null, onRepositionVisitor, onBoundaryTopologyRebind, onShortcutBlocked, editorChromeMode = 'full' }: Props) {
   const styles = useStyles();
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -238,6 +239,7 @@ room, onRoomUpdated, editor, verticalConnections, openings, selectedOpeningId, o
             virtualVisitor={virtualVisitor}
             onRepositionVisitor={onRepositionVisitor}
             onShortcutBlocked={onShortcutBlocked}
+            chromeMode={editorChromeMode}
           />
           {showCompass && <CompassOverlay northAngleDeg={northAngleDeg} />}
         </div>

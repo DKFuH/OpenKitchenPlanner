@@ -5,9 +5,16 @@ import {
 
 export type PlannerViewMode = '2d' | 'split' | 'split3' | '3d' | 'elevation' | 'section'
 
+export const DEFAULT_PLANNER_VIEW_MODE: PlannerViewMode = 'split3'
+export const DEFAULT_PLANNER_SPLIT_RATIO = 58
+export const DEFAULT_PLANNER_SPLIT3_PRIMARY_RATIO = 62
+export const DEFAULT_PLANNER_SPLIT3_SECONDARY_RATIO = 46
+
 export interface PlannerViewSettings extends NavigationSettings {
   mode: PlannerViewMode
   split_ratio: number
+  split3_primary_ratio: number
+  split3_secondary_ratio: number
   visitor_visible: boolean
   camera_height_mm: number
 }
@@ -33,7 +40,15 @@ function parsePlannerViewSettings(raw: string): PlannerViewSettings {
 
   return {
     mode,
-    split_ratio: typeof parsed.split_ratio === 'number' ? clampNumber(parsed.split_ratio, 25, 75) : 58,
+    split_ratio: typeof parsed.split_ratio === 'number'
+      ? clampNumber(parsed.split_ratio, 25, 75)
+      : DEFAULT_PLANNER_SPLIT_RATIO,
+    split3_primary_ratio: typeof parsed.split3_primary_ratio === 'number'
+      ? clampNumber(parsed.split3_primary_ratio, 30, 70)
+      : DEFAULT_PLANNER_SPLIT3_PRIMARY_RATIO,
+    split3_secondary_ratio: typeof parsed.split3_secondary_ratio === 'number'
+      ? clampNumber(parsed.split3_secondary_ratio, 25, 75)
+      : DEFAULT_PLANNER_SPLIT3_SECONDARY_RATIO,
     visitor_visible: parsed.visitor_visible !== false,
     camera_height_mm: typeof parsed.camera_height_mm === 'number'
       ? clampNumber(Math.round(parsed.camera_height_mm), 900, 2400)

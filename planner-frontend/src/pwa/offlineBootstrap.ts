@@ -13,6 +13,8 @@ declare global {
   }
 }
 
+const isDevRuntime = Boolean((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV)
+
 const OFFLINE_QUEUE_STORAGE_KEY = 'okp.offline-sync-queue.v1'
 const OFFLINE_BADGE_ID = 'okp-offline-badge'
 
@@ -207,10 +209,26 @@ function registerServiceWorker(): void {
   })
 }
 
+async function unregisterServiceWorkers(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations()
+    await Promise.all(registrations.map((registration) => registration.unregister()))
+  } catch {
+    // ignore unregister failures in unsupported/privacy contexts
+  }
+}
+
 export function bootstrapOfflinePwa(): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return
   if (window.__okpOfflineBootstrapDone) return
   window.__okpOfflineBootstrapDone = true
+
+  if (isDevRuntime) {
+    void unregisterServiceWorkers()
+    return
+  }
 
   registerServiceWorker()
 

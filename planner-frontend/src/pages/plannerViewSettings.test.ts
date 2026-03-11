@@ -48,6 +48,8 @@ describe('plannerViewSettings', () => {
     expect(loadPlannerViewSettings('p-2', storage)).toEqual<PlannerViewSettings>({
       mode: 'split',
       split_ratio: 61,
+      split3_primary_ratio: 62,
+      split3_secondary_ratio: 46,
       visitor_visible: false,
       camera_height_mm: 1740,
       navigation_profile: 'cad',
@@ -65,6 +67,8 @@ describe('plannerViewSettings', () => {
     expect(loadPlannerViewSettings('p-3', storage)).toEqual<PlannerViewSettings>({
       mode: '3d',
       split_ratio: 58,
+      split3_primary_ratio: 62,
+      split3_secondary_ratio: 46,
       visitor_visible: true,
       camera_height_mm: 1650,
       navigation_profile: 'cad',
@@ -107,6 +111,8 @@ describe('plannerViewSettings', () => {
     expect(loadPlannerViewSettings('p-5', storage)).toEqual<PlannerViewSettings>({
       mode: 'split',
       split_ratio: 25,
+      split3_primary_ratio: 62,
+      split3_secondary_ratio: 46,
       visitor_visible: true,
       camera_height_mm: 2400,
       navigation_profile: 'cad',
@@ -129,6 +135,8 @@ describe('plannerViewSettings', () => {
     const settings: PlannerViewSettings = {
       mode: 'split',
       split_ratio: 54,
+      split3_primary_ratio: 60,
+      split3_secondary_ratio: 48,
       visitor_visible: true,
       camera_height_mm: 1700,
       navigation_profile: 'trackpad',

@@ -1,7 +1,7 @@
 import { useRef, useCallback, useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { Stage, Layer, Line, Circle, Group, Rect, Text, Image as KonvaImage } from 'react-konva'
 import type Konva from 'konva'
-import type { Point2D } from '@shared/types'
+import type { Point2D, Vertex } from '@shared/types'
 import type { Opening } from '../api/openings.js'
 import type { Placement } from '../api/placements.js'
 import type { Dimension } from '../api/dimensions.js'
@@ -199,6 +199,12 @@ const useStyles = makeStyles({
     fontWeight: '600',
     color: tokens.colorNeutralForeground3,
   },
+  stageArea: {
+    flex: '1 1 auto',
+    minHeight: '0',
+    minWidth: '0',
+    overflow: 'hidden',
+  },
 })
 
 // ─── Koordinaten-Umrechnung ───────────────────────────────────────────────────
@@ -208,44 +214,78 @@ const SCALE = 0.15 // 1px = ~6,67mm → 5m Raum = 750px
 
 function worldToCanvas(mm: number): number { return mm * SCALE }
 function canvasToWorld(px: number): number { return px / SCALE }
+function fitViewportToVertices(
+  vertices: Vertex[],
+  width: number,
+  height: number,
+): { x: number; y: number; zoom: number } | null {
+  if (vertices.length === 0 || width <= 0 || height <= 0) {
+    return null
+  }
+
+  const xs = vertices.map((vertex) => worldToCanvas(vertex.x_mm))
+  const ys = vertices.map((vertex) => worldToCanvas(vertex.y_mm))
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const boundsWidth = Math.max(1, maxX - minX)
+  const boundsHeight = Math.max(1, maxY - minY)
+  const padding = 48
+  const availableWidth = Math.max(1, width - padding * 2)
+  const availableHeight = Math.max(1, height - padding * 2)
+  const zoom = Math.min(4, Math.max(0.35, Math.min(availableWidth / boundsWidth, availableHeight / boundsHeight)))
+  const centerX = (minX + maxX) * 0.5
+  const centerY = (minY + maxY) * 0.5
+
+  return {
+    x: width * 0.5 - centerX * zoom,
+    y: height * 0.5 - centerY * zoom,
+    zoom,
+  }
+}
+
 function resolveColor(token: string, fallbackToken?: string): string {
   if (typeof window === 'undefined') return 'transparent'
   const styles = getComputedStyle(document.documentElement)
   const value = styles.getPropertyValue(token).trim()
   if (value) return value
   if (!fallbackToken) return 'transparent'
-  return styles.getPropertyValue(fallbackToken).trim() || 'transparent'
+  if (fallbackToken.startsWith('--')) {
+    return styles.getPropertyValue(fallbackToken).trim() || 'transparent'
+  }
+  return fallbackToken
 }
 
 // ─── Farben ───────────────────────────────────────────────────────────────────
 
 const COLOR = {
-  polygon: resolveColor('--primary-color'),
-  polygonFill: resolveColor('--primary-light'),
-  preview: resolveColor('--text-muted'),
-  vertex: resolveColor('--primary-color'),
-  vertexHover: resolveColor('--status-danger'),
-  vertexSelected: resolveColor('--status-warning'),
-  edgeSelected: resolveColor('--status-warning'),
-  edgePreviewCommit: resolveColor('--status-success', '--primary-color'),
-  edgePreviewDraft: resolveColor('--status-warning', '--primary-color'),
-  edgePreviewGhost: resolveColor('--status-info', '--primary-color'),
-  error: resolveColor('--status-danger'),
-  errorFill: resolveColor('--status-danger-bg'),
-  openingDoor: resolveColor('--status-info'),
-  openingWindow: resolveColor('--status-info-soft', '--status-info'),
-  openingPassThrough: resolveColor('--status-success'),
-  openingSelected: resolveColor('--status-warning'),
-  openingGroupHighlighted: resolveColor('--status-info', '--primary-color'),
-  placementFill: resolveColor('--primary-soft', '--primary-light'),
-  placementStroke: resolveColor('--primary-color'),
-  placementSelectedFill: resolveColor('--status-warning'),
-  placementSelectedStroke: resolveColor('--status-warning-strong', '--status-warning-text'),
-  placementGroupHighlightedStroke: resolveColor('--status-info', '--primary-color'),
-  centerline: resolveColor('--status-info', '--primary-color'),
-  vertexStroke: resolveColor('--text-inverse'),
-  verticalConnectionFill: resolveColor('--status-info-soft', '--primary-light'),
-  verticalConnectionStroke: resolveColor('--status-info', '--primary-color'),
+  polygon: resolveColor('--primary-color', '#0ea5e9'),
+  polygonFill: resolveColor('--primary-light', '#d7eefb'),
+  preview: resolveColor('--text-muted', '#64748b'),
+  vertex: resolveColor('--primary-color', '#0ea5e9'),
+  vertexHover: resolveColor('--status-danger', '#ef4444'),
+  vertexSelected: resolveColor('--status-warning', '#f59e0b'),
+  edgeSelected: resolveColor('--status-warning', '#f59e0b'),
+  edgePreviewCommit: resolveColor('--status-success', '#10b981'),
+  edgePreviewDraft: resolveColor('--status-warning', '#f59e0b'),
+  edgePreviewGhost: resolveColor('--status-info', '#0ea5e9'),
+  error: resolveColor('--status-danger', '#ef4444'),
+  errorFill: resolveColor('--status-danger-bg', '#fee2e2'),
+  openingDoor: resolveColor('--status-info', '#0ea5e9'),
+  openingWindow: resolveColor('--status-info-soft', '#7dd3fc'),
+  openingPassThrough: resolveColor('--status-success', '#10b981'),
+  openingSelected: resolveColor('--status-warning', '#f59e0b'),
+  openingGroupHighlighted: resolveColor('--status-info', '#0ea5e9'),
+  placementFill: resolveColor('--primary-soft', '#bae6fd'),
+  placementStroke: resolveColor('--primary-color', '#0ea5e9'),
+  placementSelectedFill: resolveColor('--status-warning', '#fbbf24'),
+  placementSelectedStroke: resolveColor('--status-warning-strong', '#d97706'),
+  placementGroupHighlightedStroke: resolveColor('--status-info', '#0ea5e9'),
+  centerline: resolveColor('--status-info', '#0ea5e9'),
+  vertexStroke: resolveColor('--text-inverse', '#ffffff'),
+  verticalConnectionFill: resolveColor('--status-info-soft', '#d7eefb'),
+  verticalConnectionStroke: resolveColor('--status-info', '#0ea5e9'),
 } as const
 
 function openingColor(type: Opening['type'], selected: boolean) {
@@ -378,6 +418,7 @@ interface Props {
   onRepositionVisitor?: (point: { x_mm: number; y_mm: number }) => void
   safeEditMode?: boolean
   onShortcutBlocked?: (reason: string) => void
+  chromeMode?: 'full' | 'minimal'
 }
 
 export function PolygonEditor({
@@ -406,14 +447,17 @@ width, height, state, isValid,
   onRepositionVisitor,
   safeEditMode = false,
   onShortcutBlocked,
+  chromeMode = 'full',
 }: Props) {
   const styles = useStyles();
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const stageAreaRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const calibrationPointsRef = useRef<Array<{ x: number; y: number }>>([])
   const middlePanActiveRef = useRef(false)
   const middlePanStartRef = useRef<{ pointerX: number; pointerY: number; offsetX: number; offsetY: number } | null>(null)
+  const autoFitKeyRef = useRef<string | null>(null)
   const [dragLabel, setDragLabel] = useState<{ x: number; y: number; text: string } | null>(null)
   const [referenceImageElement, setReferenceImageElement] = useState<HTMLImageElement | null>(null)
   const [isOrthoModifierDown, setIsOrthoModifierDown] = useState(false)
@@ -421,6 +465,10 @@ width, height, state, isValid,
   const [isBaseToleranceModifierDown, setIsBaseToleranceModifierDown] = useState(false)
   const [snapToleranceMode, setSnapToleranceMode] = useState<'auto' | 'base'>('auto')
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 })
+  const [stageSize, setStageSize] = useState({
+    width: Math.max(1, width),
+    height: Math.max(1, height),
+  })
 
   const dynamicMagnetismToleranceMm = useMemo(() => {
     const baseTolerance = state.settings.magnetismToleranceMm
@@ -567,6 +615,59 @@ width, height, state, isValid,
     image.src = url
     image.onload = () => setReferenceImageElement(image)
   }, [state.referenceImage?.url])
+
+  useEffect(() => {
+    const stageArea = stageAreaRef.current
+    if (!stageArea) {
+      setStageSize({
+        width: Math.max(1, width),
+        height: Math.max(1, height),
+      })
+      return
+    }
+
+    const syncStageSize = () => {
+      setStageSize({
+        width: Math.max(1, Math.floor(stageArea.clientWidth)),
+        height: Math.max(1, Math.floor(stageArea.clientHeight)),
+      })
+    }
+
+    syncStageSize()
+    const observer = new ResizeObserver(syncStageSize)
+    observer.observe(stageArea)
+
+    return () => observer.disconnect()
+  }, [height, width])
+
+  const fitViewportKey = useMemo(() => {
+    const vertexKey = state.vertices.map((vertex) => `${vertex.x_mm}:${vertex.y_mm}`).join('|')
+    return `${state.closed ? 'closed' : 'open'}:${state.isDirty ? 'dirty' : 'clean'}:${stageSize.width}x${stageSize.height}:${vertexKey}`
+  }, [stageSize.height, stageSize.width, state.closed, state.isDirty, state.vertices])
+
+  useEffect(() => {
+    if (state.vertices.length === 0) {
+      autoFitKeyRef.current = null
+      setViewport({ x: 0, y: 0, zoom: 1 })
+      return
+    }
+
+    if (state.isDirty) {
+      return
+    }
+
+    if (autoFitKeyRef.current === fitViewportKey) {
+      return
+    }
+
+    const fittedViewport = fitViewportToVertices(state.vertices, stageSize.width, stageSize.height)
+    if (!fittedViewport) {
+      return
+    }
+
+    autoFitKeyRef.current = fitViewportKey
+    setViewport(fittedViewport)
+  }, [fitViewportKey, stageSize.height, stageSize.width, state.isDirty, state.vertices])
 
   const handleStageClick = useCallback((_e: Konva.KonvaEventObject<MouseEvent>) => {
     if (middlePanActiveRef.current) {
@@ -749,15 +850,15 @@ width, height, state, isValid,
 
   const handleResetZoom = useCallback(() => {
     const targetZoom = 1
-    const logicalCenterX = (width / 2 - viewport.x) / viewport.zoom
-    const logicalCenterY = (height / 2 - viewport.y) / viewport.zoom
+    const logicalCenterX = (stageSize.width / 2 - viewport.x) / viewport.zoom
+    const logicalCenterY = (stageSize.height / 2 - viewport.y) / viewport.zoom
 
     setViewport({
-      x: width / 2 - logicalCenterX * targetZoom,
-      y: height / 2 - logicalCenterY * targetZoom,
+      x: stageSize.width / 2 - logicalCenterX * targetZoom,
+      y: stageSize.height / 2 - logicalCenterY * targetZoom,
       zoom: targetZoom,
     })
-  }, [height, viewport.x, viewport.y, viewport.zoom, width])
+  }, [stageSize.height, stageSize.width, viewport.x, viewport.y, viewport.zoom])
 
   const handleToggleSnapToleranceMode = useCallback(() => {
     setSnapToleranceMode((prev) => (prev === 'auto' ? 'base' : 'auto'))
@@ -930,6 +1031,8 @@ width, height, state, isValid,
     >
       {/* ── Toolbar ── */}
       <div className={styles.toolbar}>
+        {chromeMode === 'full' ? (
+          <>
         <ToolBtn active={state.tool === 'draw'} onClick={() => onSetTool('draw')}>Zeichnen</ToolBtn>
         <ToolBtn active={state.tool === 'select'} onClick={() => onSetTool('select')}>Auswählen</ToolBtn>
         {isOrthoModifierDown && <span className={styles.modifierBadge}>ORTHO</span>}
@@ -974,6 +1077,8 @@ width, height, state, isValid,
         >
           Fang: {effectiveMagnetismLabel}
         </button>
+          </>
+        ) : null}
         <button
           type="button"
           className={`${styles.settingMeta} ${styles.settingMetaSubtle} ${styles.settingMetaButton}`}
@@ -1053,27 +1158,28 @@ width, height, state, isValid,
       </div>
 
       {/* ── Canvas ── */}
-      <Stage
-        ref={stageRef}
-        width={width}
-        height={height}
-        x={viewport.x}
-        y={viewport.y}
-        scaleX={viewport.zoom}
-        scaleY={viewport.zoom}
-        onClick={handleStageClick}
-        onDblClick={handleStageDblClick}
-        onWheel={handleStageWheel}
-        className={state.tool === 'draw' || state.tool === 'calibrate' ? styles.stageCrosshair : styles.stageDefault}
-      >
-        <AcousticOverlay
-          grid={acousticGrid}
-          opacity={acousticOpacity}
-          visible={acousticVisible}
-          stageScale={SCALE}
-        />
+      <div ref={stageAreaRef} className={styles.stageArea}>
+        <Stage
+          ref={stageRef}
+          width={stageSize.width}
+          height={stageSize.height}
+          x={viewport.x}
+          y={viewport.y}
+          scaleX={viewport.zoom}
+          scaleY={viewport.zoom}
+          onClick={handleStageClick}
+          onDblClick={handleStageDblClick}
+          onWheel={handleStageWheel}
+          className={state.tool === 'draw' || state.tool === 'calibrate' ? styles.stageCrosshair : styles.stageDefault}
+        >
+          <AcousticOverlay
+            grid={acousticGrid}
+            opacity={acousticOpacity}
+            visible={acousticVisible}
+            stageScale={SCALE}
+          />
 
-        <Layer>
+          <Layer>
           {state.referenceImage && referenceImageElement && (
             <KonvaImage
               image={referenceImageElement}
@@ -1413,6 +1519,41 @@ width, height, state, isValid,
             </Group>
           )}
 
+          {state.closed && dimensions.length === 0 && (
+            <Group listening={false}>
+              {pts.map((start, i) => {
+                if (!wallVisibleByIndex[i]) return null
+                const end = pts[(i + 1) % pts.length]
+                if (!end) return null
+
+                const dx = end.x - start.x
+                const dy = end.y - start.y
+                const len = Math.hypot(dx, dy)
+                if (len === 0) return null
+
+                const nx = -dy / len
+                const ny = dx / len
+                const labelOffset = worldToCanvas(120)
+                const labelX = (start.x + end.x) * 0.5 + nx * labelOffset
+                const labelY = (start.y + end.y) * 0.5 + ny * labelOffset
+                const wallLength = Math.round(canvasToWorld(len))
+                const isSelected = state.selectedEdgeIndex === i
+
+                return (
+                  <Text
+                    key={`implicit-dimension-${state.wallIds[i] ?? i}`}
+                    x={labelX - 28}
+                    y={labelY - 8}
+                    text={`${wallLength} mm`}
+                    fontSize={11}
+                    fill={isSelected ? COLOR.edgeSelected : COLOR.polygon}
+                    fontStyle={isSelected ? 'bold' : 'normal'}
+                  />
+                )
+              })}
+            </Group>
+          )}
+
           {/* Centerlines (persistierte Mittellinien) */}
           {state.closed && showCenterlines && (
             <CenterlineLayer
@@ -1647,8 +1788,9 @@ width, height, state, isValid,
               />
             </Group>
           )}
-        </Layer>
-      </Stage>
+          </Layer>
+        </Stage>
+      </div>
 
       {/* ── Info ── */}
       <div className={styles.info}>

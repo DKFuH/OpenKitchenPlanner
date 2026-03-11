@@ -18,7 +18,7 @@ interface Props {
 
 const useStyles = makeStyles({
   sidebar: {
-    width: '220px',
+    width: '190px',
     flexShrink: 0,
     backgroundColor: tokens.colorNeutralBackground1,
     borderRight: '1px solid ' + tokens.colorNeutralStroke1,
@@ -27,7 +27,7 @@ const useStyles = makeStyles({
     flexDirection: 'column',
   },
   section: {
-    padding: tokens.spacingVerticalS,
+    padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
     borderBottom: '1px solid ' + tokens.colorNeutralStroke2,
   },
   sectionTitle: {
@@ -44,10 +44,10 @@ const useStyles = makeStyles({
     padding: '0',
   },
   item: {
-    padding: '4px 8px',
+    padding: '3px 6px',
     borderRadius: tokens.borderRadiusSmall,
     cursor: 'pointer',
-    fontSize: '0.9rem',
+    fontSize: '0.82rem',
     color: tokens.colorNeutralForeground1,
   },
   active: {
@@ -70,8 +70,8 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusSmall,
     backgroundColor: tokens.colorNeutralBackground1,
     color: tokens.colorNeutralForeground1,
-    fontSize: '0.76rem',
-    padding: '4px 6px',
+    fontSize: '0.72rem',
+    padding: '3px 5px',
     cursor: 'pointer',
   },
   mcpPanel: {
@@ -89,8 +89,8 @@ const useStyles = makeStyles({
     background: 'none',
     border: '1px dashed ' + tokens.colorNeutralStroke1,
     borderRadius: tokens.borderRadiusSmall,
-    padding: tokens.spacingVerticalXS,
-    fontSize: '0.8rem',
+    padding: '4px 6px',
+    fontSize: '0.74rem',
     color: tokens.colorNeutralForeground3,
     cursor: 'pointer',
   },

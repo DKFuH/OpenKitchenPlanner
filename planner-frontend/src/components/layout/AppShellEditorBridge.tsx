@@ -3,6 +3,7 @@ import type { EditorActionStates } from '../../editor/actionStateResolver.js'
 import type { WorkflowStep } from '../../editor/workflowStateStore.js'
 import type { TenantPluginsResponse } from '../../api/tenantSettings.js'
 import type { PlannerViewMode } from '../../pages/plannerViewSettings.js'
+import type { EditorMode } from '../../editor/editorModeStore.js'
 
 export interface AppShellEditorBridgeState {
   workflowStep: WorkflowStep
@@ -18,6 +19,13 @@ export interface AppShellEditorBridgeState {
   lockStateLabel: string | null
   /** View mode control */
   viewMode: PlannerViewMode
+  editorMode: EditorMode
+  magnetismEnabled: boolean
+  axisMagnetismEnabled: boolean
+  angleSnapEnabled: boolean
+  safeEditEnabled: boolean
+  areasVisible: boolean
+  rightSidebarVisible: boolean
   onSetViewMode: (mode: PlannerViewMode) => void
   /** Panel toggles: navigation | camera | capture | renderEnvironment | daylight | material */
   onTogglePanel: (panel: string) => void

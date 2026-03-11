@@ -136,7 +136,7 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
         projectId: shellState.projectId,
         actionStates: shellState.actionStates,
         workflowStep: shellState.workflowStep,
-        editorMode: shellState.mode,
+        editorMode: editorBridgeState?.editorMode ?? shellState.mode,
         backendEntries,
         availablePlugins,
         mcpActions,
@@ -145,6 +145,12 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
         selectedKanbanProjectId,
         viewMode,
         openPanels,
+        magnetismEnabled: editorBridgeState?.magnetismEnabled,
+        axisMagnetismEnabled: editorBridgeState?.axisMagnetismEnabled,
+        angleSnapEnabled: editorBridgeState?.angleSnapEnabled,
+        safeEditEnabled: editorBridgeState?.safeEditEnabled,
+        areasVisible: editorBridgeState?.areasVisible,
+        rightSidebarVisible: editorBridgeState?.rightSidebarVisible,
         activeTabId,
       }),
     [
@@ -158,13 +164,28 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
       enabledPluginIds,
       selectedKanbanProjectId,
       viewMode,
+      editorBridgeState?.angleSnapEnabled,
+      editorBridgeState?.areasVisible,
+      editorBridgeState?.axisMagnetismEnabled,
+      editorBridgeState?.editorMode,
+      editorBridgeState?.magnetismEnabled,
+      editorBridgeState?.rightSidebarVisible,
+      editorBridgeState?.safeEditEnabled,
       activeTabId,
     ],
   )
 
   // Sync context tab with resolved state when it changes
   const resolvedContextTabId = ribbonState.activeContextTabId
-  const currentContextTabId = activeContextTabId ?? resolvedContextTabId
+  const currentContextTabId = resolvedContextTabId && activeContextTabId === resolvedContextTabId
+    ? activeContextTabId
+    : null
+
+  useEffect(() => {
+    if (activeContextTabId && activeContextTabId !== resolvedContextTabId) {
+      setActiveContextTabId(null)
+    }
+  }, [activeContextTabId, resolvedContextTabId])
 
   const handleTabChange = useCallback((tabId: RibbonTabId) => {
     setActiveTabId(tabId)
@@ -205,6 +226,8 @@ export function RibbonShell({ shellState, editorBridgeState = null, kanbanBridge
           editorBridgeState.onSetViewMode(action.slice(5) as import('../../pages/plannerViewSettings.js').PlannerViewMode)
         } else if (action.startsWith('panel:')) {
           editorBridgeState.onTogglePanel(action.slice(6))
+        } else if (action.startsWith('cmd:')) {
+          editorBridgeState.onEditorCommand(action.slice(4))
         }
         return
       }

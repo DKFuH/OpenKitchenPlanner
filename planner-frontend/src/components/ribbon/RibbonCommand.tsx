@@ -122,7 +122,7 @@ export function RibbonCommand({ command, onExecute, compact = false }: RibbonCom
 
   const button = (
     <Button
-      appearance='subtle'
+      appearance={command.active ? 'primary' : 'subtle'}
       className={btnClass}
       disabled={!command.enabled}
       data-testid={`ribbon-cmd-${command.id}`}

@@ -10,7 +10,6 @@ import type { AcousticGridMeta } from '../../api/acoustics.js'
 import type { UnifiedCatalogItem, CatalogArticle } from '../../api/catalog.js'
 import type { ValidateResponse } from '../../api/validate.js'
 import type { AutoDollhousePatch, AutoDollhouseSettings } from '../../api/visibility.js'
-import { previewBom, toQuoteBomLines, type BomPreviewRequest } from '../../api/bom.js'
 import { QuoteExportPanel } from '../quotes/QuoteExportPanel.js'
 import { ProtectPanel } from './ProtectPanel.js'
 import { WallFeaturesPanel } from './WallFeaturesPanel.js'
@@ -27,19 +26,19 @@ import { makeStyles, tokens } from '@fluentui/react-components'
 
 const useStyles = makeStyles({
 sidebar: {
-    width: '240px',
+    width: '260px',
     flexShrink: 0,
     backgroundColor: tokens.colorNeutralBackground1,
     borderLeft: '1px solid ' + tokens.colorNeutralStroke1,
     overflowY: 'auto',
   },
   section: {
-    padding: tokens.spacingVerticalS,
+    padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalS}`,
     borderBottom: '1px solid ' + tokens.colorNeutralStroke2,
   },
   sectionTitle: {
     margin: '0 0 8px',
-    fontSize: '0.75rem',
+    fontSize: '0.68rem',
     fontWeight: '600',
     textTransform: 'uppercase',
     color: tokens.colorNeutralForeground3,
@@ -55,7 +54,7 @@ sidebar: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
     gap: '4px 8px',
-    fontSize: '0.875rem',
+    fontSize: '0.78rem',
   },
   field: {
     display: 'flex',
@@ -64,20 +63,20 @@ sidebar: {
     marginBottom: '8px',
   },
   fieldLabel: {
-    fontSize: '0.75rem',
+    fontSize: '0.68rem',
     color: tokens.colorNeutralForeground3,
   },
   fieldInput: {
-    padding: '4px 8px',
+    padding: '3px 6px',
     border: '1px solid ' + tokens.colorNeutralStroke1,
     borderRadius: tokens.borderRadiusSmall,
-    fontSize: '0.875rem',
+    fontSize: '0.78rem',
     width: '100%',
     boxSizing: 'border-box',
     backgroundColor: tokens.colorNeutralBackground1,
   },
   hint: {
-    fontSize: '0.75rem',
+    fontSize: '0.68rem',
     color: tokens.colorNeutralForeground3,
     margin: '2px 0 0',
   },
@@ -95,7 +94,7 @@ sidebar: {
     gap: '4px',
   },
   assistItem: {
-    fontSize: '0.72rem',
+    fontSize: '0.68rem',
     display: 'flex',
     justifyContent: 'space-between',
     gap: '8px',
@@ -103,19 +102,19 @@ sidebar: {
   },
   deleteBtn: {
     marginTop: '8px',
-    padding: '4px 12px',
+    padding: '3px 8px',
     border: '1px solid ' + tokens.colorPaletteRedBorder2,
     borderRadius: tokens.borderRadiusSmall,
     background: 'none',
     color: tokens.colorPaletteRedForeground1,
     cursor: 'pointer',
-    fontSize: '0.8rem',
+    fontSize: '0.72rem',
     width: '100%',
   },
   constraintRow: {
     border: '1px solid ' + tokens.colorNeutralStroke1,
     borderRadius: tokens.borderRadiusSmall,
-    padding: '8px',
+    padding: '6px',
     marginBottom: '8px',
   },
   addConstraintBtn: {
@@ -123,8 +122,8 @@ sidebar: {
     background: 'none',
     border: '1px dashed ' + tokens.colorNeutralStroke1,
     borderRadius: tokens.borderRadiusSmall,
-    padding: '4px',
-    fontSize: '0.8rem',
+    padding: '3px',
+    fontSize: '0.72rem',
     color: tokens.colorNeutralForeground3,
     cursor: 'pointer',
     marginTop: '4px',
@@ -133,12 +132,12 @@ sidebar: {
     marginTop: '8px',
   },
   validOk: {
-    fontSize: '0.8rem',
+    fontSize: '0.72rem',
     color: tokens.colorPaletteGreenForeground1,
     margin: '4px 0',
   },
   validError: {
-    fontSize: '0.8rem',
+    fontSize: '0.72rem',
     color: tokens.colorPaletteRedForeground1,
     margin: '4px 0',
   },
@@ -146,7 +145,7 @@ sidebar: {
     borderLeft: '3px solid ' + tokens.colorNeutralStroke1,
     padding: '2px 6px',
     marginBottom: '4px',
-    fontSize: '0.75rem',
+    fontSize: '0.69rem',
   },
   severityError: {
     borderLeftColor: tokens.colorPaletteRedForeground1,
@@ -170,7 +169,7 @@ sidebar: {
     lineHeight: '1.3',
   },
   konfigName: {
-    fontSize: '0.85rem',
+    fontSize: '0.76rem',
     fontWeight: '600',
     color: tokens.colorNeutralForeground1,
     margin: '0 0 2px',
@@ -181,7 +180,7 @@ sidebar: {
     borderTop: '1px solid ' + tokens.colorNeutralStroke2,
   },
   subTitle: {
-    fontSize: '0.7rem',
+    fontSize: '0.66rem',
     fontWeight: '600',
     color: tokens.colorNeutralForeground3,
     textTransform: 'uppercase',
@@ -284,6 +283,15 @@ interface Props {
   }) => void
   onSyncDrawingGroupConfig: (groupId: string, config: DrawingGroupConfigPatch) => void
   catalogPanel?: ReactNode
+  showGroupsPanel?: boolean
+  showValidationPanel?: boolean
+  showVisibilityPanel?: boolean
+  showLockPanel?: boolean
+  showSelectionPanels?: boolean
+  showAcousticPanel?: boolean
+  showCeilingConstraintsPanel?: boolean
+  showFeaturePanels?: boolean
+  showQuoteExportPanel?: boolean
 }
 
 export function RightSidebar({
@@ -349,6 +357,15 @@ export function RightSidebar({
   onApplyDrawingGroupTransform,
   onSyncDrawingGroupConfig,
   catalogPanel,
+  showGroupsPanel = true,
+  showValidationPanel = true,
+  showVisibilityPanel = true,
+  showLockPanel = true,
+  showSelectionPanels = true,
+  showAcousticPanel = true,
+  showCeilingConstraintsPanel = true,
+  showFeaturePanels = true,
+  showQuoteExportPanel = true,
 }: Props) {
   const styles = useStyles()
   const activeLevel = levels.find((level) => level.id === activeLevelId) ?? null
@@ -356,121 +373,55 @@ export function RightSidebar({
   const dimensionsLocked = dimensions.length > 0 ? dimensions.every((dimension) => dimension.locked === true) : null
   const placementsVisible = placements.length > 0 ? placements.every((placement) => placement.visible !== false) : null
 
-  async function buildQuoteCreatePayload() {
-    const taxGroupId = 'tax-default'
-    const taxRate = 0.19
-
-    const placementWithPricing = placements.filter((placement) => placement.list_price_net != null)
-    const priceListItems = placementWithPricing
-      .filter((placement) => !placement.catalog_article_id)
-      .map((placement) => ({
-      catalog_item_id: placement.catalog_item_id,
-      list_price_net: placement.list_price_net ?? 0,
-      dealer_price_net: placement.dealer_price_net ?? 0,
-    }))
-
-    const articlePrices = placementWithPricing
-      .filter((placement) => placement.catalog_article_id)
-      .map((placement) => ({
-        article_id: placement.catalog_article_id as string,
-        ...(placement.article_variant_id ? { article_variant_id: placement.article_variant_id } : {}),
-        list_net: placement.list_price_net ?? 0,
-        dealer_net: placement.dealer_price_net ?? 0,
-        tax_group_id: placement.tax_group_id ?? taxGroupId,
-      }))
-
-    const cabinets: BomPreviewRequest['project']['cabinets'] = placements.map((placement) => ({
-      ...placement,
-      id: placement.id,
-      tax_group_id: placement.tax_group_id ?? taxGroupId,
-      qty: 1,
-      pricing_group_discount_pct: 0,
-      position_discount_pct: 0,
-      flags: {
-        requires_customization: false,
-        height_variant: null,
-        labor_surcharge: false,
-        special_trim_needed: false,
-      },
-    }))
-
-    const payload: BomPreviewRequest = {
-      project: {
-        id: projectId,
-        cabinets,
-        appliances: [],
-        accessories: [],
-        articlePrices,
-        priceListItems,
-        taxGroups: [{ id: taxGroupId, name: 'Standard', tax_rate: taxRate }],
-        quoteSettings: {
-          freight_flat_rate: 89,
-          assembly_rate_per_item: 45,
-        },
-      },
-      ...(selectedRoomId
-        ? {
-            options: {
-              includeGeneratedItems: true,
-              room_id: selectedRoomId,
-            },
-          }
-        : {}),
-    }
-
-    const preview = await previewBom(payload)
-    return {
-      bom_lines: toQuoteBomLines(preview.lines),
-      price_summary: {
-        subtotal_net: preview.totals.total_net_after_discounts,
-        total_gross: preview.totals.total_net_after_discounts * (1 + taxRate),
-      },
-    }
-  }
-
   return (
     <aside className={styles.sidebar}>
       {catalogPanel}
-      <VisibilityPanel
-        activeLevelName={activeLevel?.name ?? null}
-        activeLevelVisible={activeLevel ? activeLevel.visible : null}
-        dimensionsVisible={dimensionsVisible}
-        placementsVisible={placementsVisible}
-        selectedWallVisible={selectedWallVisible}
-        autoDollhouse={autoDollhouse}
-        autoDollhouseSaving={autoDollhouseSaving}
-        onToggleActiveLevelVisibility={onToggleActiveLevelVisibility}
-        onSetDimensionsVisible={onSetDimensionsVisible}
-        onSetPlacementsVisible={onSetPlacementsVisible}
-        onSetSelectedWallVisible={onSetSelectedWallVisible}
-        onSaveAutoDollhouse={onSaveAutoDollhouse}
-      />
+      {showVisibilityPanel && (
+        <VisibilityPanel
+          activeLevelName={activeLevel?.name ?? null}
+          activeLevelVisible={activeLevel ? activeLevel.visible : null}
+          dimensionsVisible={dimensionsVisible}
+          placementsVisible={placementsVisible}
+          selectedWallVisible={selectedWallVisible}
+          autoDollhouse={autoDollhouse}
+          autoDollhouseSaving={autoDollhouseSaving}
+          onToggleActiveLevelVisibility={onToggleActiveLevelVisibility}
+          onSetDimensionsVisible={onSetDimensionsVisible}
+          onSetPlacementsVisible={onSetPlacementsVisible}
+          onSetSelectedWallVisible={onSetSelectedWallVisible}
+          onSaveAutoDollhouse={onSaveAutoDollhouse}
+        />
+      )}
 
-      <LockPanel
-        safeEditMode={safeEditMode}
-        activeLevelLocked={activeLevel ? activeLevel.locked : null}
-        dimensionsLocked={dimensionsLocked}
-        selectedPlacementLocked={selectedPlacement ? Boolean(selectedPlacement.locked) : null}
-        selectedWallLocked={selectedWallLocked}
-        onToggleSafeEditMode={onToggleSafeEditMode}
-        onSetActiveLevelLocked={onSetActiveLevelLocked}
-        onSetDimensionsLocked={onSetDimensionsLocked}
-        onSetSelectedPlacementLocked={onSetSelectedPlacementLocked}
-        onSetSelectedWallLocked={onSetSelectedWallLocked}
-      />
+      {showLockPanel && (
+        <LockPanel
+          safeEditMode={safeEditMode}
+          activeLevelLocked={activeLevel ? activeLevel.locked : null}
+          dimensionsLocked={dimensionsLocked}
+          selectedPlacementLocked={selectedPlacement ? Boolean(selectedPlacement.locked) : null}
+          selectedWallLocked={selectedWallLocked}
+          onToggleSafeEditMode={onToggleSafeEditMode}
+          onSetActiveLevelLocked={onSetActiveLevelLocked}
+          onSetDimensionsLocked={onSetDimensionsLocked}
+          onSetSelectedPlacementLocked={onSetSelectedPlacementLocked}
+          onSetSelectedWallLocked={onSetSelectedWallLocked}
+        />
+      )}
 
-      <GroupsPanel
-        groups={drawingGroups}
-        selectedGroupId={selectedDrawingGroupId}
-        selectionMembers={currentSelectionMembers}
-        onSelectGroup={onSelectDrawingGroup}
-        onCreateGroup={onCreateDrawingGroup}
-        onDeleteGroup={onDeleteDrawingGroup}
-        onApplyTransform={onApplyDrawingGroupTransform}
-        onSyncConfig={onSyncDrawingGroupConfig}
-      />
+      {showGroupsPanel && (
+        <GroupsPanel
+          groups={drawingGroups}
+          selectedGroupId={selectedDrawingGroupId}
+          selectionMembers={currentSelectionMembers}
+          onSelectGroup={onSelectDrawingGroup}
+          onCreateGroup={onCreateDrawingGroup}
+          onDeleteGroup={onDeleteDrawingGroup}
+          onApplyTransform={onApplyDrawingGroupTransform}
+          onSyncConfig={onSyncDrawingGroupConfig}
+        />
+      )}
 
-      {selectedOpening ? (
+      {showSelectionPanels && (selectedOpening ? (
         <OpeningPanel
           key={selectedOpening.id}
           opening={selectedOpening}
@@ -527,43 +478,49 @@ export function RightSidebar({
             </div>
           )}
         </>
+      ))}
+
+      {showAcousticPanel && (
+        <AcousticPanel
+          enabled={acousticEnabled}
+          opacityPct={acousticOpacityPct}
+          variable={acousticVariable}
+          grids={acousticGrids}
+          activeGridId={activeAcousticGridId}
+          min={acousticMin}
+          max={acousticMax}
+          busy={acousticBusy}
+          onToggle={onToggleAcoustics}
+          onSetOpacityPct={onSetAcousticOpacityPct}
+          onSetVariable={onSetAcousticVariable}
+          onUpload={onAcousticUpload}
+          onSelectGrid={onSelectAcousticGrid}
+          onDeleteGrid={onDeleteAcousticGrid}
+        />
       )}
 
-      <AcousticPanel
-        enabled={acousticEnabled}
-        opacityPct={acousticOpacityPct}
-        variable={acousticVariable}
-        grids={acousticGrids}
-        activeGridId={activeAcousticGridId}
-        min={acousticMin}
-        max={acousticMax}
-        busy={acousticBusy}
-        onToggle={onToggleAcoustics}
-        onSetOpacityPct={onSetAcousticOpacityPct}
-        onSetVariable={onSetAcousticVariable}
-        onUpload={onAcousticUpload}
-        onSelectGrid={onSelectAcousticGrid}
-        onDeleteGrid={onDeleteAcousticGrid}
-      />
+      {showValidationPanel && (
+        <ValidationPanel
+          result={validationResult}
+          loading={validationLoading}
+          onRun={onRunValidation}
+        />
+      )}
 
-      <ValidationPanel
-        result={validationResult}
-        loading={validationLoading}
-        onRun={onRunValidation}
-      />
+      {showCeilingConstraintsPanel && (
+        <CeilingConstraintPanel
+          constraints={ceilingConstraints}
+          wallGeom={selectedWallGeom}
+          onSave={onSaveCeilingConstraints}
+        />
+      )}
 
-      <CeilingConstraintPanel
-        constraints={ceilingConstraints}
-        wallGeom={selectedWallGeom}
-        onSave={onSaveCeilingConstraints}
-      />
-
-      {selectedRoomId && (
+      {showFeaturePanels && selectedRoomId && (
         <ConstraintsPanel roomId={selectedRoomId} />
       )}
 
       {/* Wand-Objekte, Installationen & Operationen (Sprints 31-33) */}
-      {selectedWallGeom && selectedRoomId && (
+      {showFeaturePanels && selectedWallGeom && selectedRoomId && (
         <WallFeaturesPanel
           roomId={selectedRoomId}
           wallId={selectedWallGeom.id}
@@ -572,31 +529,30 @@ export function RightSidebar({
       )}
 
       {/* Raumgestaltung: Arbeitsflächen, Annotationen, Deko, Beleuchtung (Sprints 36-39) */}
-      {selectedRoomId && room && (
+      {showFeaturePanels && selectedRoomId && room && (
         <RoomFeaturesPanel roomId={selectedRoomId} />
       )}
 
       {/* Makros (Sprint 35) */}
-      {selectedRoomId && (
+      {showFeaturePanels && selectedRoomId && (
         <MacrosPanel
           projectId={projectId}
           currentPlacements={placements}
         />
       )}
 
-      <KitchenAssistantPanel roomId={selectedRoomId} placements={placements} />
+      {showFeaturePanels && <KitchenAssistantPanel roomId={selectedRoomId} placements={placements} />}
 
-      <ProtectPanel
-        projectId={projectId}
-        roomId={selectedRoomId}
-        placements={placements}
-        ceilingHeightMm={room?.ceiling_height_mm ?? 2500}
-      />
+      {showFeaturePanels && (
+        <ProtectPanel
+          projectId={projectId}
+          roomId={selectedRoomId}
+          placements={placements}
+          ceilingHeightMm={room?.ceiling_height_mm ?? 2500}
+        />
+      )}
 
-      <QuoteExportPanel
-        projectId={projectId}
-        buildCreatePayload={buildQuoteCreatePayload}
-      />
+      {showQuoteExportPanel && <QuoteExportPanel projectId={projectId} />}
     </aside>
   )
 }
@@ -615,7 +571,7 @@ const OPENING_LABELS: Record<string, string> = {
   custom: 'Benutzerdefiniert',
 }
 
-function OpeningPanel({ opening, onUpdate, onDelete }: {
+export function OpeningPanel({ opening, onUpdate, onDelete }: {
   opening: Opening
   onUpdate: (o: Opening) => void
   onDelete: (id: string) => void
@@ -755,7 +711,7 @@ function OpeningPanel({ opening, onUpdate, onDelete }: {
 
 // ─── Vertex-Panel ─────────────────────────────────────────────────────────────
 
-function VertexPanel({ index, vertex, onMove }: {
+export function VertexPanel({ index, vertex, onMove }: {
   index: number
   vertex: Vertex
   onMove: (i: number, pos: Point2D) => void
@@ -814,7 +770,7 @@ function VertexPanel({ index, vertex, onMove }: {
 
 // ─── Kanten-Panel ─────────────────────────────────────────────────────────────
 
-function EdgePanel({ edgeIndex, lengthMm, dimensionAssistSegments, onSetLength, onDraftChange }: {
+export function EdgePanel({ edgeIndex, lengthMm, dimensionAssistSegments, onSetLength, onDraftChange }: {
   edgeIndex: number
   lengthMm: number
   dimensionAssistSegments: DimensionAssistSegment[]
@@ -956,7 +912,7 @@ function resolveVariantPrice(article: CatalogArticle, variantId?: string) {
   return defaultPrice ?? prices[0]
 }
 
-function ValidationPanel({ result, loading, onRun }: {
+export function ValidationPanel({ result, loading, onRun }: {
   result: ValidateResponse | null
   loading: boolean
   onRun: () => void
@@ -993,7 +949,7 @@ function ValidationPanel({ result, loading, onRun }: {
   )
 }
 
-function AcousticPanel({
+export function AcousticPanel({
   enabled,
   opacityPct,
   variable,
@@ -1126,7 +1082,7 @@ function AcousticPanel({
 
 // ─── Platzierungs-Panel ───────────────────────────────────────────────────────
 
-function PlacementPanel({ placement, onUpdate, onDelete }: {
+export function PlacementPanel({ placement, onUpdate, onDelete }: {
   placement: Placement
   onUpdate: (p: Placement) => void
   onDelete: (id: string) => void
@@ -1189,7 +1145,7 @@ function PlacementPanel({ placement, onUpdate, onDelete }: {
 
 // ─── Dachschrägen-Panel ───────────────────────────────────────────────────────
 
-function CeilingConstraintPanel({ constraints, wallGeom, onSave }: {
+export function CeilingConstraintPanel({ constraints, wallGeom, onSave }: {
   constraints: CeilingConstraint[]
   wallGeom: { id: string; start: Point2D; end: Point2D } | null
   onSave: (constraints: CeilingConstraint[]) => void
@@ -1317,7 +1273,7 @@ function ConstraintRow({ constraint, onUpdate, onDelete }: {
 
 // ─── Konfigurator-Panel ───────────────────────────────────────────────────────
 
-function KonfiguratorPanel({ item, dimensions, onChange, chosenOptions, onSetOptions }: {
+export function KonfiguratorPanel({ item, dimensions, onChange, chosenOptions, onSetOptions }: {
   item: UnifiedCatalogItem
   dimensions: ConfiguredDimensions
   onChange: (dims: ConfiguredDimensions) => void

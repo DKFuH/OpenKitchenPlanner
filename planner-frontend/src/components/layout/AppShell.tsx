@@ -14,19 +14,26 @@ import {
 
 const useStyles = makeStyles({
   root: {
+    height: '100dvh',
     minHeight: '100vh',
+    maxHeight: '100dvh',
     display: 'grid',
     gridTemplateRows: 'auto 1fr',
     backgroundColor: tokens.colorNeutralBackground2,
+    overflow: 'hidden',
   },
   content: {
     minHeight: 0,
+    overflow: 'auto',
     padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
     '@media (max-width: 900px)': {
       padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
     },
   },
   contentEditor: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100%',
     minHeight: 0,
     padding: 0,
     overflow: 'hidden',

@@ -264,9 +264,6 @@ let wallVisuals: Array<{
 let dollhouseSettings: DollhouseConfig = null
 let lastEmitted: CameraStateData | null = null
 let lastEmitTs = 0
-let currentGroup: THREE.Group | null = null
-let sunlightState: SunlightData | null = null
-let renderEnvState: RenderEnvironmentSettings | null = null
 
 // ─── Scene geometry builder ──────────────────────────────────────────────────
 
@@ -575,8 +572,6 @@ async function handleInit(data: {
   applyRenderEnvironment(scene, envHemisphere, envDirectional, envGroundMaterial, data.renderEnvironment)
 
   dollhouseSettings = data.autoDollhouseSettings
-  sunlightState = data.sunlight
-  renderEnvState = data.renderEnvironment
 
   buildGeometry(data.input, data.showReference)
 
