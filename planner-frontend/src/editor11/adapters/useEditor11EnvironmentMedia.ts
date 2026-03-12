@@ -72,6 +72,12 @@ export function useEditor11EnvironmentMedia({
       return
     }
 
+    if (env.latitude == null || env.longitude == null) {
+      setSunPreview(null)
+      setSunPreviewLoading(false)
+      return
+    }
+
     setSunPreviewLoading(true)
     try {
       const preview = await projectEnvironmentApi.sunPreview(nextProjectId, {

@@ -9,7 +9,6 @@ import {
   Input,
   MessageBar,
   MessageBarBody,
-  Option,
   Select,
   Spinner,
   Textarea,
@@ -162,8 +161,8 @@ export function PanoramaToursPage() {
         <div className={styles.formGrid}>
           <Field label='Tour w\u00e4hlen'>
             <Select value={activeId ?? ''} onChange={(_e, d) => setActiveId(d.value || null)}>
-              <Option value=''>Neu erstellen</Option>
-              {items.map((entry) => <Option key={entry.id} value={entry.id}>{entry.name}</Option>)}
+              <option value=''>Neu erstellen</option>
+              {items.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
             </Select>
           </Field>
           <Field label='Name'>
@@ -171,8 +170,8 @@ export function PanoramaToursPage() {
           </Field>
           <Field label='Sprache'>
             <Select value={shareLocale} onChange={(_e, d) => setShareLocale(d.value === 'en' ? 'en' : 'de')}>
-              <Option value='de'>Deutsch</Option>
-              <Option value='en'>English</Option>
+              <option value='de'>Deutsch</option>
+              <option value='en'>English</option>
             </Select>
           </Field>
         </div>

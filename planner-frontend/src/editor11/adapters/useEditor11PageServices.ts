@@ -61,6 +61,7 @@ export function useEditor11PageServices({
   useEditor11InitialData({
     projectId,
     selectedRoomId: pageState.selectedRoomId,
+    daylightEnabled: pageState.daylightEnabled,
     stairsEnabled: pageState.stairsEnabled,
     multilevelDocsEnabled: pageState.multilevelDocsEnabled,
     setProject: pageState.setProject,
@@ -84,6 +85,9 @@ export function useEditor11PageServices({
     setRenderEnvironmentPresets: pageState.setRenderEnvironmentPresets,
     setSectionLines: pageState.setSectionLines,
     setSelectedSectionLineId: pageState.setSelectedSectionLineId,
+    setProjectEnvironment: pageState.setProjectEnvironment,
+    setSunPreview: pageState.setSunPreview,
+    setSunPreviewLoading: pageState.setSunPreviewLoading,
   })
 
   useEffect(() => {

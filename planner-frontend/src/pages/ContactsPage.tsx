@@ -224,13 +224,13 @@ export function ContactsPage() {
                     <div>
                       <Caption1>Typ</Caption1>
                       <Select value={form.type} onChange={(_e, d) => setForm((prev) => ({ ...prev, type: d.value as ContactType }))}>
-                        {Object.entries(CONTACT_TYPE_LABELS).map(([v, l]) => <Option key={v} value={v}>{l}</Option>)}
+                        {Object.entries(CONTACT_TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                       </Select>
                     </div>
                     <div>
                       <Caption1>Kontaktart</Caption1>
                       <Select value={form.party_kind} onChange={(_e, d) => setForm((prev) => ({ ...prev, party_kind: d.value as ContactPartyKind }))}>
-                        {Object.entries(PARTY_KIND_LABELS).map(([v, l]) => <Option key={v} value={v}>{l}</Option>)}
+                        {Object.entries(PARTY_KIND_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                       </Select>
                     </div>
                     <Field label="Vorname"><Input value={form.first_name} onChange={(_e, d) => setForm((prev) => ({ ...prev, first_name: d.value }))} /></Field>
@@ -242,7 +242,7 @@ export function ContactsPage() {
                     <div>
                       <Caption1>Lead-Quelle</Caption1>
                       <Select value={form.lead_source} onChange={(_e, d) => setForm((prev) => ({ ...prev, lead_source: d.value as ContactLeadSource }))}>
-                        {Object.entries(LEAD_SOURCE_LABELS).map(([v, l]) => <Option key={v} value={v}>{l}</Option>)}
+                        {Object.entries(LEAD_SOURCE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                       </Select>
                     </div>
                     <Field label="Budget (€)"><Input type="number" min="0" value={form.budget_estimate} onChange={(_e, d) => setForm((prev) => ({ ...prev, budget_estimate: d.value }))} /></Field>
@@ -280,15 +280,15 @@ export function ContactsPage() {
         <div className={styles.filterField}>
           <Caption1>Typ</Caption1>
           <Select value={typeFilter} onChange={(_e, d) => setTypeFilter(d.value as 'all' | ContactType)}>
-            <Option value="all">Alle Typen</Option>
-            {Object.entries(CONTACT_TYPE_LABELS).map(([v, l]) => <Option key={v} value={v}>{l}</Option>)}
+            <option value="all">Alle Typen</option>
+            {Object.entries(CONTACT_TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </Select>
         </div>
         <div className={styles.filterField}>
           <Caption1>Kontaktart</Caption1>
           <Select value={partyKindFilter} onChange={(_e, d) => setPartyKindFilter(d.value as 'all' | ContactPartyKind)}>
-            <Option value="all">Alle Arten</Option>
-            {Object.entries(PARTY_KIND_LABELS).map(([v, l]) => <Option key={v} value={v}>{l}</Option>)}
+            <option value="all">Alle Arten</option>
+            {Object.entries(PARTY_KIND_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </Select>
         </div>
         <div className={styles.filterField}>

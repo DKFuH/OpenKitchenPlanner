@@ -10,7 +10,6 @@ import {
   Input,
   MessageBar,
   MessageBarBody,
-  Option,
   Select,
   Spinner,
   Title2,
@@ -141,15 +140,15 @@ export function SpecificationPackagesPage() {
         <div className={styles.formGrid}>
           <Field label='Paket w\u00e4hlen'>
             <Select value={activeId ?? ''} onChange={(_e, d) => setActiveId(d.value || null)}>
-              <Option value=''>Neu erstellen</Option>
-              {items.map((e) => <Option key={e.id} value={e.id}>{e.name}</Option>)}
+              <option value=''>Neu erstellen</option>
+              {items.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
             </Select>
           </Field>
           <Field label='Name'><Input value={name} onChange={(_e, d) => setName(d.value)} /></Field>
           <Field label='Sprache'>
             <Select value={localeCode} onChange={(_e, d) => setLocaleCode(d.value === 'en' ? 'en' : 'de')}>
-              <Option value='de'>Deutsch</Option>
-              <Option value='en'>English</Option>
+              <option value='de'>Deutsch</option>
+              <option value='en'>English</option>
             </Select>
           </Field>
         </div>

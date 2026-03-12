@@ -1,3 +1,5 @@
+import { tenantScopedHeaders } from './runtimeContext.js'
+
 export interface AcousticGridMeta {
   id: string
   filename: string
@@ -28,6 +30,7 @@ export const acousticsApi = {
     const response = await fetch(`/api/v1/projects/${projectId}/import/acoustics`, {
       method: 'POST',
       headers: {
+        ...tenantScopedHeaders(),
         'Content-Type': 'text/plain',
         'X-Filename': file.name,
       },
@@ -42,7 +45,9 @@ export const acousticsApi = {
   },
 
   listGrids: async (projectId: string): Promise<AcousticGridMeta[]> => {
-    const response = await fetch(`/api/v1/projects/${projectId}/acoustic-grids`)
+    const response = await fetch(`/api/v1/projects/${projectId}/acoustic-grids`, {
+      headers: tenantScopedHeaders(),
+    })
     if (!response.ok) {
       throw new Error(await response.text())
     }
@@ -51,7 +56,9 @@ export const acousticsApi = {
   },
 
   getTiles: async (gridId: string): Promise<GeoJsonGrid> => {
-    const response = await fetch(`/api/v1/acoustic-grids/${gridId}/tiles`)
+    const response = await fetch(`/api/v1/acoustic-grids/${gridId}/tiles`, {
+      headers: tenantScopedHeaders(),
+    })
     if (!response.ok) {
       throw new Error(await response.text())
     }
@@ -60,14 +67,19 @@ export const acousticsApi = {
   },
 
   deleteGrid: async (gridId: string): Promise<void> => {
-    const response = await fetch(`/api/v1/acoustic-grids/${gridId}`, { method: 'DELETE' })
+    const response = await fetch(`/api/v1/acoustic-grids/${gridId}`, {
+      method: 'DELETE',
+      headers: tenantScopedHeaders(),
+    })
     if (!response.ok) {
       throw new Error(await response.text())
     }
   },
 
   listLayers: async (projectId: string): Promise<unknown[]> => {
-    const response = await fetch(`/api/v1/projects/${projectId}/acoustic-layers`)
+    const response = await fetch(`/api/v1/projects/${projectId}/acoustic-layers`, {
+      headers: tenantScopedHeaders(),
+    })
     if (!response.ok) {
       throw new Error(await response.text())
     }

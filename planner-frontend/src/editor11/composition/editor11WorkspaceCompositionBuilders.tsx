@@ -194,7 +194,7 @@ export function buildEditor11ViewportArgs(
       navigationSettings: pageState.navigationSettings,
       safeEditMode: pageState.safeEditMode,
       editorChromeMode: 'minimal',
-      showCompass: pageState.daylightEnabled,
+      showCompass: false,
       northAngleDeg: pageState.projectEnvironment?.north_angle_deg ?? 0,
       virtualVisitor: {
         x_mm: camera.cameraState.x_mm,

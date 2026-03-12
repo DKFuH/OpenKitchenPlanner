@@ -7,7 +7,9 @@ import { getTenantPlugins, type TenantPluginsResponse } from '../../api/tenantSe
 import { verticalConnectionsApi, type VerticalConnection } from '../../api/verticalConnections.js'
 import { visibilityApi, type AutoDollhouseSettings } from '../../api/visibility.js'
 import { renderEnvironmentApi } from '../../api/renderEnvironment.js'
+import { projectEnvironmentApi } from '../../api/projectEnvironment.js'
 import { annotationsApi } from '../../api/rooms.js'
+import type { ProjectEnvironment, SunPreview } from '../../plugins/daylight/index.js'
 import {
   DEFAULT_RENDER_ENVIRONMENT_SETTINGS,
   RENDER_ENVIRONMENT_PRESETS,
@@ -19,6 +21,7 @@ import {
 interface UseEditor11InitialDataArgs {
   projectId: string | null
   selectedRoomId: string | null
+  daylightEnabled: boolean
   stairsEnabled: boolean
   multilevelDocsEnabled: boolean
   setProject: Dispatch<SetStateAction<ProjectDetail | null>>
@@ -42,11 +45,15 @@ interface UseEditor11InitialDataArgs {
   setRenderEnvironmentPresets: Dispatch<SetStateAction<RenderEnvironmentPreset[]>>
   setSectionLines: Dispatch<SetStateAction<SectionLine[]>>
   setSelectedSectionLineId: Dispatch<SetStateAction<string | null>>
+  setProjectEnvironment: Dispatch<SetStateAction<ProjectEnvironment | null>>
+  setSunPreview: Dispatch<SetStateAction<SunPreview | null>>
+  setSunPreviewLoading: Dispatch<SetStateAction<boolean>>
 }
 
 export function useEditor11InitialData({
   projectId,
   selectedRoomId,
+  daylightEnabled,
   stairsEnabled,
   multilevelDocsEnabled,
   setProject,
@@ -70,6 +77,9 @@ export function useEditor11InitialData({
   setRenderEnvironmentPresets,
   setSectionLines,
   setSelectedSectionLineId,
+  setProjectEnvironment,
+  setSunPreview,
+  setSunPreviewLoading,
 }: UseEditor11InitialDataArgs) {
   useEffect(() => {
     if (!projectId) {
@@ -170,6 +180,69 @@ export function useEditor11InitialData({
     setStairsEnabled,
     setTenantPlugins,
   ])
+
+  useEffect(() => {
+    if (!projectId || !daylightEnabled) {
+      setProjectEnvironment(null)
+      setSunPreview(null)
+      setSunPreviewLoading(false)
+      return
+    }
+
+    let active = true
+    setSunPreviewLoading(true)
+
+    projectEnvironmentApi.get(projectId)
+      .then(async (environment) => {
+        if (!active) {
+          return
+        }
+
+        const normalizedEnvironment = {
+          ...environment,
+          config_json: environment.config_json ?? {},
+        }
+        setProjectEnvironment(normalizedEnvironment)
+
+        if (normalizedEnvironment.latitude == null || normalizedEnvironment.longitude == null) {
+          setSunPreview(null)
+          return
+        }
+
+        try {
+          const preview = await projectEnvironmentApi.sunPreview(projectId, {
+            ...(normalizedEnvironment.default_datetime ? { datetime: normalizedEnvironment.default_datetime } : {}),
+            ...(normalizedEnvironment.latitude != null ? { latitude: normalizedEnvironment.latitude } : {}),
+            ...(normalizedEnvironment.longitude != null ? { longitude: normalizedEnvironment.longitude } : {}),
+            north_angle_deg: normalizedEnvironment.north_angle_deg,
+          })
+          if (active) {
+            setSunPreview(preview)
+          }
+        } catch {
+          if (active) {
+            setSunPreview(null)
+          }
+        }
+      })
+      .catch(() => {
+        if (!active) {
+          return
+        }
+        setProjectEnvironment(null)
+        setSunPreview(null)
+      })
+      .finally(() => {
+        if (!active) {
+          return
+        }
+        setSunPreviewLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [daylightEnabled, projectId, setProjectEnvironment, setSunPreview, setSunPreviewLoading])
 
   useEffect(() => {
     if (!projectId || !stairsEnabled) {

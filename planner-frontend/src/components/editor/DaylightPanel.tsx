@@ -1,3 +1,4 @@
+import { CompassOverlay } from './CompassOverlay.js'
 import type { ProjectEnvironment, SunPreview } from '../../plugins/daylight/index.js'
 import { makeStyles, tokens } from '@fluentui/react-components'
 
@@ -15,6 +16,12 @@ const useStyles = makeStyles({
     margin: '0',
     fontSize: '14px',
     fontWeight: '600',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: tokens.spacingHorizontalM,
   },
   grid: {
     display: 'grid',
@@ -131,11 +138,14 @@ environment,
   onSave,
   onRefreshPreview,
 }: Props) {
-  const styles = useStyles();
+  const styles = useStyles()
 
   return (
     <section className={styles.panel}>
-      <h3 className={styles.title}>Tageslicht</h3>
+      <div className={styles.header}>
+        <h3 className={styles.title}>Tageslicht</h3>
+        <CompassOverlay northAngleDeg={environment.north_angle_deg} mode='inline' />
+      </div>
 
       <div className={styles.grid}>
         <label className={`${styles.field} ${styles.fieldFull}`}>
