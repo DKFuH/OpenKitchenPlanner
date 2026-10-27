@@ -113,6 +113,7 @@ export function buildEditor11InspectorArgs(
     validationResult: pageState.validationResult,
     validationLoading: pageState.validationLoading,
     onRunValidation: roomOperations.handleRunValidation,
+    openings: pageState.openings,
     placements: pageState.placements,
     selectedRoomId: pageState.selectedRoomId,
     acousticEnabled: pageState.acousticEnabled,

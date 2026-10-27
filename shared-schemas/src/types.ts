@@ -54,10 +54,25 @@ export interface Opening {
   id: string;
   wall_id: string;
   type?: 'door' | 'window' | 'pass-through' | 'radiator' | 'socket' | 'switch' | 'niche' | 'pipe' | 'custom';
+  family_id?: string;
+  variant?: string;
   offset_mm: number;
   width_mm: number;
   height_mm?: number;
   sill_height_mm?: number;
+  hinge_side?: 'left' | 'right';
+  opening_direction?: 'inward' | 'outward';
+  leaf_count?: 1 | 2 | 3 | 4;
+  muntin_rows?: number;
+  glazing?: 'none' | 'full' | 'upper';
+  panel_count?: number;
+  materials?: {
+    frame_color?: string;
+    leaf_color?: string;
+    glass_color?: string;
+    sill_color?: string;
+  };
+  frame_type?: string;
   wall_offset_depth_mm?: number | null;
   recess_mm?: number;
   source?: 'manual' | 'cad_import';
@@ -99,6 +114,7 @@ export interface PlacedObject {
 }
 
 export interface Placement extends PlacedObject {
+  asset_id?: string;
   room_id?: string;
   catalog_item_id: string;
   catalog_article_id?: string;

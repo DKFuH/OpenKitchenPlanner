@@ -1,4 +1,5 @@
 import { api } from './client.js'
+import { tenantScopedHeaders } from './runtimeContext.js'
 
 const BASE_URL = '/api/v1'
 
@@ -91,9 +92,9 @@ export function resequenceQuoteLines(id: string, startPosition = 1): Promise<Res
 export async function exportQuotePdf(id: string, localeCode?: string): Promise<void> {
   const response = await fetch(`${BASE_URL}/quotes/${id}/export-pdf`, {
     method: 'POST',
-    headers: {
+    headers: tenantScopedHeaders({
       'Content-Type': 'application/json',
-    },
+    }),
     body: JSON.stringify(localeCode ? { locale_code: localeCode } : {}),
   })
 

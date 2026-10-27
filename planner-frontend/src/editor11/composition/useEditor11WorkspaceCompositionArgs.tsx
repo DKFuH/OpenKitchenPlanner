@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { RoomPayload } from '../../api/rooms.js'
 import type { CeilingConstraint } from '../../components/editor/RightSidebar.js'
 import { useEditor11WorkspaceComposition } from './useEditor11WorkspaceComposition.js'
@@ -16,7 +17,11 @@ export function useEditor11WorkspaceCompositionArgs(
   input: Editor11WorkspaceCompositionArgsInput,
 ): WorkspaceCompositionArgs {
   const { roomOperations } = input
-  const selectedRoom = roomOperations.selectedRoom as unknown as RoomPayload | null
+  const selectedRoom = useMemo(() => roomOperations.selectedRoom ? ({
+    ...roomOperations.selectedRoom,
+    placements: input.pageState.placements,
+    openings: input.pageState.openings,
+  } as unknown as RoomPayload) : null, [roomOperations.selectedRoom, input.pageState.placements, input.pageState.openings])
   const ceilingConstraints = (selectedRoom?.ceiling_constraints as CeilingConstraint[] | undefined) ?? []
   const context = {
     selectedRoom,

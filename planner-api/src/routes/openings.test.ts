@@ -40,6 +40,23 @@ describe('openingRoutes', () => {
     }))
   })
 
+  it('persists file-template identity, glazing, leaf divisions and separate surface materials', async () => {
+    const app = Fastify()
+    await app.register(openingRoutes, { prefix: '/api/v1' })
+    const opening = {
+      id: '55555555-5555-4555-8555-555555555555', wall_id: wallId,
+      type: 'window', family_id: 'window-triple', variant: 'Dreh-Kipp',
+      offset_mm: 500, width_mm: 2100, height_mm: 1200, sill_height_mm: 900,
+      leaf_count: 3, muntin_rows: 2, glazing: 'full',
+      materials: { frame_color: '#333333', glass_color: '#aabbcc' },
+    }
+    const response = await app.inject({ method: 'PUT', url: `/api/v1/rooms/${roomId}/openings`, payload: { openings: [opening] } })
+    expect(response.statusCode).toBe(200)
+    expect(response.json()[0]).toMatchObject(opening)
+    expect(prismaMock.room.update).toHaveBeenCalledWith(expect.objectContaining({ data: { openings: [expect.objectContaining(opening)] } }))
+    await app.close()
+  })
+
   it('validates openings against wall bounds and siblings', async () => {
     const app = Fastify()
     await app.register(openingRoutes, { prefix: '/api/v1' })

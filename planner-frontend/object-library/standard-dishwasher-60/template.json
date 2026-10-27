@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "standard-dishwasher-60",
+  "name": "Geschirrspüler 60 cm",
+  "category": "appliance",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 600,
+    "height_mm": 820,
+    "depth_mm": 560
+  },
+  "parameters": {},
+  "material_slots": [
+    "carcass",
+    "front"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  },
+  "catalog": {
+    "id": "11000000-0000-4000-8000-000000000005",
+    "sku": "OKP-GS-060",
+    "list_price_net": 749,
+    "dealer_price_net": 561
+  },
+  "manufacturer_article": {
+    "id": "12000000-0000-4000-8000-000000000005",
+    "sku": "START-GS60",
+    "name": "Start Geschirrspüler 60",
+    "list_net": 799,
+    "dealer_net": 599,
+    "options": [],
+    "variants": []
+  }
+}

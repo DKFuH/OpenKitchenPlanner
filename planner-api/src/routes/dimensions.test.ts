@@ -301,6 +301,23 @@ describe('dimensionRoutes', () => {
     await app.close()
   })
 
+  it('draws actual cabinet heights and two-leaf windows above the sill in elevation', async () => {
+    const app = await createApp()
+    prismaMock.room.findUnique.mockResolvedValueOnce({
+      ...roomFixture,
+      placements: [{ id: 'tall-1', wall_id: 'wall-1', offset_mm: 100, width_mm: 600, height_mm: 2100 }],
+      openings: [{ id: 'window-1', wall_id: 'wall-1', type: 'window', offset_mm: 1000, width_mm: 1400, height_mm: 1200, sill_height_mm: 900, leaf_count: 2 }],
+    })
+
+    const response = await app.inject({ method: 'GET', url: `/api/v1/rooms/${roomId}/elevation/0` })
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toContain('height="210"')
+    expect(response.body).toContain('height="120"')
+    expect(response.body).toContain('Fenster 1400')
+    expect(response.body).toContain('stroke="#0284c7"')
+    await app.close()
+  })
+
   // ── Sprint 63: PUT /dimensions/:id ─────────────────────────────────────────
 
   it('PUT /dimensions/:id with label returns 200 and updated label', async () => {

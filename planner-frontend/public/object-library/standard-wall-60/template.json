@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "standard-wall-60",
+  "name": "Hängeschrank 60 cm",
+  "category": "wall_cabinet",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 600,
+    "height_mm": 720,
+    "depth_mm": 350
+  },
+  "parameters": {},
+  "material_slots": [
+    "carcass",
+    "front"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  },
+  "catalog": {
+    "id": "11000000-0000-4000-8000-000000000003",
+    "sku": "OKP-WS-060",
+    "list_price_net": 329,
+    "dealer_price_net": 181
+  },
+  "manufacturer_article": {
+    "id": "12000000-0000-4000-8000-000000000003",
+    "sku": "START-WS60",
+    "name": "Start Hängeschrank 60",
+    "list_net": 359,
+    "dealer_net": 197,
+    "options": [],
+    "variants": []
+  }
+}

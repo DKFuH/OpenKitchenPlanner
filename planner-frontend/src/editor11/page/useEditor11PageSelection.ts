@@ -43,6 +43,8 @@ export function useEditor11PageSelection({
     wallStateArgs: {
       projectElevations: pageState.projectElevations,
       selectedRoomId: pageState.selectedRoomId,
+      selectedOpeningId: pageState.selectedOpeningId,
+      selectedPlacementId: pageState.selectedPlacementId,
       wallIds: state.wallIds,
       vertices: state.vertices,
       setSelectedElevationWallIndex: pageState.setSelectedElevationWallIndex,

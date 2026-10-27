@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "library:build": "tsx scripts/build-object-library.ts",
+    "predev": "npm run library:build",
+    "prebuild": "npm run library:build",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
@@ -12,6 +15,7 @@
   },
   "dependencies": {
     "@fluentui/react-components": "^9.57.0",
+    "dxf-parser": "^1.1.2",
     "i18next": "^25.8.14",
     "konva": "^9.3.15",
     "react": "^18.3.1",
@@ -27,6 +31,7 @@
     "@types/react-dom": "^18.3.1",
     "@types/three": "^0.183.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",
     "vitest": "^3.0.8"

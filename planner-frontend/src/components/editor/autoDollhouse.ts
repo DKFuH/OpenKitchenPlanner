@@ -1,3 +1,5 @@
+import { getWallInnerNormal } from '@shared/geometry/wallPlacement'
+
 export interface AutoDollhouseConfig {
   enabled: boolean
   alpha_front_walls: number
@@ -22,6 +24,7 @@ export interface AutoDollhouseResolveInput {
   camera: AutoDollhouseCamera
   walls: AutoDollhouseWall[]
   settings: AutoDollhouseConfig | null
+  cutaway?: boolean
 }
 
 export function resolveAutoDollhouseOpacities(input: AutoDollhouseResolveInput): Record<string, number> {
@@ -30,6 +33,17 @@ export function resolveAutoDollhouseOpacities(input: AutoDollhouseResolveInput):
 
   for (const wall of input.walls) {
     result[wall.id] = 1
+  }
+
+  if (input.cutaway && input.walls.length >= 3) {
+    const polygon = input.walls.map(wall => wall.start)
+    for (const wall of input.walls) {
+      const normal = getWallInnerNormal({ ...wall, length_mm: 0 }, polygon)
+      const dx = input.camera.x_mm - (wall.start.x_mm + wall.end.x_mm) / 2
+      const dy = input.camera.y_mm - (wall.start.y_mm + wall.end.y_mm) / 2
+      if (normal.x * dx + normal.y * dy < 0) result[wall.id] = 0.06
+    }
+    return result
   }
 
   if (!settings || !settings.enabled || input.walls.length === 0) {

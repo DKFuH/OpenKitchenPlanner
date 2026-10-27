@@ -68,6 +68,7 @@ export function useEditorLegacyInspectorProps(
   }), [args])
 
   const visibility = useMemo<EditorLegacyInspectorVisibilityProps>(() => ({
+    openings: args.openings,
     placements: args.placements,
     selectedRoomId: args.selectedRoomId,
     acousticEnabled: args.acousticEnabled,

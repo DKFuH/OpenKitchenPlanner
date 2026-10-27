@@ -19,14 +19,33 @@ const openingTypeValues = [
   'custom',
 ] as const
 
+const OpeningVariantFields = {
+  leaf_count: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  muntin_rows: z.number().int().min(0).max(6).optional(),
+  glazing: z.enum(['none', 'full', 'upper']).optional(),
+  panel_count: z.number().int().min(0).max(6).optional(),
+  materials: z.object({
+    frame_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    leaf_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    glass_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    sill_color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  }).optional(),
+}
+
 const OpeningSchema = z.object({
   id: z.string().uuid().default(() => randomUUID()),
   wall_id: z.string().uuid(),
   type: z.enum(openingTypeValues).optional(),
+  family_id: z.string().min(1).max(100).optional(),
+  variant: z.string().min(1).max(100).optional(),
   offset_mm: z.number().min(0),
   width_mm: z.number().positive(),
   height_mm: z.number().positive().optional(),
   sill_height_mm: z.number().min(0).optional(),
+  hinge_side: z.enum(['left', 'right']).optional(),
+  opening_direction: z.enum(['inward', 'outward']).optional(),
+  ...OpeningVariantFields,
+  frame_type: z.string().min(1).max(100).optional(),
   wall_offset_depth_mm: z.number().int().min(0).max(2000).nullable().optional(),
   source: z.enum(['manual', 'cad_import']).default('manual'),
 })
@@ -86,10 +105,16 @@ const OpeningDraftSchema = z.object({
   id: z.string().min(1).default(() => randomUUID()),
   wall_id: z.string().min(1),
   type: z.enum(openingTypeValues).optional(),
+  family_id: z.string().min(1).max(100).optional(),
+  variant: z.string().min(1).max(100).optional(),
   offset_mm: z.number().min(0),
   width_mm: z.number().positive(),
   height_mm: z.number().positive().optional(),
   sill_height_mm: z.number().min(0).optional(),
+  hinge_side: z.enum(['left', 'right']).optional(),
+  opening_direction: z.enum(['inward', 'outward']).optional(),
+  ...OpeningVariantFields,
+  frame_type: z.string().min(1).max(100).optional(),
   wall_offset_depth_mm: z.number().int().min(0).max(2000).nullable().optional(),
   source: z.enum(['manual', 'cad_import']).default('manual'),
 })

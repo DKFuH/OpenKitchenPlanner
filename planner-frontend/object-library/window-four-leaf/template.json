@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "window-four-leaf",
+  "name": "Fenster, 4-flügelig (2800 × 1200)",
+  "category": "window",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 2800,
+    "height_mm": 1200,
+    "depth_mm": 120
+  },
+  "parameters": {
+    "type": "window",
+    "leaf_count": 4,
+    "frame_type": "Kunststoff",
+    "variant": "Dreh-Kipp",
+    "sill_height_mm": 900
+  },
+  "material_slots": [
+    "frame",
+    "leaf",
+    "glass",
+    "sill"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  }
+}

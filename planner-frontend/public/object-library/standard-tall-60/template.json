@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "standard-tall-60",
+  "name": "Hochschrank 60 cm",
+  "category": "tall_cabinet",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 600,
+    "height_mm": 2100,
+    "depth_mm": 580
+  },
+  "parameters": {},
+  "material_slots": [
+    "carcass",
+    "front"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  },
+  "catalog": {
+    "id": "11000000-0000-4000-8000-000000000004",
+    "sku": "OKP-HS-060",
+    "list_price_net": 899,
+    "dealer_price_net": 494
+  },
+  "manufacturer_article": {
+    "id": "12000000-0000-4000-8000-000000000004",
+    "sku": "START-HS60",
+    "name": "Start Hochschrank 60",
+    "list_net": 969,
+    "dealer_net": 533,
+    "options": [],
+    "variants": []
+  }
+}

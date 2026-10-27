@@ -26,6 +26,11 @@ export function useEditor11ProjectionOrchestration({
     selectedRoomId: pageState.selectedRoomId,
     selectedElevationWallIndex: pageState.selectedElevationWallIndex,
     selectedSectionLineId: pageState.selectedSectionLineId,
+    geometryRevision: JSON.stringify([
+      pageState.project?.rooms.find((room) => room.id === pageState.selectedRoomId)?.boundary,
+      pageState.openings,
+      pageState.placements,
+    ]),
   })
 
   const saveSectionViewConfig = useEditor11SectionViewSave({

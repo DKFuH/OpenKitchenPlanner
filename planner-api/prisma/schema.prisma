@@ -2176,6 +2176,7 @@ model AssetLibraryItem {
   folder_id          String?
   collection         String?  @db.VarChar(120)
   source_format      String   @db.VarChar(20)
+  source_storage_key String?
   file_url           String
   preview_url        String?
   bbox_json          Json     @default("{}")

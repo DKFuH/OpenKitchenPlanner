@@ -1,4 +1,6 @@
-export type AssetSourceFormat = 'obj' | 'dae'
+import { dxfPlanVertices, gltfVertices } from './templateGeometryImport.js'
+
+export type AssetSourceFormat = 'obj' | 'dae' | 'gltf' | 'glb' | 'dxf'
 
 export interface AssetBoundingBoxMm {
   width_mm: number
@@ -84,7 +86,10 @@ function detectSourceFormat(fileName: string): AssetSourceFormat {
   const lower = fileName.toLowerCase()
   if (lower.endsWith('.obj')) return 'obj'
   if (lower.endsWith('.dae')) return 'dae'
-  throw new Error('Nur OBJ und DAE werden unterstützt')
+  if (lower.endsWith('.gltf')) return 'gltf'
+  if (lower.endsWith('.glb')) return 'glb'
+  if (lower.endsWith('.dxf')) return 'dxf'
+  throw new Error('Unterstützt werden DXF, glTF, GLB, OBJ und DAE')
 }
 
 function computeBounds(vertices: Point3[]) {
@@ -139,17 +144,24 @@ function inferFactorToMm(maxDimension: number): AssetDefaultScale {
   }
 }
 
-export function extractModelImportMeta(fileName: string, content: string): ModelImportMeta {
-  if (!content || content.trim().length === 0) {
+export function extractModelImportMeta(fileName: string, input: string | Buffer, options?: { height_mm?: number }): ModelImportMeta {
+  const content = typeof input === 'string' ? input : input.toString('utf8')
+  if (!input || input.length === 0 || (typeof input === 'string' && !input.trim())) {
     throw new Error('Datei ist leer')
   }
 
   const sourceFormat = detectSourceFormat(fileName)
-  const vertices = sourceFormat === 'obj' ? parseObjVertices(content) : parseDaeVertices(content)
+  const vertices = sourceFormat === 'gltf' || sourceFormat === 'glb'
+    ? gltfVertices(Buffer.isBuffer(input) ? input : Buffer.from(input), sourceFormat === 'glb')
+    : sourceFormat === 'dxf' ? dxfPlanVertices(content, options?.height_mm)
+    : sourceFormat === 'obj' ? parseObjVertices(content) : parseDaeVertices(content)
 
   const rawBounds = computeBounds(vertices)
   const maxDimension = Math.max(rawBounds.width, rawBounds.height, rawBounds.depth)
-  const defaultScale = inferFactorToMm(maxDimension)
+  const defaultScale: AssetDefaultScale = sourceFormat === 'gltf' || sourceFormat === 'glb'
+    ? { factor_to_mm: 1000, axis_scale: { x: 1, y: 1, z: 1 }, source_unit: 'm' }
+    : sourceFormat === 'dxf' ? { factor_to_mm: 1, axis_scale: { x: 1, y: 1, z: 1 }, source_unit: 'mm' }
+    : inferFactorToMm(maxDimension)
 
   const width_mm = Math.round(rawBounds.width * defaultScale.factor_to_mm)
   const height_mm = Math.round(rawBounds.height * defaultScale.factor_to_mm)

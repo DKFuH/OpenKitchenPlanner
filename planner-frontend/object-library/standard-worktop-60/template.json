@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "id": "standard-worktop-60",
+  "name": "Arbeitsplatte 60 cm tief",
+  "category": "worktop",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 1000,
+    "height_mm": 40,
+    "depth_mm": 600
+  },
+  "parameters": {},
+  "material_slots": [
+    "carcass",
+    "front"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  },
+  "catalog": {
+    "id": "11000000-0000-4000-8000-000000000006",
+    "sku": "OKP-APL-060",
+    "list_price_net": 149,
+    "dealer_price_net": 82
+  }
+}

@@ -58,6 +58,7 @@ export interface EditorLegacyInspectorValidationProps {
 }
 
 export interface EditorLegacyInspectorVisibilityProps {
+  openings: Opening[]
   placements: Placement[]
   selectedRoomId: string | null
   acousticEnabled: boolean

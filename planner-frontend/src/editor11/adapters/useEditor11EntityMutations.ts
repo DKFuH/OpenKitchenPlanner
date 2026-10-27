@@ -7,6 +7,7 @@ import { placementsApi } from '../../api/placements.js'
 import type { CatalogArticle, UnifiedCatalogItem } from '../../api/catalog.js'
 import type { RoomPayload } from '../../api/rooms.js'
 import { normalizeOpeningForMultiview } from '../../editor/roomTopology.js'
+import { defaultDoorOpening } from '../../editor/openingFamilies.js'
 
 interface ConfiguredDimensions {
   width_mm: number
@@ -60,18 +61,9 @@ export function useEditor11EntityMutations({
   }, [selectedRoomRef, setOpenings])
 
   const handleAddOpening = useCallback((wallId: string, wallLengthMm: number) => {
-    const defaultWidth = Math.min(900, wallLengthMm)
-    const offset = Math.max(0, Math.round((wallLengthMm - defaultWidth) / 2))
-    const newOpening = normalizeOpeningForMultiview({
-      id: crypto.randomUUID(),
-      wall_id: wallId,
-      type: 'door',
-      offset_mm: offset,
-      width_mm: defaultWidth,
-      height_mm: 2100,
-      sill_height_mm: 0,
-      source: 'manual',
-    })
+    const newOpening = normalizeOpeningForMultiview(
+      defaultDoorOpening(wallId, wallLengthMm, crypto.randomUUID()),
+    )
     const updated = [...openingsRef.current, newOpening]
     setOpenings(updated)
     setSelectedOpeningId(newOpening.id)
@@ -135,6 +127,7 @@ export function useEditor11EntityMutations({
     const newPlacement: Placement = {
       id: crypto.randomUUID(),
       catalog_item_id: selectedCatalogItem.id,
+      ...(!isArticle && selectedCatalogItem.asset_id ? { asset_id: selectedCatalogItem.asset_id } : {}),
       ...(isArticle ? { catalog_article_id: selectedCatalogItem.id } : {}),
       ...(resolvedVariantId ? { article_variant_id: resolvedVariantId } : {}),
       description: selectedCatalogItem.name,

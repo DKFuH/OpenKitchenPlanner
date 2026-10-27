@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "standard-base-80",
+  "name": "Unterschrank 80 cm",
+  "category": "base_cabinet",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 800,
+    "height_mm": 720,
+    "depth_mm": 560
+  },
+  "parameters": {},
+  "material_slots": [
+    "carcass",
+    "front"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  },
+  "catalog": {
+    "id": "11000000-0000-4000-8000-000000000002",
+    "sku": "OKP-US-080",
+    "list_price_net": 469,
+    "dealer_price_net": 258
+  },
+  "manufacturer_article": {
+    "id": "12000000-0000-4000-8000-000000000002",
+    "sku": "START-US80",
+    "name": "Start Auszugsschrank 80",
+    "list_net": 629,
+    "dealer_net": 346,
+    "options": [
+      {
+        "id": "13000000-0000-4000-8000-000000000003",
+        "key": "front",
+        "values": [
+          "Weiss matt",
+          "Eiche natur"
+        ]
+      }
+    ],
+    "variants": []
+  }
+}

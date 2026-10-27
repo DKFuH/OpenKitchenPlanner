@@ -49,10 +49,9 @@ OpenKitchenPlanner is a web-based planning platform for carpentry workshops and 
 git clone https://github.com/DKFuH/OKP.git
 cd OKP
 docker-compose up -d --build
-docker-compose exec api npm run db:push
-npm install
-npm run dev --workspace planner-frontend
 ```
+
+The Docker API initializes the schema and an idempotent starter catalog automatically.
 
 #### Option B: Local (e.g. Laragon)
 
@@ -68,6 +67,7 @@ npm run dev --workspace planner-frontend
    ```bash
    npm install
    npm run db:push --workspace planner-api
+   npm run db:seed --workspace planner-api
    # Terminal 1
    npm run dev --workspace planner-api
    # Terminal 2
@@ -113,10 +113,9 @@ OpenKitchenPlanner ist eine webbasierte Planungsplattform für Schreinereien und
 git clone https://github.com/DKFuH/OKP.git
 cd OKP
 docker-compose up -d --build
-docker-compose exec api npm run db:push
-npm install
-npm run dev --workspace planner-frontend
 ```
+
+Die Docker-API initialisiert das Schema und einen idempotenten Starterkatalog automatisch.
 
 #### Option B: Lokal (z. B. Laragon)
 
@@ -132,6 +131,7 @@ npm run dev --workspace planner-frontend
    ```bash
    npm install
    npm run db:push --workspace planner-api
+   npm run db:seed --workspace planner-api
    # Terminal 1
    npm run dev --workspace planner-api
    # Terminal 2

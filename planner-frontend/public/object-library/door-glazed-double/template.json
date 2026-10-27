@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "door-glazed-double",
+  "name": "Glastür, 2-flügelig (1760 × 1985)",
+  "category": "door",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 1760,
+    "height_mm": 1985,
+    "depth_mm": 120
+  },
+  "parameters": {
+    "type": "door",
+    "hinge_side": "left",
+    "opening_direction": "inward",
+    "leaf_count": 2,
+    "frame_type": "Holzzarge",
+    "variant": "Glastür",
+    "glazing": "full",
+    "sill_height_mm": 0
+  },
+  "material_slots": [
+    "frame",
+    "leaf",
+    "glass",
+    "sill"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  }
+}

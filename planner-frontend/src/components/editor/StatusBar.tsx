@@ -39,7 +39,7 @@ project, selectedRoom }: Props) {
       {selectedRoom && (
         <span>Aktiv: <strong>{selectedRoom.name}</strong></span>
       )}
-      <span className={styles.right}>Gesamtpreis: — (Sprint 12)</span>
+      <span className={styles.right}>Alle Maße in mm</span>
     </footer>
   )
 }

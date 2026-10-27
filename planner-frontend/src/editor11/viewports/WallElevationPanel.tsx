@@ -81,8 +81,9 @@ const useStyles = makeStyles({
     fontSize: '0.78rem',
   },
   body: {
+    display: 'flex',
     minHeight: '0',
-    overflow: 'auto',
+    overflow: 'hidden',
     padding: tokens.spacingVerticalS,
   },
   hint: {
@@ -91,15 +92,18 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground3,
   },
   svgViewport: {
-    minHeight: '100%',
+    display: 'flex',
+    flex: '1',
+    minHeight: '0',
     backgroundColor: tokens.colorNeutralBackground2,
     borderRadius: tokens.borderRadiusSmall,
     padding: tokens.spacingVerticalS,
-    overflow: 'auto',
+    overflow: 'hidden',
     '& svg': {
       display: 'block',
       width: '100%',
-      height: 'auto',
+      height: '100%',
+      maxHeight: '100%',
       maxWidth: '100%',
     },
   },
@@ -140,10 +144,7 @@ export function WallElevationPanel({
       onSelectWallIndex(activeEntry.wall_index)
     }
 
-    if (selectedWallId !== activeEntry.wall_id) {
-      dispatch({ id: 'select.wall', roomId: selectedRoomId, wallId: activeEntry.wall_id })
-    }
-  }, [activeEntry, dispatch, onSelectWallIndex, selectedElevationWallIndex, selectedRoomId, selectedWallId])
+  }, [activeEntry, onSelectWallIndex, selectedElevationWallIndex, selectedRoomId])
 
   return (
     <section className={styles.root}>
@@ -178,7 +179,6 @@ export function WallElevationPanel({
 
       <div className={styles.contextBar}>
         <span className={styles.pill}>Raum: {selectedRoomName ?? '-'}</span>
-        <span className={styles.pill}>Wand-ID: {selectedWallId ?? '-'}</span>
         <span className={styles.pill}>
           Aktiv: {activeEntry ? `Wand ${activeEntry.wall_index + 1}` : '-'}
         </span>

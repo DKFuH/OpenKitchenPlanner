@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { LibraryFolder } from '../../api/assetLibrary.js'
+import { assetLibraryApi } from '../../api/assetLibrary.js'
 import {
   ASSET_CATEGORY_LABELS,
   type AssetLibraryItem,
@@ -231,6 +232,7 @@ assets,
   onSetAssetCollection,
 }: Props) {
   const styles = useStyles();
+  const [downloadError, setDownloadError] = useState<string | null>(null)
 
   const [viewMode, setViewMode] = useState<ViewMode>('preview')
   const [collectionDrafts, setCollectionDrafts] = useState<Record<string, string>>({})
@@ -269,6 +271,7 @@ assets,
         </button>
       </div>
 
+      {downloadError && <p role="alert">{downloadError}</p>}
       {loading ? (
         <p className={styles.state}>Lade Assets…</p>
       ) : error ? (
@@ -295,6 +298,10 @@ assets,
                   </span>
                 </button>
                 <div className={styles.itemActions}>
+                  <button type="button" title="Originaldatei herunterladen" onClick={() => {
+                    setDownloadError(null)
+                    void assetLibraryApi.download(asset).catch(error => setDownloadError(error instanceof Error ? error.message : 'Download fehlgeschlagen'))
+                  }}>Datei</button>
                   <button
                     type="button"
                     className={`${styles.favoriteBtn} ${asset.favorite ? styles.favoriteBtnActive : ''}`}

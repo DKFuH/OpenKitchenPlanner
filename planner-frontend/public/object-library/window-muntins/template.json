@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "window-muntins",
+  "name": "Sprossenfenster (1200 × 1400)",
+  "category": "window",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 1200,
+    "height_mm": 1400,
+    "depth_mm": 120
+  },
+  "parameters": {
+    "type": "window",
+    "leaf_count": 2,
+    "frame_type": "Holz",
+    "variant": "Sprossenfenster",
+    "muntin_rows": 2,
+    "sill_height_mm": 800
+  },
+  "material_slots": [
+    "frame",
+    "leaf",
+    "glass",
+    "sill"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  }
+}

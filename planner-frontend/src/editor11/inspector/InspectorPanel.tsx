@@ -68,6 +68,7 @@ const useStyles = makeStyles({
 const DEFAULT_OPEN_SECTION_IDS = new Set([
   'legacy-catalog',
   'legacy-selection',
+  'room-object-list',
 ])
 
 export function InspectorPanel({ children }: { children?: ReactNode }) {

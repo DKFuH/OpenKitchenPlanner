@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { prisma } from '../db.js'
 import { sendBadRequest, sendNotFound } from '../errors.js'
 import { extractModelImportMeta } from '../services/modelImportService.js'
+import { randomUUID } from 'node:crypto'
+import { deleteDocumentBlob, readDocumentBlob, writeDocumentBlob } from '../services/documentStorage.js'
 
 type AssetListEntry = {
   name: string
@@ -33,6 +35,7 @@ const AssetImportBodySchema = z.object({
   tags: z.array(z.string().trim().min(1).max(50)).default([]),
   file_name: z.string().trim().min(1).max(240),
   file_base64: z.string().trim().min(1),
+  height_mm: z.number().positive().max(100000).optional(),
 })
 
 const AssetPatchBodySchema = z.object({
@@ -80,15 +83,6 @@ function ensureTenant(
 function stripExtension(fileName: string): string {
   const index = fileName.lastIndexOf('.')
   return index > 0 ? fileName.slice(0, index) : fileName
-}
-
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9\-_.]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 120)
 }
 
 function normalizeCollection(value: string | null | undefined): string | null {
@@ -312,7 +306,27 @@ export async function assetLibraryRoutes(app: FastifyInstance) {
     return reply.status(204).send()
   })
 
-  app.post('/tenant/assets/import', async (request, reply) => {
+  app.get<{ Params: { id: string } }>('/tenant/assets/:id', async (request, reply) => {
+    if (!ensureTenant(request.tenantId, reply)) return
+    const asset = await prisma.assetLibraryItem.findUnique({ where: { id: request.params.id } })
+    if (!asset || asset.tenant_id !== request.tenantId) return sendNotFound(reply, 'Vorlage nicht gefunden')
+    return asset
+  })
+
+  app.post('/tenant/assets/inspect', { bodyLimit: 12 * 1024 * 1024 }, async (request, reply) => {
+    if (!ensureTenant(request.tenantId, reply)) return
+    const parsed = AssetImportBodySchema.safeParse(request.body)
+    if (!parsed.success) return sendBadRequest(reply, 'Ungültige Vorlagendaten')
+    const data = Buffer.from(parsed.data.file_base64, 'base64')
+    if (data.length > 8 * 1024 * 1024) return sendBadRequest(reply, 'Datei zu groß (max. 8 MB)')
+    try {
+      return extractModelImportMeta(parsed.data.file_name, data, { height_mm: parsed.data.height_mm })
+    } catch (error) {
+      return sendBadRequest(reply, error instanceof Error ? error.message : 'Vorlage konnte nicht gelesen werden')
+    }
+  })
+
+  app.post('/tenant/assets/import', { bodyLimit: 12 * 1024 * 1024 }, async (request, reply) => {
     if (!ensureTenant(request.tenantId, reply)) return
     const tenantId = request.tenantId
 
@@ -336,17 +350,14 @@ export async function assetLibraryRoutes(app: FastifyInstance) {
       return sendBadRequest(reply, 'Datei zu groß (max. 8 MB)')
     }
 
-    const content = decoded.toString('utf-8')
-
     let importMeta
     try {
-      importMeta = extractModelImportMeta(parsedBody.data.file_name, content)
+      importMeta = extractModelImportMeta(parsedBody.data.file_name, decoded, { height_mm: parsedBody.data.height_mm })
     } catch (error) {
       return sendBadRequest(reply, error instanceof Error ? error.message : 'Modell konnte nicht verarbeitet werden')
     }
 
     const name = parsedBody.data.name ?? stripExtension(parsedBody.data.file_name)
-    const safeName = slugify(name || parsedBody.data.file_name || 'asset')
     const folderId = parsedBody.data.folder_id ?? null
     if (folderId) {
       const folder = await ensureFolderInTenant(folderId, tenantId)
@@ -355,8 +366,13 @@ export async function assetLibraryRoutes(app: FastifyInstance) {
       }
     }
 
-    const created = await prisma.assetLibraryItem.create({
+    const id = randomUUID()
+    const blob = await writeDocumentBlob({ tenantId, projectId: 'object-library', filename: parsedBody.data.file_name, buffer: decoded })
+    let created
+    try {
+      created = await prisma.assetLibraryItem.create({
       data: {
+        id,
         tenant_id: tenantId,
         name,
         category: parsedBody.data.category,
@@ -364,15 +380,32 @@ export async function assetLibraryRoutes(app: FastifyInstance) {
         folder_id: folderId,
         collection: normalizeCollection(parsedBody.data.collection),
         source_format: importMeta.sourceFormat,
-        file_url: `asset://tenant/${tenantId}/${Date.now()}-${safeName}`,
+        source_storage_key: blob.storage_key,
+        file_url: `/api/v1/tenant/assets/${id}/file`,
         preview_url: null,
         bbox_json: importMeta.bboxMm as unknown as Prisma.InputJsonValue,
         default_scale_json: importMeta.defaultScale as unknown as Prisma.InputJsonValue,
         tags_json: normalizeTags(parsedBody.data.tags) as Prisma.InputJsonValue,
       },
-    })
+      })
+    } catch (error) {
+      await deleteDocumentBlob(blob.storage_key)
+      throw error
+    }
 
     return reply.status(201).send(created)
+  })
+
+  app.get<{ Params: { id: string } }>('/tenant/assets/:id/file', async (request, reply) => {
+    if (!ensureTenant(request.tenantId, reply)) return
+    const asset = await prisma.assetLibraryItem.findUnique({ where: { id: request.params.id } })
+    if (!asset || asset.tenant_id !== request.tenantId || !asset.source_storage_key) return sendNotFound(reply, 'Vorlagendatei nicht gefunden')
+    const buffer = await readDocumentBlob(asset.source_storage_key)
+    if (!buffer) return sendNotFound(reply, 'Vorlagendatei nicht gefunden')
+    const contentTypes: Record<string, string> = { gltf: 'model/gltf+json', glb: 'model/gltf-binary', dxf: 'application/dxf' }
+    return reply.header('Content-Type', contentTypes[asset.source_format] ?? 'application/octet-stream')
+      .header('Content-Disposition', `attachment; filename="template.${asset.source_format}"`)
+      .header('X-Content-Type-Options', 'nosniff').send(buffer)
   })
 
   app.patch<{ Params: { id: string } }>('/tenant/assets/:id', async (request, reply) => {
@@ -427,7 +460,13 @@ export async function assetLibraryRoutes(app: FastifyInstance) {
       return sendNotFound(reply, 'Asset nicht gefunden')
     }
 
+    const usage = await prisma.room.findFirst({
+      where: { project: { tenant_id: tenantId }, placements: { array_contains: [{ asset_id: existing.id }] } },
+      select: { id: true },
+    })
+    if (usage) return reply.status(409).send({ error: 'ASSET_IN_USE', message: 'Die Vorlage wird in einer Planung verwendet und kann deshalb nicht gelöscht werden.' })
     await prisma.assetLibraryItem.delete({ where: { id: request.params.id } })
+    if (existing.source_storage_key) await deleteDocumentBlob(existing.source_storage_key)
     return reply.status(204).send()
   })
 }

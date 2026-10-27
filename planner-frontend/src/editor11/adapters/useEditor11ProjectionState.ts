@@ -9,6 +9,7 @@ interface UseEditor11ProjectionStateArgs {
   selectedRoomId: string | null
   selectedElevationWallIndex: number
   selectedSectionLineId: string | null
+  geometryRevision?: string
 }
 
 export function useEditor11ProjectionState({
@@ -16,6 +17,7 @@ export function useEditor11ProjectionState({
   selectedRoomId,
   selectedElevationWallIndex,
   selectedSectionLineId,
+  geometryRevision,
 }: UseEditor11ProjectionStateArgs) {
   const [elevationSvg, setElevationSvg] = useState('')
   const [elevationLoading, setElevationLoading] = useState(false)
@@ -52,7 +54,7 @@ export function useEditor11ProjectionState({
     return () => {
       active = false
     }
-  }, [selectedElevationWallIndex, selectedRoomId, showsElevationProjection])
+  }, [selectedElevationWallIndex, selectedRoomId, showsElevationProjection, geometryRevision])
 
   useEffect(() => {
     if (viewMode !== 'section' || !selectedRoomId || !selectedSectionLineId) {

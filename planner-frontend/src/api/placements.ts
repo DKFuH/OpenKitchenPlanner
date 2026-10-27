@@ -4,6 +4,7 @@ import { shouldUseDemoFallback } from './client.js'
 
 export interface Placement {
   id: string
+  asset_id?: string
   catalog_item_id: string
   catalog_article_id?: string
   article_variant_id?: string

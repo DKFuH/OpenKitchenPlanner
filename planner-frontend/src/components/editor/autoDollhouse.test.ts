@@ -18,6 +18,13 @@ function wall(id: string, x0: number, y0: number, x1: number, y1: number, manual
 }
 
 describe('resolveAutoDollhouseOpacities', () => {
+  it('opens the two walls between an outside camera and the room regardless of winding', () => {
+    const walls = [wall('top', 0, 0, 3000, 0), wall('right', 3000, 0, 3000, 2000), wall('bottom', 3000, 2000, 0, 2000), wall('left', 0, 2000, 0, 0)]
+    for (const boundary of [walls, [...walls].reverse().map(wall => ({ ...wall, start: wall.end, end: wall.start }))]) {
+      const result = resolveAutoDollhouseOpacities({ camera: { x_mm: 5000, y_mm: 4500, yaw_rad: -2.3 }, walls: boundary, settings: null, cutaway: true })
+      expect(result).toEqual({ top: 1, left: 1, right: 0.06, bottom: 0.06 })
+    }
+  })
   it('keeps all walls opaque when auto mode is disabled', () => {
     const result = resolveAutoDollhouseOpacities({
       camera: { x_mm: 0, y_mm: 0, yaw_rad: 0 },

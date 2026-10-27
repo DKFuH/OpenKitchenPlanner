@@ -21,6 +21,9 @@ import { VisibilityPanel } from './VisibilityPanel.js'
 import { LockPanel } from './LockPanel.js'
 import { GroupsPanel } from './GroupsPanel.js'
 import type { DimensionAssistSegment } from '../../editor/roomTopology.js'
+import { applyOpeningFamily, OPENING_FAMILIES } from '../../editor/openingFamilies.js'
+import { OpeningLibraryDialog } from './OpeningLibraryDialog.js'
+import { OpeningMaterialsDialog } from './OpeningMaterialsDialog.js'
 import { makeStyles, tokens } from '@fluentui/react-components'
 
 
@@ -109,6 +112,17 @@ sidebar: {
     color: tokens.colorPaletteRedForeground1,
     cursor: 'pointer',
     fontSize: '0.72rem',
+    width: '100%',
+  },
+  objectActionBtn: {
+    marginTop: '8px',
+    padding: '6px 8px',
+    border: '1px solid ' + tokens.colorNeutralStroke1,
+    borderRadius: tokens.borderRadiusSmall,
+    background: tokens.colorNeutralBackground1,
+    color: tokens.colorNeutralForeground1,
+    cursor: 'pointer',
+    fontSize: '0.75rem',
     width: '100%',
   },
   constraintRow: {
@@ -577,6 +591,8 @@ export function OpeningPanel({ opening, onUpdate, onDelete }: {
   onDelete: (id: string) => void
 }) {
   const styles = useStyles()
+  const [libraryOpen, setLibraryOpen] = useState(false)
+  const [materialsOpen, setMaterialsOpen] = useState(false)
   const [offset, setOffset] = useState(String(Math.round(opening.offset_mm)))
   const [width, setWidth] = useState(String(Math.round(opening.width_mm)))
   const [height, setHeight] = useState(String(opening.height_mm ? Math.round(opening.height_mm) : ''))
@@ -591,7 +607,7 @@ export function OpeningPanel({ opening, onUpdate, onDelete }: {
     setHeight(String(opening.height_mm ? Math.round(opening.height_mm) : ''))
     setSill(String(opening.sill_height_mm ? Math.round(opening.sill_height_mm) : '0'))
     setWallOffsetDepth(String(opening.wall_offset_depth_mm ? Math.round(opening.wall_offset_depth_mm) : '0'))
-  }, [opening.id])
+  }, [opening.id, opening.offset_mm, opening.width_mm, opening.height_mm, opening.sill_height_mm, opening.wall_offset_depth_mm])
 
   function commitField(field: keyof Opening, raw: string, min = 0) {
     const n = parseFloat(raw)
@@ -606,6 +622,30 @@ export function OpeningPanel({ opening, onUpdate, onDelete }: {
       </h3>
 
       {/* Typ-Auswahl */}
+      <button type="button" className={styles.objectActionBtn} onClick={() => setLibraryOpen(true)}>Objektbibliothek öffnen</button>
+      <button type="button" className={styles.objectActionBtn} onClick={() => setMaterialsOpen(true)}>Oberflächen & Materialien</button>
+      {materialsOpen && <OpeningMaterialsDialog opening={opening} onClose={() => setMaterialsOpen(false)} onApply={materials => onUpdate({ ...opening, materials })} />}
+      {libraryOpen && <OpeningLibraryDialog
+        opening={opening}
+        open={libraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        onChoose={familyId => onUpdate(applyOpeningFamily(opening, familyId))}
+      />}
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>Bauteilfamilie</label>
+        <select
+          aria-label="Bauteilfamilie"
+          className={styles.fieldInput}
+          value={opening.family_id ?? ''}
+          onChange={e => onUpdate(applyOpeningFamily(opening, e.target.value))}
+        >
+          <option value="">Freie Öffnung</option>
+          {OPENING_FAMILIES.map(family => (
+            <option key={family.id} value={family.id}>{family.label}</option>
+          ))}
+        </select>
+      </div>
+
       <div className={styles.field}>
         <label className={styles.fieldLabel}>Typ</label>
         <select
@@ -682,6 +722,67 @@ export function OpeningPanel({ opening, onUpdate, onDelete }: {
             onKeyDown={e => { if (e.key === 'Enter') commitField('sill_height_mm', sill) }}
           />
         </div>
+      )}
+
+      {(opening.type === 'door' || opening.type === 'window') && (
+        <>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>Variante</label>
+            <input
+              aria-label="Öffnungsvariante"
+              className={styles.fieldInput}
+              value={opening.variant ?? ''}
+              onChange={e => onUpdate({ ...opening, variant: e.target.value })}
+            />
+          </div>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>Flügel</label>
+            <select
+              aria-label="Flügelanzahl"
+              className={styles.fieldInput}
+              value={opening.leaf_count ?? 1}
+              onChange={e => onUpdate({ ...opening, leaf_count: Number(e.target.value) as Opening['leaf_count'] })}
+            >
+              <option value={1}>1-flügelig</option>
+              <option value={2}>2-flügelig</option>
+              <option value={3}>3-flügelig</option>
+              <option value={4}>4-flügelig</option>
+            </select>
+          </div>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>Anschlag</label>
+            <select
+              aria-label="Anschlagseite"
+              className={styles.fieldInput}
+              value={opening.hinge_side ?? 'left'}
+              onChange={e => onUpdate({ ...opening, hinge_side: e.target.value as 'left' | 'right' })}
+            >
+              <option value="left">Links</option>
+              <option value="right">Rechts</option>
+            </select>
+          </div>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>Öffnungsrichtung</label>
+            <select
+              aria-label="Öffnungsrichtung"
+              className={styles.fieldInput}
+              value={opening.opening_direction ?? 'inward'}
+              onChange={e => onUpdate({ ...opening, opening_direction: e.target.value as 'inward' | 'outward' })}
+            >
+              <option value="inward">Nach innen</option>
+              <option value="outward">Nach außen</option>
+            </select>
+          </div>
+          <div className={styles.field}>
+            <label className={styles.fieldLabel}>Rahmen / Zarge</label>
+            <input
+              aria-label="Rahmen oder Zarge"
+              className={styles.fieldInput}
+              value={opening.frame_type ?? ''}
+              onChange={e => onUpdate({ ...opening, frame_type: e.target.value })}
+            />
+          </div>
+        </>
       )}
 
       <div className={styles.field}>

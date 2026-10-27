@@ -25,13 +25,15 @@ services:
       HOST: 0.0.0.0
       FRONTEND_URL: http://localhost:5173
       NODE_OPTIONS: --no-warnings
+      DOCUMENT_STORAGE_DIR: /app/.storage/documents
     ports:
       - "3001:3000"
-    volumes: []
+    volumes:
+      - document_data:/app/.storage/documents
     depends_on:
       postgres:
         condition: service_healthy
-    command: npm run dev --workspace=planner-api
+    command: sh -c "npm run db:push --workspace=planner-api && npm run db:seed --workspace=planner-api && npm run dev --workspace=planner-api"
 
   frontend:
     build:
@@ -60,3 +62,4 @@ services:
 
 volumes:
   postgres_data:
+  document_data:

@@ -11,7 +11,7 @@ describe('pluginSlotRegistry', () => {
     })
 
     expect(entries[0]?.id).toBe('plugin-settings')
-    expect(entries[0]?.path).toBe('/settings/plugins')
+    expect(entries[0]?.path).toBe('/settings/plugins?projectId=project-1')
     expect(entries[0]?.enabled).toBe(true)
   })
 

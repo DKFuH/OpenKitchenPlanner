@@ -1,6 +1,8 @@
 import { useRegisterInspectorSection } from './useRegisterInspectorSection.js'
+import { LegacyQuoteExportInspectorSection } from './sections/LegacyQuoteExportInspectorSection.js'
 import { LegacySelectionInspectorSection } from './sections/LegacySelectionInspectorSection.js'
 import type { EditorLegacyInspectorProps } from './editorLegacyInspectorTypes.js'
+import { RoomObjectList } from './sections/RoomObjectList.js'
 
 export function useRegisterLegacyInspectorSections(props: EditorLegacyInspectorProps) {
   useRegisterInspectorSection(
@@ -11,6 +13,12 @@ export function useRegisterLegacyInspectorSections(props: EditorLegacyInspectorP
     } : null,
     [props.catalogPanel],
   )
+
+  useRegisterInspectorSection({
+    id: 'room-object-list',
+    title: `Im Raum (${props.placements.length + props.openings.length})`,
+    render: () => <RoomObjectList roomId={props.selectedRoomId} openings={props.openings} placements={props.placements} />,
+  }, [props.openings, props.placements, props.selectedRoomId])
 
   useRegisterInspectorSection({
     id: 'legacy-selection',
@@ -59,4 +67,16 @@ export function useRegisterLegacyInspectorSections(props: EditorLegacyInspectorP
     props.selectedVertex,
     props.selectedVertexIndex,
   ])
+
+  useRegisterInspectorSection({
+    id: 'legacy-quote-export',
+    title: 'Angebot & Export',
+    render: () => (
+      <LegacyQuoteExportInspectorSection
+        projectId={props.projectId}
+        selectedRoomId={props.selectedRoomId}
+        placements={props.placements}
+      />
+    ),
+  }, [props.placements, props.projectId, props.selectedRoomId])
 }

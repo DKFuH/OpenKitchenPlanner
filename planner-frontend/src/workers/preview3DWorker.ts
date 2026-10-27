@@ -15,8 +15,10 @@
  */
 
 import * as THREE from 'three'
+import { getWallInnerNormal } from '@shared/geometry/wallPlacement'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { resolveAutoDollhouseOpacities } from '../components/editor/autoDollhouse.js'
+import { buildWallSections, createOpeningVisual, type RoomOpeningGeometry } from '../components/editor/roomOpeningGeometry.js'
 import { profileZoomFactor, type NavigationSettings } from '../components/editor/navigationSettings.js'
 import {
   normalizeRenderEnvironmentSettings,
@@ -47,7 +49,7 @@ type SunlightData = {
 type GeometryInput = {
   vertices: Array<{ x_mm: number; y_mm: number }>
   walls: WallSegmentResolved[]
-  openings: Array<{ wall_id: string; offset_mm: number; width_mm: number }>
+  openings: RoomOpeningGeometry[]
   placements: Array<{
     id: string; wall_id: string; offset_mm: number; width_mm: number
     depth_mm: number; height_mm: number
@@ -273,16 +275,19 @@ function buildGeometry(input: GeometryInput, showReference: boolean) {
   // Clear old geometry
   while (group.children.length > 0) {
     const child = group.children[0] as THREE.Mesh
-    if (child.geometry) child.geometry.dispose()
-    if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose())
-    else if ((child as THREE.Mesh).material) ((child as THREE.Mesh).material as THREE.Material).dispose()
+    child.traverse(object => {
+      const mesh = object as THREE.Mesh
+      mesh.geometry?.dispose()
+      if (Array.isArray(mesh.material)) mesh.material.forEach(material => material.dispose())
+      else mesh.material?.dispose()
+    })
     group.remove(child)
   }
   wallVisuals = []
 
   // Floor
   const floorShape = new THREE.Shape(
-    input.vertices.map((v) => new THREE.Vector2(v.x_mm * MM_TO_M, v.y_mm * MM_TO_M)),
+    input.vertices.map((v) => new THREE.Vector2(v.x_mm * MM_TO_M, -v.y_mm * MM_TO_M)),
   )
   const floorGeometry = new THREE.ShapeGeometry(floorShape)
   const floorMaterial = new THREE.MeshStandardMaterial({
@@ -305,26 +310,23 @@ function buildGeometry(input: GeometryInput, showReference: boolean) {
     const lengthMm = Math.hypot(dx, dy)
     if (lengthMm <= 0) continue
 
-    const wallGeometry = new THREE.BoxGeometry(
-      lengthMm * MM_TO_M,
-      input.ceilingHeightMm * MM_TO_M,
-      WALL_THICKNESS_MM * MM_TO_M,
-    )
-    const wallMaterial = new THREE.MeshStandardMaterial({
-      color: hexColorToThreeColor(input.wallColor, 0x64748b),
-      transparent: true,
-      opacity: 1,
-    })
-    const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial)
-    wallMesh.rotation.y = -Math.atan2(dy, dx)
-    wallMesh.position.set(
-      ((wall.start.x_mm + wall.end.x_mm) * 0.5) * MM_TO_M,
-      (input.ceilingHeightMm * MM_TO_M) * 0.5,
-      ((wall.start.y_mm + wall.end.y_mm) * 0.5) * MM_TO_M,
-    )
-    wallMesh.visible = wall.manualVisible
-    group.add(wallMesh)
-    wallVisuals.push({ wall, mesh: wallMesh, material: wallMaterial, currentOpacity: 1 })
+    const sections = buildWallSections(lengthMm, input.ceilingHeightMm, input.openings.filter(opening => opening.wall_id === wall.id))
+    for (const section of sections) {
+      const wallGeometry = new THREE.BoxGeometry(section.width * MM_TO_M, section.height * MM_TO_M, WALL_THICKNESS_MM * MM_TO_M)
+      const wallMaterial = new THREE.MeshStandardMaterial({
+        color: hexColorToThreeColor(input.wallColor, 0x64748b), transparent: true, opacity: 1,
+      })
+      const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial)
+      wallMesh.rotation.y = -Math.atan2(dy, dx)
+      wallMesh.position.set(
+        (wall.start.x_mm + dx / lengthMm * (section.offset + section.width / 2)) * MM_TO_M,
+        (section.base + section.height / 2) * MM_TO_M,
+        (wall.start.y_mm + dy / lengthMm * (section.offset + section.width / 2)) * MM_TO_M,
+      )
+      wallMesh.visible = wall.manualVisible
+      group.add(wallMesh)
+      wallVisuals.push({ wall, mesh: wallMesh, material: wallMaterial, currentOpacity: 1 })
+    }
 
     if (showReference) {
       const lineGeom = new THREE.BufferGeometry().setFromPoints([
@@ -346,13 +348,9 @@ function buildGeometry(input: GeometryInput, showReference: boolean) {
     const ux = dx / len, uy = dy / len
     const cx = wall.start.x_mm + ux * (opening.offset_mm + opening.width_mm * 0.5)
     const cy = wall.start.y_mm + uy * (opening.offset_mm + opening.width_mm * 0.5)
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(opening.width_mm * MM_TO_M, 2.0, 0.06),
-      new THREE.MeshStandardMaterial({ color: 0x0ea5e9 }),
-    )
-    mesh.position.set(cx * MM_TO_M, 1.0, cy * MM_TO_M)
+    const mesh = createOpeningVisual(opening)
+    mesh.position.set(cx * MM_TO_M, 0, cy * MM_TO_M)
     mesh.rotation.y = -Math.atan2(dy, dx)
-    mesh.visible = showReference
     group.add(mesh)
   }
 
@@ -389,7 +387,8 @@ function buildGeometry(input: GeometryInput, showReference: boolean) {
     const len = Math.hypot(dx, dy)
     if (len <= 0) continue
     const ux = dx / len, uy = dy / len
-    const nx = uy, ny = -ux
+    const normal = getWallInnerNormal({ id: wall.id, start: wall.start, end: wall.end, length_mm: len }, input.vertices)
+    const nx = normal.x, ny = normal.y
     const co = p.offset_mm + p.width_mm * 0.5
     const px = wall.start.x_mm + ux * co + nx * (p.depth_mm * 0.5)
     const py = wall.start.y_mm + uy * co + ny * (p.depth_mm * 0.5)
@@ -448,6 +447,8 @@ function emitCameraIfChanged() {
 
 // ─── Render loop ─────────────────────────────────────────────────────────────
 
+let cutaway = true
+
 function animate() {
   if (disposed || !renderer || !scene || !camera || !controls) return
 
@@ -457,6 +458,7 @@ function animate() {
   if (facingDir.lengthSq() > 1e-8 && wallVisuals.length > 0 && group) {
     facingDir.normalize()
     const resolved = resolveAutoDollhouseOpacities({
+      cutaway,
       camera: {
         x_mm: (camera.position.x - group.position.x) / MM_TO_M,
         y_mm: (camera.position.z - group.position.z) / MM_TO_M,
@@ -474,9 +476,9 @@ function animate() {
     })
 
     for (const e of wallVisuals) {
-      e.mesh.visible = e.wall.manualVisible
-      if (!e.wall.manualVisible) continue
       const target = resolved[e.wall.id] ?? 1
+      e.mesh.visible = e.wall.manualVisible && !(cutaway && target < 0.1)
+      if (!e.wall.manualVisible) continue
       e.currentOpacity += (target - e.currentOpacity) * 0.18
       if (Math.abs(target - e.currentOpacity) < 0.008) e.currentOpacity = target
       e.material.opacity = e.currentOpacity
@@ -635,6 +637,9 @@ self.onmessage = async (e: MessageEvent) => {
   const msg = e.data
 
   switch (msg.type) {
+    case 'setCutaway':
+      cutaway = Boolean(msg.enabled)
+      break
     case 'init':
       try {
         await handleInit(msg)

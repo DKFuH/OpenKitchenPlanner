@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "window-tilt-turn-single",
+  "name": "Dreh-Kipp-Fenster, 1-flügelig (1000 × 1200)",
+  "category": "window",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 1000,
+    "height_mm": 1200,
+    "depth_mm": 120
+  },
+  "parameters": {
+    "type": "window",
+    "hinge_side": "left",
+    "opening_direction": "inward",
+    "leaf_count": 1,
+    "frame_type": "Kunststoff",
+    "variant": "Dreh-Kipp",
+    "sill_height_mm": 900
+  },
+  "material_slots": [
+    "frame",
+    "leaf",
+    "glass",
+    "sill"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  }
+}

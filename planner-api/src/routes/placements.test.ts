@@ -93,6 +93,7 @@ describe('placementRoutes', () => {
       url: `/api/v1/rooms/${roomId}/placements`,
       payload: {
         catalog_item_id: 'catalog-1',
+        asset_id: '11111111-1111-4111-8111-111111111111',
         wall_id: 'wall-1',
         offset_mm: 100,
         width_mm: 600,
@@ -105,6 +106,7 @@ describe('placementRoutes', () => {
     expect(response.json()).toEqual(
       expect.objectContaining({
         catalog_item_id: 'catalog-1',
+        asset_id: '11111111-1111-4111-8111-111111111111',
         wall_id: 'wall-1',
         offset_mm: 100,
       }),

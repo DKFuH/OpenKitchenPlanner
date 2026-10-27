@@ -45,8 +45,8 @@ type RoomBoundary = {
   }>
 } | null
 
-type RoomPlacement = { id: string; wall_id: string; offset_mm: number; width_mm: number; depth_mm?: number }
-type RoomOpening = { id: string; wall_id: string; offset_mm: number; width_mm: number }
+type RoomPlacement = { id: string; wall_id: string; offset_mm: number; width_mm: number; depth_mm?: number; height_mm?: number; visible?: boolean }
+type RoomOpening = { id: string; wall_id: string; offset_mm: number; width_mm: number; height_mm?: number; sill_height_mm?: number; type?: string; leaf_count?: number }
 
 const AutoChainBodySchema = z.object({
   wall_id: z.string().min(1),
@@ -474,19 +474,33 @@ export async function dimensionRoutes(app: FastifyInstance) {
           : Math.hypot(wall.x1_mm - wall.x0_mm, wall.y1_mm - wall.y0_mm)
       const roomHeight = room.ceiling_height_mm
       const placements = ((room.placements as RoomPlacement[] | null) ?? [])
-        .filter((placement) => placement.wall_id === wallSegment.id)
+        .filter((placement) => placement.wall_id === wallSegment.id && placement.visible !== false)
+      const openings = ((room.openings as RoomOpening[] | null) ?? [])
+        .filter((opening) => opening.wall_id === wallSegment.id)
 
       const scale = 0.1
       const svgWidth = Math.round(wallLength * scale) + 100
       const svgHeight = Math.round(roomHeight * scale) + 80
 
       let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">`
+      svgContent += `<rect x="50" y="50" width="${wallLength * scale}" height="${roomHeight * scale}" fill="#f8fafc" stroke="#94a3b8"/>`
       svgContent += `<line x1="50" y1="${svgHeight - 30}" x2="${svgWidth - 50}" y2="${svgHeight - 30}" stroke="#333" stroke-width="2"/>`
+
+      for (const opening of openings) {
+        const x = 50 + opening.offset_mm * scale
+        const w = opening.width_mm * scale
+        const h = (opening.height_mm ?? (opening.type === 'window' ? 1200 : 2100)) * scale
+        const y = svgHeight - 30 - (opening.sill_height_mm ?? 0) * scale - h
+        const window = opening.type === 'window'
+        svgContent += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${window ? '#dbeafe' : '#fff7ed'}" stroke="${window ? '#0284c7' : '#a16207'}" stroke-width="2"/>`
+        if (opening.leaf_count === 2) svgContent += `<line x1="${x + w / 2}" y1="${y}" x2="${x + w / 2}" y2="${y + h}" stroke="#64748b"/>`
+        svgContent += `<text x="${x + w / 2}" y="${y + h / 2}" text-anchor="middle" font-size="8" fill="#334155">${window ? 'Fenster' : 'Tür'} ${Math.round(opening.width_mm)}</text>`
+      }
 
       for (const placement of placements) {
         const x = 50 + placement.offset_mm * scale
         const w = placement.width_mm * scale
-        const h = 720 * scale
+        const h = (placement.height_mm ?? 720) * scale
         const y = svgHeight - 30 - h
         svgContent += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#e8d5b0" stroke="#8B4513" stroke-width="1"/>`
         svgContent += `<text x="${x + w / 2}" y="${y + h / 2}" text-anchor="middle" font-size="8" fill="#333">${Math.round(placement.width_mm)}</text>`

@@ -7,6 +7,7 @@ const savedFilterId = '22222222-2222-4222-8222-222222222222'
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
+    room: { findFirst: vi.fn() },
     assetLibraryItem: {
       findMany: vi.fn(),
       count: vi.fn(),
@@ -33,6 +34,12 @@ const { prismaMock } = vi.hoisted(() => ({
 }))
 
 vi.mock('../db.js', () => ({ prisma: prismaMock }))
+vi.mock('../services/documentStorage.js', () => ({
+  writeDocumentBlob: vi.fn().mockResolvedValue({ storage_key: 'tenant-a/object-library/source.obj' }),
+  readDocumentBlob: vi.fn().mockResolvedValue(Buffer.from('original model data')),
+  deleteDocumentBlob: vi.fn().mockResolvedValue(undefined),
+}))
+import { writeDocumentBlob, readDocumentBlob, deleteDocumentBlob } from '../services/documentStorage.js'
 
 import { assetLibraryRoutes } from './assetLibrary.js'
 
@@ -100,6 +107,7 @@ async function createApp() {
 describe('assetLibraryRoutes', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    prismaMock.room.findFirst.mockResolvedValue(null)
     prismaMock.assetLibraryItem.findMany.mockResolvedValue([assetFixture()])
     prismaMock.assetLibraryItem.findUnique.mockResolvedValue(assetFixture())
     prismaMock.assetLibraryItem.count.mockResolvedValue(0)
@@ -175,6 +183,43 @@ describe('assetLibraryRoutes', () => {
       category: 'base',
       bbox_json: { width_mm: 600, height_mm: 720, depth_mm: 560 },
     })
+    expect(writeDocumentBlob).toHaveBeenCalledWith(expect.objectContaining({ tenantId, buffer: Buffer.from(obj) }))
+    expect(res.json().file_url).toMatch(/^\/api\/v1\/tenant\/assets\/.+\/file$/)
+    await app.close()
+  })
+
+  it('returns the original file only to its tenant', async () => {
+    prismaMock.assetLibraryItem.findUnique.mockResolvedValue(assetFixture({ source_storage_key: 'stored/source.obj' }))
+    const app = await createApp()
+    const response = await app.inject({ method: 'GET', url: '/api/v1/tenant/assets/asset-1/file' })
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toBe('original model data')
+    expect(readDocumentBlob).toHaveBeenCalledWith('stored/source.obj')
+    vi.mocked(readDocumentBlob).mockClear()
+    prismaMock.assetLibraryItem.findUnique.mockResolvedValue(assetFixture({ tenant_id: 'other', source_storage_key: 'stored/source.obj' }))
+    expect((await app.inject({ method: 'GET', url: '/api/v1/tenant/assets/asset-1/file' })).statusCode).toBe(404)
+    expect(readDocumentBlob).not.toHaveBeenCalled()
+    await app.close()
+  })
+
+  it('keeps the source file when a template is used by a placement', async () => {
+    prismaMock.room.findFirst.mockResolvedValue({ id: 'room-1' })
+    const app = await createApp()
+    const response = await app.inject({ method: 'DELETE', url: '/api/v1/tenant/assets/asset-1' })
+    expect(response.statusCode).toBe(409)
+    expect(prismaMock.assetLibraryItem.delete).not.toHaveBeenCalled()
+    expect(deleteDocumentBlob).not.toHaveBeenCalled()
+    await app.close()
+  })
+
+  it('inspects without storing, and removes an orphan file when database creation fails', async () => {
+    const app = await createApp()
+    const payload = { file_name: 'object.obj', file_base64: Buffer.from('v 0 0 0\nv .6 .72 .56').toString('base64') }
+    expect((await app.inject({ method: 'POST', url: '/api/v1/tenant/assets/inspect', payload })).statusCode).toBe(200)
+    expect(writeDocumentBlob).not.toHaveBeenCalled()
+    prismaMock.assetLibraryItem.create.mockRejectedValueOnce(new Error('DB unavailable'))
+    expect((await app.inject({ method: 'POST', url: '/api/v1/tenant/assets/import', payload })).statusCode).toBe(500)
+    expect(deleteDocumentBlob).toHaveBeenCalledWith('tenant-a/object-library/source.obj')
     await app.close()
   })
 

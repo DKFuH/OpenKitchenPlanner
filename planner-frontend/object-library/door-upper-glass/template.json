@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "door-upper-glass",
+  "name": "Tür mit Lichtausschnitt (885 × 1985)",
+  "category": "door",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 885,
+    "height_mm": 1985,
+    "depth_mm": 120
+  },
+  "parameters": {
+    "type": "door",
+    "hinge_side": "left",
+    "opening_direction": "inward",
+    "leaf_count": 1,
+    "frame_type": "Holzzarge",
+    "variant": "Lichtausschnitt",
+    "glazing": "upper",
+    "sill_height_mm": 0
+  },
+  "material_slots": [
+    "frame",
+    "leaf",
+    "glass",
+    "sill"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  }
+}

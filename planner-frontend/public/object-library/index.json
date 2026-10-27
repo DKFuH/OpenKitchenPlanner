@@ -1,0 +1,170 @@
+[
+  {
+    "id": "door-double-standard",
+    "name": "Doppeltür, 2-flügelig (1760 × 1985)",
+    "category": "door",
+    "template": "door-double-standard/template.json",
+    "model": "door-double-standard/model.gltf",
+    "plan": "door-double-standard/plan.dxf"
+  },
+  {
+    "id": "door-glazed",
+    "name": "Glastür, 1-flügelig (885 × 1985)",
+    "category": "door",
+    "template": "door-glazed/template.json",
+    "model": "door-glazed/model.gltf",
+    "plan": "door-glazed/plan.dxf"
+  },
+  {
+    "id": "door-glazed-double",
+    "name": "Glastür, 2-flügelig (1760 × 1985)",
+    "category": "door",
+    "template": "door-glazed-double/template.json",
+    "model": "door-glazed-double/model.gltf",
+    "plan": "door-glazed-double/plan.dxf"
+  },
+  {
+    "id": "door-paneled",
+    "name": "Kassettentür (885 × 1985)",
+    "category": "door",
+    "template": "door-paneled/template.json",
+    "model": "door-paneled/model.gltf",
+    "plan": "door-paneled/plan.dxf"
+  },
+  {
+    "id": "door-single-standard",
+    "name": "Zimmertür, 1-flügelig (DIN 885 × 1985)",
+    "category": "door",
+    "template": "door-single-standard/template.json",
+    "model": "door-single-standard/model.gltf",
+    "plan": "door-single-standard/plan.dxf"
+  },
+  {
+    "id": "door-sliding-standard",
+    "name": "Schiebetür (1010 × 2100)",
+    "category": "door",
+    "template": "door-sliding-standard/template.json",
+    "model": "door-sliding-standard/model.gltf",
+    "plan": "door-sliding-standard/plan.dxf"
+  },
+  {
+    "id": "door-upper-glass",
+    "name": "Tür mit Lichtausschnitt (885 × 1985)",
+    "category": "door",
+    "template": "door-upper-glass/template.json",
+    "model": "door-upper-glass/model.gltf",
+    "plan": "door-upper-glass/plan.dxf"
+  },
+  {
+    "id": "standard-base-60",
+    "name": "Unterschrank 60 cm",
+    "category": "base_cabinet",
+    "template": "standard-base-60/template.json",
+    "model": "standard-base-60/model.gltf",
+    "plan": "standard-base-60/plan.dxf"
+  },
+  {
+    "id": "standard-base-80",
+    "name": "Unterschrank 80 cm",
+    "category": "base_cabinet",
+    "template": "standard-base-80/template.json",
+    "model": "standard-base-80/model.gltf",
+    "plan": "standard-base-80/plan.dxf"
+  },
+  {
+    "id": "standard-dishwasher-60",
+    "name": "Geschirrspüler 60 cm",
+    "category": "appliance",
+    "template": "standard-dishwasher-60/template.json",
+    "model": "standard-dishwasher-60/model.gltf",
+    "plan": "standard-dishwasher-60/plan.dxf"
+  },
+  {
+    "id": "standard-tall-60",
+    "name": "Hochschrank 60 cm",
+    "category": "tall_cabinet",
+    "template": "standard-tall-60/template.json",
+    "model": "standard-tall-60/model.gltf",
+    "plan": "standard-tall-60/plan.dxf"
+  },
+  {
+    "id": "standard-wall-60",
+    "name": "Hängeschrank 60 cm",
+    "category": "wall_cabinet",
+    "template": "standard-wall-60/template.json",
+    "model": "standard-wall-60/model.gltf",
+    "plan": "standard-wall-60/plan.dxf"
+  },
+  {
+    "id": "standard-worktop-60",
+    "name": "Arbeitsplatte 60 cm tief",
+    "category": "worktop",
+    "template": "standard-worktop-60/template.json",
+    "model": "standard-worktop-60/model.gltf",
+    "plan": "standard-worktop-60/plan.dxf"
+  },
+  {
+    "id": "window-fixed-standard",
+    "name": "Festverglasung (1000 × 1200)",
+    "category": "window",
+    "template": "window-fixed-standard/template.json",
+    "model": "window-fixed-standard/model.gltf",
+    "plan": "window-fixed-standard/plan.dxf"
+  },
+  {
+    "id": "window-floor",
+    "name": "Bodentiefes Fenster (1000 × 2200)",
+    "category": "window",
+    "template": "window-floor/template.json",
+    "model": "window-floor/model.gltf",
+    "plan": "window-floor/plan.dxf"
+  },
+  {
+    "id": "window-four-leaf",
+    "name": "Fenster, 4-flügelig (2800 × 1200)",
+    "category": "window",
+    "template": "window-four-leaf/template.json",
+    "model": "window-four-leaf/model.gltf",
+    "plan": "window-four-leaf/plan.dxf"
+  },
+  {
+    "id": "window-horizontal",
+    "name": "Fenster mit Querpfosten (1400 × 1200)",
+    "category": "window",
+    "template": "window-horizontal/template.json",
+    "model": "window-horizontal/model.gltf",
+    "plan": "window-horizontal/plan.dxf"
+  },
+  {
+    "id": "window-muntins",
+    "name": "Sprossenfenster (1200 × 1400)",
+    "category": "window",
+    "template": "window-muntins/template.json",
+    "model": "window-muntins/model.gltf",
+    "plan": "window-muntins/plan.dxf"
+  },
+  {
+    "id": "window-tilt-turn-double",
+    "name": "Dreh-Kipp-Fenster, 2-flügelig (1400 × 1200)",
+    "category": "window",
+    "template": "window-tilt-turn-double/template.json",
+    "model": "window-tilt-turn-double/model.gltf",
+    "plan": "window-tilt-turn-double/plan.dxf"
+  },
+  {
+    "id": "window-tilt-turn-single",
+    "name": "Dreh-Kipp-Fenster, 1-flügelig (1000 × 1200)",
+    "category": "window",
+    "template": "window-tilt-turn-single/template.json",
+    "model": "window-tilt-turn-single/model.gltf",
+    "plan": "window-tilt-turn-single/plan.dxf"
+  },
+  {
+    "id": "window-triple",
+    "name": "Fenster, 3-flügelig (2100 × 1200)",
+    "category": "window",
+    "template": "window-triple/template.json",
+    "model": "window-triple/model.gltf",
+    "plan": "window-triple/plan.dxf"
+  }
+]

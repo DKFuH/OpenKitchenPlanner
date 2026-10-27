@@ -2,6 +2,7 @@ import { useRef, useCallback, useEffect, useMemo, useState, type MouseEvent as R
 import { Stage, Layer, Line, Circle, Group, Rect, Text, Image as KonvaImage } from 'react-konva'
 import type Konva from 'konva'
 import type { Point2D, Vertex } from '@shared/types'
+import { getWallInnerNormal } from '@shared/geometry/wallPlacement'
 import type { Opening } from '../api/openings.js'
 import type { Placement } from '../api/placements.js'
 import type { Dimension } from '../api/dimensions.js'
@@ -1579,11 +1580,18 @@ width, height, state, isValid,
                 const angle = Math.atan2(dy, dx) * 180 / Math.PI
                 const w = Math.hypot(dx, dy)
                 const d = worldToCanvas(placement.depth_mm)
+                const wallIndex = state.wallIds.indexOf(placement.wall_id)
+                const normal = getWallInnerNormal({
+                  id: placement.wall_id,
+                  start: state.vertices[wallIndex],
+                  end: state.vertices[(wallIndex + 1) % state.vertices.length],
+                  length_mm: 0,
+                }, state.vertices)
                 return (
                   <Group key={placement.id}>
                     <Rect
-                      x={midX}
-                      y={midY}
+                      x={midX + normal.x * d / 2}
+                      y={midY + normal.y * d / 2}
                       width={w}
                       height={Math.max(d, 4)}
                       offsetX={w / 2}
@@ -1599,11 +1607,21 @@ width, height, state, isValid,
                       }
                       strokeWidth={isSelected || isGroupHighlighted ? 2 : 1}
                       dash={isLocked ? [5, 3] : undefined}
-                      opacity={0.7}
+                      opacity={0.95}
                       onClick={(e) => {
                         e.cancelBubble = true
                         onSelectPlacement?.(isSelected ? null : placement.id)
                       }}
+                    />
+                    <Text
+                      x={midX + normal.x * d / 2 - w / 2}
+                      y={midY + normal.y * d / 2 - 12}
+                      width={w}
+                      text={`${placement.description ?? 'Möbel'}\n${placement.width_mm} mm`}
+                      fontSize={10}
+                      align="center"
+                      fill={COLOR.placementSelectedStroke}
+                      listening={false}
                     />
                     {isLocked && (
                       <Text

@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "id": "standard-base-60",
+  "name": "Unterschrank 60 cm",
+  "category": "base_cabinet",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 600,
+    "height_mm": 720,
+    "depth_mm": 560
+  },
+  "parameters": {},
+  "material_slots": [
+    "carcass",
+    "front"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  },
+  "catalog": {
+    "id": "11000000-0000-4000-8000-000000000001",
+    "sku": "OKP-US-060",
+    "list_price_net": 389,
+    "dealer_price_net": 214
+  },
+  "manufacturer_article": {
+    "id": "12000000-0000-4000-8000-000000000001",
+    "sku": "START-US60",
+    "name": "Start Unterschrank 60",
+    "list_net": 429,
+    "dealer_net": 236,
+    "options": [
+      {
+        "id": "13000000-0000-4000-8000-000000000001",
+        "key": "front",
+        "values": [
+          "Weiss matt",
+          "Eiche natur"
+        ]
+      },
+      {
+        "id": "13000000-0000-4000-8000-000000000002",
+        "key": "griff",
+        "values": [
+          "Buegelgriff",
+          "Grifflos"
+        ]
+      }
+    ],
+    "variants": [
+      {
+        "id": "14000000-0000-4000-8000-000000000001",
+        "key": "WEISS-GRIFF",
+        "values": {
+          "front": "Weiss matt",
+          "griff": "Buegelgriff"
+        }
+      },
+      {
+        "id": "14000000-0000-4000-8000-000000000002",
+        "key": "EICHE-GRIFFLOS",
+        "values": {
+          "front": "Eiche natur",
+          "griff": "Grifflos"
+        }
+      }
+    ]
+  }
+}

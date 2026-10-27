@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+import { getWallInnerNormal } from '@shared/geometry/wallPlacement'
 import type { RoomPayload } from '../../api/rooms.js'
 import type { VerticalConnection } from '../../api/verticalConnections.js'
 import type { AutoDollhouseSettings } from '../../api/visibility.js'
 import { resolveAutoDollhouseOpacities } from './autoDollhouse.js'
+import { buildWallSections, createOpeningVisual, type RoomOpeningGeometry } from './roomOpeningGeometry.js'
 import { profileZoomFactor, type NavigationSettings } from './navigationSettings.js'
 import {
   normalizeRenderEnvironmentSettings,
@@ -13,6 +15,7 @@ import {
 } from './renderEnvironmentState.js'
 import { createSceneRenderer, isOffscreenCanvasSupported, type RendererBackend } from './rendererCapabilities.js'
 import { makeStyles, tokens } from '@fluentui/react-components'
+import { disposeTemplate, loadAssetTemplate } from './assetTemplateGeometry.js'
 
 const useStyles = makeStyles({
   wrap: {
@@ -24,7 +27,9 @@ const useStyles = makeStyles({
     minWidth: '0',
   },
   toolbar: {
-    height: '40px',
+    minHeight: '40px',
+    flexShrink: '0',
+    gap: tokens.spacingHorizontalXS,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -71,9 +76,10 @@ type WallLike = {
   visible?: boolean
   is_hidden?: boolean
 }
-type OpeningLike = { wall_id: string; offset_mm: number; width_mm: number }
+type OpeningLike = RoomOpeningGeometry
 type PlacementLike = {
   id: string
+  asset_id?: string
   wall_id: string
   offset_mm: number
   width_mm: number
@@ -491,7 +497,8 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
   const isLocalPreviewHost =
     typeof window !== 'undefined' &&
     (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
-  const useOffscreenWorker = !isLocalPreviewHost && isOffscreenCanvasSupported()
+  const hasAssetTemplates = (room?.placements ?? []).some(placement => Boolean((placement as PlacementLike).asset_id))
+  const useOffscreenWorker = !isLocalPreviewHost && !hasAssetTemplates && isOffscreenCanvasSupported()
   const rootRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const workerRef = useRef<Worker | null>(null)
@@ -517,8 +524,13 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
     camera_height_mm: number
   } | null>(null)
   const [showReference, setShowReference] = useState(true)
+  const [cutaway, setCutaway] = useState(true)
+  const cutawayRef = useRef(true)
+  cutawayRef.current = cutaway
   const [rendererBackend, setRendererBackend] = useState<RendererBackend | null>(null)
   const [rendererError, setRendererError] = useState<string | null>(null)
+  const [assetErrors, setAssetErrors] = useState<string[]>([])
+  const [loadedAssetCount, setLoadedAssetCount] = useState(0)
 
   cameraStateRef.current = cameraState
   onCameraStateChangeRef.current = onCameraStateChange
@@ -570,6 +582,8 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
     setRendererError(null)
 
     let disposed = false
+    setAssetErrors([])
+    setLoadedAssetCount(0)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let rendererInstance: any = null
     let cleanupFn: (() => void) | null = null
@@ -659,7 +673,7 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
       )
 
       const floorShape = new THREE.Shape(
-        input.vertices.map((vertex) => new THREE.Vector2(vertex.x_mm * MM_TO_M, vertex.y_mm * MM_TO_M)),
+        input.vertices.map((vertex) => new THREE.Vector2(vertex.x_mm * MM_TO_M, -vertex.y_mm * MM_TO_M)),
       )
       const floorGeometry = new THREE.ShapeGeometry(floorShape)
       const floorMaterial = new THREE.MeshStandardMaterial({
@@ -704,34 +718,26 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
         const lengthMm = Math.hypot(dx, dy)
         if (lengthMm <= 0) continue
 
-        const lengthM = lengthMm * MM_TO_M
-        const wallHeightM = input.ceilingHeightMm * MM_TO_M
         const wallThicknessM = WALL_THICKNESS_MM * MM_TO_M
-
-        const wallGeometry = new THREE.BoxGeometry(lengthM, wallHeightM, wallThicknessM)
-        const wallMaterial = new THREE.MeshStandardMaterial({
-          color: hexColorToThreeColor(input.wallColor, 0x64748b),
-          transparent: true,
-          opacity: 1,
-        })
-        const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial)
-
-        const angle = Math.atan2(dy, dx)
-        wallMesh.rotation.y = -angle
-        wallMesh.position.set(
-          ((wall.start.x_mm + wall.end.x_mm) * 0.5) * MM_TO_M,
-          wallHeightM * 0.5,
-          ((wall.start.y_mm + wall.end.y_mm) * 0.5) * MM_TO_M,
-        )
-        wallMesh.visible = wall.manualVisible
-
-        group.add(wallMesh)
-        wallVisuals.push({
-          wall,
-          mesh: wallMesh,
-          material: wallMaterial,
-          currentOpacity: 1,
-        })
+        const sections = buildWallSections(lengthMm, input.ceilingHeightMm, input.openings.filter(opening => opening.wall_id === wall.id))
+        for (const section of sections) {
+          const wallGeometry = new THREE.BoxGeometry(section.width * MM_TO_M, section.height * MM_TO_M, wallThicknessM)
+          const wallMaterial = new THREE.MeshStandardMaterial({
+            color: hexColorToThreeColor(input.wallColor, 0x64748b),
+            transparent: true,
+            opacity: 1,
+          })
+          const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial)
+          wallMesh.rotation.y = -Math.atan2(dy, dx)
+          wallMesh.position.set(
+            (wall.start.x_mm + dx / lengthMm * (section.offset + section.width / 2)) * MM_TO_M,
+            (section.base + section.height / 2) * MM_TO_M,
+            (wall.start.y_mm + dy / lengthMm * (section.offset + section.width / 2)) * MM_TO_M,
+          )
+          wallMesh.visible = wall.manualVisible
+          group.add(wallMesh)
+          wallVisuals.push({ wall, mesh: wallMesh, material: wallMaterial, currentOpacity: 1 })
+        }
 
         if (showReference) {
           const lineGeom = new THREE.BufferGeometry().setFromPoints([
@@ -757,13 +763,9 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
         const cx = wall.start.x_mm + ux * (opening.offset_mm + opening.width_mm * 0.5)
         const cy = wall.start.y_mm + uy * (opening.offset_mm + opening.width_mm * 0.5)
 
-        const openingMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(opening.width_mm * MM_TO_M, 2.0, 0.06),
-          new THREE.MeshStandardMaterial({ color: 0x0ea5e9 }),
-        )
-        openingMesh.position.set(cx * MM_TO_M, 1.0, cy * MM_TO_M)
+        const openingMesh = createOpeningVisual(opening)
+        openingMesh.position.set(cx * MM_TO_M, 0, cy * MM_TO_M)
         openingMesh.rotation.y = -Math.atan2(dy, dx)
-        openingMesh.visible = showReference
         group.add(openingMesh)
       }
 
@@ -813,8 +815,9 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
 
         const ux = dx / wallLength
         const uy = dy / wallLength
-        const nx = uy
-        const ny = -ux
+        const normal = getWallInnerNormal({ id: wall.id, start: wall.start, end: wall.end, length_mm: wallLength }, input.vertices)
+        const nx = normal.x
+        const ny = normal.y
 
         const centerOffset = placement.offset_mm + placement.width_mm * 0.5
         const px = wall.start.x_mm + ux * centerOffset + nx * (placement.depth_mm * 0.5)
@@ -842,6 +845,19 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
         )
         furnitureMesh.rotation.y = -Math.atan2(dy, dx)
         group.add(furnitureMesh)
+        if (placement.asset_id) {
+          void loadAssetTemplate(placement.asset_id, placement).then(model => {
+            if (disposed) { disposeTemplate(model); return }
+            model.position.set(px * MM_TO_M, 0, py * MM_TO_M)
+            model.rotation.y = furnitureMesh.rotation.y
+            group.remove(furnitureMesh)
+            disposeTemplate(furnitureMesh)
+            group.add(model)
+            setLoadedAssetCount(previous => previous + 1)
+          }).catch(error => {
+            if (!disposed) setAssetErrors(previous => [...previous, `Vorlage nicht geladen: ${error instanceof Error ? error.message : placement.asset_id}. Ersatzkörper wird angezeigt.`])
+          })
+        }
       }
 
       let lastEmitTs = 0
@@ -909,6 +925,7 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
           facingDirection.normalize()
           const autoConfig = autoDollhouseSettingsRef.current
           const resolved = resolveAutoDollhouseOpacities({
+            cutaway: cutawayRef.current,
             camera: {
               x_mm: (camera.position.x - group.position.x) / MM_TO_M,
               y_mm: (camera.position.z - group.position.z) / MM_TO_M,
@@ -931,12 +948,12 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
           })
 
           for (const entry of wallVisuals) {
-            entry.mesh.visible = entry.wall.manualVisible
+            const targetOpacity = resolved[entry.wall.id] ?? 1
+            entry.mesh.visible = entry.wall.manualVisible && !(cutawayRef.current && targetOpacity < 0.1)
             if (!entry.wall.manualVisible) {
               continue
             }
 
-            const targetOpacity = resolved[entry.wall.id] ?? 1
             entry.currentOpacity += (targetOpacity - entry.currentOpacity) * 0.18
             if (Math.abs(targetOpacity - entry.currentOpacity) < 0.008) {
               entry.currentOpacity = targetOpacity
@@ -966,6 +983,12 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
         if (environmentHemisphereRef.current === environmentHemisphere) environmentHemisphereRef.current = null
         if (environmentDirectionalRef.current === environmentDirectional) environmentDirectionalRef.current = null
         if (environmentGroundMaterialRef.current === environmentGroundMaterial) environmentGroundMaterialRef.current = null
+        scene.traverse(object => {
+          const mesh = object as THREE.Mesh
+          mesh.geometry?.dispose()
+          if (Array.isArray(mesh.material)) mesh.material.forEach(material => material.dispose())
+          else mesh.material?.dispose()
+        })
         renderer.dispose()
         if (mountEl.contains(renderer.domElement)) mountEl.removeChild(renderer.domElement)
       }
@@ -1201,10 +1224,44 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
       <header className={styles.toolbar}>
         <span className={styles.meta}>
           3D-Preview · Orbit/Zoom/Pan
+          {hasAssetTemplates && <> · Vorlagen {loadedAssetCount}/{geometryInput.placements.filter(placement => placement.asset_id).length}</>}
           {rendererBackend !== null && (
             <> · {rendererBackend === 'webgpu' ? 'WebGPU' : 'WebGL'}</>
           )}
         </span>
+        <button
+          type="button"
+          className={styles.toggle}
+          aria-pressed={cutaway}
+          onClick={() => {
+            const next = !cutaway
+            setCutaway(next)
+            workerRef.current?.postMessage({ type: 'setCutaway', enabled: next })
+          }}
+        >
+          Wände {cutaway ? 'schließen' : 'öffnen'}
+        </button>
+        <button
+          type="button"
+          className={styles.toggle}
+          onClick={() => {
+            const xs = geometryInput.vertices.map(vertex => vertex.x_mm)
+            const ys = geometryInput.vertices.map(vertex => vertex.y_mm)
+            const cx = (Math.min(...xs) + Math.max(...xs)) / 2
+            const cy = (Math.min(...ys) + Math.max(...ys)) / 2
+            const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), geometryInput.ceilingHeightMm)
+            const next = {
+              x_mm: cx + span * 0.9,
+              y_mm: cy + span * 1.2,
+              camera_height_mm: span * 1.1,
+              yaw_rad: Math.atan2(-1.2, -0.9),
+              pitch_rad: -Math.atan2(span * 1.1 - geometryInput.ceilingHeightMm * 0.3, span * 1.5),
+            }
+            onCameraStateChange?.(next)
+          }}
+        >
+          Gesamtansicht
+        </button>
         <button
           type="button"
           className={styles.toggle}
@@ -1213,6 +1270,7 @@ room, verticalConnections = [], cameraState = null, onCameraStateChange, sunligh
           Referenz {showReference ? 'ausblenden' : 'einblenden'}
         </button>
       </header>
+      {assetErrors.length > 0 && <div role="alert" style={{ padding: '4px 8px', fontSize: '.78rem' }}>{assetErrors.join(' ')}</div>}
       {rendererError !== null ? (
         <div className={styles.empty}>{rendererError}</div>
       ) : useOffscreenWorker ? (

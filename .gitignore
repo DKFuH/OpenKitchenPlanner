@@ -9,6 +9,8 @@ Thumbs.db
 .vscode/
 coverage/
 .nyc_output/
+planner-frontend/test-results/
+planner-frontend/playwright-report/
 *.skp
 *.dwg
 uploads/

@@ -15,6 +15,8 @@ interface WallSegmentState {
 interface UseEditor11WallStateArgs {
   projectElevations: ProjectElevationEntry[]
   selectedRoomId: string | null
+  selectedOpeningId?: string | null
+  selectedPlacementId?: string | null
   selectedEdgeIndex: number | null
   selectedWallSegment: WallSegmentState | null
   wallIds: string[]
@@ -35,6 +37,8 @@ function resolveWallVisible(segment: WallSegmentState | null): boolean {
 export function useEditor11WallState({
   projectElevations,
   selectedRoomId,
+  selectedOpeningId,
+  selectedPlacementId,
   selectedEdgeIndex,
   selectedWallSegment,
   wallIds,
@@ -49,9 +53,11 @@ export function useEditor11WallState({
     [projectElevations, selectedRoomId],
   )
 
-  const selectedWallId = selectedEdgeIndex !== null
+  const selectedEntityWallId = openings.find(opening => opening.id === selectedOpeningId)?.wall_id
+    ?? placements.find(placement => placement.id === selectedPlacementId)?.wall_id
+  const selectedWallId = selectedEntityWallId ?? (selectedEdgeIndex !== null
     ? (selectedWallSegment?.id ?? wallIds[selectedEdgeIndex] ?? null)
-    : null
+    : null)
 
   useEffect(() => {
     if (elevationsForSelectedRoom.length === 0) {

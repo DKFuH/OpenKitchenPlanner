@@ -32,6 +32,7 @@ const MaterialAssignmentSchema = z.object({
 const PlacementSchema = z.object({
   id: z.string().min(1).default(() => randomUUID()),
   catalog_item_id: z.string().min(1),
+  asset_id: z.string().uuid().optional(),
   catalog_article_id: z.string().min(1).optional(),
   article_variant_id: z.string().min(1).optional(),
   description: z.string().min(1).optional(),

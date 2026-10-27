@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "door-sliding-standard",
+  "name": "Schiebetür (1010 × 2100)",
+  "category": "door",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 1010,
+    "height_mm": 2100,
+    "depth_mm": 120
+  },
+  "parameters": {
+    "type": "door",
+    "hinge_side": "left",
+    "opening_direction": "inward",
+    "leaf_count": 1,
+    "frame_type": "Schiebetürkasten",
+    "variant": "Schiebetür",
+    "sill_height_mm": 0
+  },
+  "material_slots": [
+    "frame",
+    "leaf",
+    "glass",
+    "sill"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  }
+}

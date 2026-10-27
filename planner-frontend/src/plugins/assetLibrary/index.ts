@@ -10,7 +10,7 @@ export interface AssetLibraryItem {
   favorite: boolean
   folder_id: string | null
   collection: string | null
-  source_format: 'obj' | 'dae'
+  source_format: 'obj' | 'dae' | 'gltf' | 'glb' | 'dxf'
   file_url: string
   preview_url: string | null
   bbox_json: {
@@ -29,11 +29,11 @@ export interface AssetLibraryItem {
 }
 
 export const ASSET_CATEGORY_LABELS: Record<AssetCategory, string> = {
-  base: 'Base',
-  wall: 'Wall',
-  appliance: 'Appliance',
-  decor: 'Decor',
-  custom: 'Custom',
+  base: 'Unterschränke',
+  wall: 'Oberschränke',
+  appliance: 'Geräte',
+  decor: 'Dekoration',
+  custom: 'Eigene Objekte',
 }
 
 function categoryToCatalogType(category: AssetCategory): CatalogItemType {
@@ -46,6 +46,7 @@ function categoryToCatalogType(category: AssetCategory): CatalogItemType {
 export function mapAssetToCatalogItem(asset: AssetLibraryItem): CatalogItem {
   return {
     id: asset.id,
+    asset_id: asset.id,
     sku: `asset-${asset.source_format}-${asset.id.slice(0, 8)}`,
     name: asset.name,
     type: categoryToCatalogType(asset.category),

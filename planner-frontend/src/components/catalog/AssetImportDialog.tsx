@@ -6,6 +6,7 @@ import {
   type AssetLibraryItem,
 } from '../../plugins/assetLibrary/index.js'
 import { makeStyles, tokens } from '@fluentui/react-components'
+import { AssetTemplatePreview } from './AssetTemplatePreview.js'
 
 const useStyles = makeStyles({
   overlay: {
@@ -18,7 +19,9 @@ const useStyles = makeStyles({
     zIndex: '1200',
   },
   dialog: {
-    width: 'min(420px, calc(100vw - 2rem))',
+    width: 'min(520px, calc(100vw - 2rem))',
+    maxHeight: 'calc(100vh - 2rem)',
+    overflowY: 'auto',
     background: tokens.colorNeutralBackground1,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusMedium,
@@ -142,21 +145,37 @@ isOpen, onClose, onImported }: Props) {
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [heightMm, setHeightMm] = useState(720)
+  const [review, setReview] = useState<Awaited<ReturnType<typeof assetLibraryApi.inspect>> | null>(null)
+  const [previewReady, setPreviewReady] = useState(false)
 
-  const acceptedExtensions = useMemo(() => '.obj,.dae', [])
+  const acceptedExtensions = useMemo(() => '.dxf,.gltf,.glb,.obj,.dae', [])
 
   if (!isOpen) return null
+
+  async function inspectFile() {
+    if (!file) return
+    setBusy(true)
+    setReview(null)
+    setPreviewReady(false)
+    setError(null)
+    try {
+      if (file.size > 8 * 1024 * 1024) throw new Error('Datei zu groß (max. 8 MB)')
+      setReview(await assetLibraryApi.inspect({ file_name: file.name, file_base64: await fileToBase64(file), height_mm: heightMm }))
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Datei konnte nicht geprüft werden')
+    } finally { setBusy(false) }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!file) {
-      setError('Bitte eine OBJ- oder DAE-Datei auswählen')
+      setError('Bitte eine Vorlagendatei auswählen')
       return
     }
 
-    const lower = file.name.toLowerCase()
-    if (!lower.endsWith('.obj') && !lower.endsWith('.dae')) {
-      setError('Nur OBJ- und DAE-Dateien sind erlaubt')
+    if (!review || !previewReady || error) {
+      setError('Bitte zuerst die Vorschau und Maße prüfen')
       return
     }
 
@@ -176,6 +195,7 @@ isOpen, onClose, onImported }: Props) {
         tags,
         file_name: file.name,
         file_base64: fileBase64,
+        height_mm: heightMm,
       })
 
       onImported(imported)
@@ -183,6 +203,7 @@ isOpen, onClose, onImported }: Props) {
       setCategory('custom')
       setTagsInput('')
       setFile(null)
+      setReview(null)
       onClose()
     } catch (importError) {
       setError(importError instanceof Error ? importError.message : 'Import fehlgeschlagen')
@@ -195,7 +216,7 @@ isOpen, onClose, onImported }: Props) {
     <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Asset importieren">
       <form className={styles.dialog} onSubmit={handleSubmit}>
         <header className={styles.header}>
-          <h3 className={styles.title}>Asset importieren</h3>
+          <h3 className={styles.title}>Objektvorlage importieren</h3>
         </header>
 
         <label className={styles.field}>
@@ -203,9 +224,22 @@ isOpen, onClose, onImported }: Props) {
           <input
             type="file"
             accept={acceptedExtensions}
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            disabled={busy}
+            onChange={(event) => { setFile(event.target.files?.[0] ?? null); setReview(null); setError(null) }}
           />
         </label>
+
+        <p style={{ margin: 0, fontSize: '.78rem' }}>GLB/glTF: 3D-Modell mit eingebetteten Daten. DXF: geschlossene Grundrisskonturen mit Einheit und geraden Kanten. Maximal 8 MB.</p>
+        {file?.name.toLowerCase().endsWith('.dxf') && <label className={styles.field}>
+          Objekthöhe für DXF-Grundriss (mm)
+          <input type="number" min="1" max="100000" value={heightMm} disabled={busy}
+            onChange={event => { setHeightMm(Number(event.target.value)); setReview(null); setError(null) }} />
+        </label>}
+        <button type="button" disabled={!file || busy} onClick={() => void inspectFile()}>{busy ? 'Prüfe Datei…' : 'Vorschau und Maße prüfen'}</button>
+        {review && file && <>
+          <AssetTemplatePreview file={file} format={review.sourceFormat} dimensions={review.bboxMm} onError={setError} onReady={() => setPreviewReady(true)} />
+          <output>Breite {review.bboxMm.width_mm} · Höhe {review.bboxMm.height_mm} · Tiefe {review.bboxMm.depth_mm} mm</output>
+        </>}
 
         <label className={styles.field}>
           Name (optional)
@@ -240,7 +274,7 @@ isOpen, onClose, onImported }: Props) {
 
         <footer className={styles.actions}>
           <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={busy}>Abbrechen</button>
-          <button type="submit" className={styles.submitBtn} disabled={busy}>{busy ? 'Importiere…' : 'Importieren'}</button>
+          <button type="submit" className={styles.submitBtn} disabled={busy || !review || !previewReady || !!error}>{busy ? 'Importiere…' : 'Vorlage speichern'}</button>
         </footer>
       </form>
     </div>

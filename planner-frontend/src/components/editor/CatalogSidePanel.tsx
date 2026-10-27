@@ -64,6 +64,8 @@ const useStyles = makeStyles({
   },
   catalogHeader: {
     display: 'flex',
+    flexWrap: 'wrap',
+    gap: tokens.spacingHorizontalXS,
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: tokens.spacingVerticalXS,
@@ -78,6 +80,7 @@ const useStyles = makeStyles({
   },
   modeToggle: {
     display: 'flex',
+    flexWrap: 'wrap',
     backgroundColor: tokens.colorNeutralBackground3,
     borderRadius: tokens.borderRadiusSmall,
     padding: '2px',
@@ -518,7 +521,7 @@ export function CatalogSidePanel({
                   className={`${styles.modeBtn} ${catalogMode === 'assets' ? styles.modeBtnActive : ''}`}
                   onClick={() => setCatalogMode('assets')}
                 >
-                  Assets
+                  Eigene Vorlagen
                 </button>
               )}
             </div>

@@ -71,7 +71,7 @@ export function useEditor11ViewPersistence({
     return () => {
       active = false
     }
-  }, [projectId, setProjectElevations])
+  }, [projectId, selectedRoom?.boundary, setProjectElevations])
 
   useEffect(() => {
     if (!selectedRoom) {

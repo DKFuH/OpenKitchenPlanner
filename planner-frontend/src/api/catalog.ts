@@ -13,6 +13,7 @@ export type CatalogItemType =
 
 export interface CatalogItem {
   id: string
+  asset_id?: string
   sku: string
   name: string
   type: CatalogItemType

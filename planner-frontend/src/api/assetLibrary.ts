@@ -1,5 +1,6 @@
 import { api } from './client.js'
 import type { AssetCategory, AssetLibraryItem } from '../plugins/assetLibrary/index.js'
+import { tenantScopedHeaders } from './runtimeContext.js'
 
 export type LibrarySort = 'updated' | 'name' | 'favorites'
 
@@ -41,6 +42,7 @@ interface AssetImportPayload {
   tags: string[]
   file_name: string
   file_base64: string
+  height_mm?: number
 }
 
 interface AssetPatchPayload {
@@ -54,6 +56,19 @@ interface AssetPatchPayload {
 }
 
 export const assetLibraryApi = {
+  download: async (asset: AssetLibraryItem): Promise<void> => {
+    const response = await fetch(`/api/v1/tenant/assets/${encodeURIComponent(asset.id)}/file`, { headers: tenantScopedHeaders() })
+    if (!response.ok) throw new Error('Vorlagendatei konnte nicht geladen werden')
+    const url = URL.createObjectURL(await response.blob())
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${asset.name}.${asset.source_format}`
+    link.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  },
+  get: (id: string): Promise<AssetLibraryItem> => api.get(`/tenant/assets/${encodeURIComponent(id)}`),
+  inspect: (payload: Pick<AssetImportPayload, 'file_name' | 'file_base64' | 'height_mm'>): Promise<{ bboxMm: AssetLibraryItem['bbox_json']; sourceFormat: AssetLibraryItem['source_format'] }> =>
+    api.post('/tenant/assets/inspect', payload),
   list: (params?: AssetListParams): Promise<AssetLibraryItem[]> => {
     const search = new URLSearchParams()
     if (params?.q) search.set('q', params.q)

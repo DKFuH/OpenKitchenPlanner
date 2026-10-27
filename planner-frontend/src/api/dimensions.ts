@@ -1,4 +1,5 @@
 import { api } from './client.js'
+import { tenantScopedHeaders } from './runtimeContext.js'
 
 export interface DimensionPoint {
   x_mm: number
@@ -60,7 +61,7 @@ export const dimensionsApi = {
     api.delete(`/dimensions/${id}`),
 
   getElevation: async (roomId: string, wallIndex: number): Promise<string> => {
-    const response = await fetch(`/api/v1/rooms/${roomId}/elevation/${wallIndex}`)
+    const response = await fetch(`/api/v1/rooms/${roomId}/elevation/${wallIndex}`, { headers: tenantScopedHeaders() })
     if (!response.ok) {
       throw new Error(`Frontansicht konnte nicht geladen werden (${response.status})`)
     }

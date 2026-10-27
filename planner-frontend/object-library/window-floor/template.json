@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "window-floor",
+  "name": "Bodentiefes Fenster (1000 × 2200)",
+  "category": "window",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 1000,
+    "height_mm": 2200,
+    "depth_mm": 120
+  },
+  "parameters": {
+    "type": "window",
+    "leaf_count": 1,
+    "frame_type": "Aluminium",
+    "variant": "Bodentief",
+    "sill_height_mm": 0
+  },
+  "material_slots": [
+    "frame",
+    "leaf",
+    "glass",
+    "sill"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  }
+}

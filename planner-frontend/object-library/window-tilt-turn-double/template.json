@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "id": "window-tilt-turn-double",
+  "name": "Dreh-Kipp-Fenster, 2-flügelig (1400 × 1200)",
+  "category": "window",
+  "units": "mm",
+  "dimensions": {
+    "width_mm": 1400,
+    "height_mm": 1200,
+    "depth_mm": 120
+  },
+  "parameters": {
+    "type": "window",
+    "hinge_side": "left",
+    "opening_direction": "inward",
+    "leaf_count": 2,
+    "frame_type": "Kunststoff",
+    "variant": "Dreh-Kipp",
+    "sill_height_mm": 900
+  },
+  "material_slots": [
+    "frame",
+    "leaf",
+    "glass",
+    "sill"
+  ],
+  "files": {
+    "model": "model.gltf",
+    "plan": "plan.dxf"
+  }
+}
