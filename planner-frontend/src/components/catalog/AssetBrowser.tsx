@@ -16,6 +16,8 @@ const useStyles = makeStyles({
   },
   header: {
     display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.35rem',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '0.4rem',

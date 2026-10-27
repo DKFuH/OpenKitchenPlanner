@@ -131,6 +131,7 @@ const useStyles = makeStyles({
   },
   inlineControls: {
     display: 'flex',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: tokens.spacingHorizontalXS,
     marginBottom: tokens.spacingVerticalXS,
@@ -145,6 +146,7 @@ const useStyles = makeStyles({
   },
   typeSelectInline: {
     width: '100%',
+    minWidth: '0',
     boxSizing: 'border-box',
     padding: '2px 4px',
     border: '1px solid ' + tokens.colorNeutralStroke1,

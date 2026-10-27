@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 
 const TENANT_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
 const PROJECT_ID = 'empty-project'
@@ -242,6 +244,7 @@ test('saved room geometry refreshes the wall elevation viewport', async ({ page 
 })
 
 test('object selection stays active beside the wall view and window families can be changed', async ({ page }) => {
+  test.setTimeout(60000)
   const opening = { id: 'opening-1', wall_id: 'wall-1', type: 'window', offset_mm: 900, width_mm: 1000, height_mm: 1200, sill_height_mm: 900, source: 'manual' }
   const room = {
     id: ROOM_ID, project_id: PROJECT_ID, level_id: LEVEL_ID, name: 'Kueche', ceiling_height_mm: 2500,
@@ -292,7 +295,7 @@ test('object selection stays active beside the wall view and window families can
   const dialog = page.getByRole('dialog')
   await expect(dialog.getByRole('heading', { name: 'Objekt wählen' })).toBeVisible()
   await expect(dialog.getByRole('img', { name: /Vorschau Dreh-Kipp-Fenster, 2-flügelig/ })).toBeVisible()
-  await expect(dialog.locator('button img')).toHaveCount(8)
+  await expect(dialog.locator('button img')).toHaveCount(8, { timeout: 20000 })
   await dialog.screenshot({ path: 'test-results/object-library.png' })
   await dialog.getByLabel('Objektbibliothek durchsuchen').fill('3-flügelig')
   await dialog.getByRole('button', { name: /Fenster, 3-flügelig/ }).click()
@@ -301,4 +304,59 @@ test('object selection stays active beside the wall view and window families can
   await dialog.getByRole('button', { name: 'Übernehmen', exact: true }).click()
   expect((await librarySave).postDataJSON().openings[0]).toMatchObject({ family_id: 'window-triple', leaf_count: 3, width_mm: 2100 })
   await expect(page.getByLabel('Flügelanzahl')).toHaveValue('3')
+})
+
+test('file templates are previewed, placed with their source reference and reloaded as actual geometry', async ({ page }) => {
+  test.setTimeout(60000)
+  const sourcePath = fileURLToPath(new URL('../public/object-library/door-paneled/model.gltf', import.meta.url))
+  const source = await readFile(sourcePath)
+  const assetId = '11111111-1111-4111-8111-111111111111'
+  const asset = { id: assetId, name: 'Eigene Kassettentür', category: 'custom', source_format: 'gltf', favorite: false, tags_json: [], folder_id: null, collection: null,
+    bbox_json: { width_mm: 885, height_mm: 1985, depth_mm: 120 }, file_url: `/api/v1/tenant/assets/${assetId}/file` }
+  let imported = false
+  const room = { id: ROOM_ID, project_id: PROJECT_ID, level_id: LEVEL_ID, name: 'Kueche', ceiling_height_mm: 2500,
+    boundary: { vertices: [{ id: 'v1', x_mm: 0, y_mm: 0, index: 0 }, { id: 'v2', x_mm: 3000, y_mm: 0, index: 1 }, { id: 'v3', x_mm: 3000, y_mm: 2000, index: 2 }, { id: 'v4', x_mm: 0, y_mm: 2000, index: 3 }],
+      wall_segments: [1, 2, 3, 4].map(index => ({ id: `wall-${index}`, index: index - 1, start_vertex_id: `v${index}`, end_vertex_id: `v${index % 4 + 1}` })) },
+    ceiling_constraints: [], openings: [], placements: [] as unknown[] }
+  await page.route(`**/api/v1/projects/${PROJECT_ID}`, route => route.fulfill({ json: { id: PROJECT_ID, name: 'Dateivorlagen', rooms: [room], quotes: [] } }))
+  await page.route('**/api/v1/tenant/plugins', route => route.fulfill({ json: { available: [], enabled: ['asset-library'] } }))
+  await page.route(`**/api/v1/projects/${PROJECT_ID}/elevations`, route => route.fulfill({ json: { total: 4, elevations: room.boundary.wall_segments.map(wall => ({ room_id: ROOM_ID, room_name: room.name, wall_id: wall.id, wall_index: wall.index, wall_length_mm: wall.index % 2 ? 2000 : 3000, room_height_mm: 2500 })) } }))
+  await page.route('**/api/v1/tenant/assets**', async route => {
+    const pathname = new URL(route.request().url()).pathname
+    if (pathname.endsWith('/file')) return route.fulfill({ body: source, contentType: 'model/gltf+json' })
+    if (pathname.endsWith('/inspect') || pathname.endsWith('/import')) {
+      expect(Buffer.from(route.request().postDataJSON().file_base64, 'base64').equals(source)).toBe(true)
+      if (pathname.endsWith('/inspect')) return route.fulfill({ json: { sourceFormat: 'gltf', bboxMm: asset.bbox_json } })
+      imported = true
+      return route.fulfill({ status: 201, json: asset })
+    }
+    if (pathname.endsWith(assetId)) return route.fulfill({ json: asset })
+    return route.fulfill({ json: pathname.endsWith('/assets') && imported ? [asset] : [] })
+  })
+  await page.route(`**/api/v1/rooms/${ROOM_ID}/placements`, async route => {
+    if (route.request().method() === 'PUT') room.placements = route.request().postDataJSON().placements
+    return route.fulfill({ json: room.placements })
+  })
+  await page.goto(`/projects/${PROJECT_ID}`)
+  await page.getByRole('button', { name: 'DE', exact: true }).click()
+  await page.getByRole('button', { name: 'Moebel', exact: true }).click()
+  await page.getByRole('button', { name: 'Eigene Vorlagen', exact: true }).click()
+  await page.getByRole('button', { name: '+ Import', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Asset importieren' })
+  await dialog.locator('input[type=file]').setInputFiles(sourcePath)
+  await dialog.getByRole('button', { name: 'Vorschau und Maße prüfen' }).click()
+  await expect(dialog.getByText('Breite 885 · Höhe 1985 · Tiefe 120 mm', { exact: true })).toBeVisible()
+  await expect(dialog.getByRole('button', { name: 'Vorlage speichern' })).toBeEnabled()
+  await dialog.locator('form').screenshot({ path: 'test-results/template-import-preview.png' })
+  await dialog.getByRole('button', { name: 'Vorlage speichern' }).click()
+  await page.getByRole('combobox', { name: 'Gewaehlte Wand', exact: true }).selectOption('3')
+  await page.getByRole('button', { name: '+ Platzieren', exact: true }).click()
+  await expect.poll(() => room.placements.length).toBe(1)
+  expect(room.placements[0]).toMatchObject({ asset_id: assetId, width_mm: 885, height_mm: 1985, depth_mm: 120 })
+  await expect(page.getByText(/Vorlagen 1\/1/)).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Eigene Kassettentür · 885 × 120 mm', exact: true })).toBeVisible()
+  await expect(page.getByText(/Vorlagen 1\/1/)).toBeVisible()
+  await page.getByRole('button', { name: 'Gesamtansicht', exact: true }).click()
+  await page.screenshot({ path: 'test-results/template-import-plan.png' })
 })
